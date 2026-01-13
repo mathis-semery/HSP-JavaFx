@@ -14,8 +14,6 @@ public class Hospitalisation {
     private String description_maladie;
     private LocalDateTime date_creation;
 
-    public Hospitalisation() {
-    }
 
     public Hospitalisation(int id_hospitalisation, int id_dossier, int id_chambre, int id_medecin, LocalDate date_debut, LocalDate date_fin, String description_maladie, LocalDateTime date_creation) {
         this.id_hospitalisation = id_hospitalisation;

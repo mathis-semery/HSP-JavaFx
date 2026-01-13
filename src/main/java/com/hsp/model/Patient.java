@@ -13,8 +13,6 @@ public class Patient {
     private String adresse;
     private LocalDateTime date_creation;
 
-    public Patient() {
-    }
 
     public Patient(int id_patient, String nom, String prenom, String num_secu, String email, String telephone, String adresse, LocalDateTime date_creation) {
         this.id_patient = id_patient;
