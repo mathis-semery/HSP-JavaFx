@@ -54,4 +54,15 @@ public class Chambre {
     public void setNumero(String numero) {
         this.numero = numero;
     }
+
+    @Override
+    public String toString() {
+        return "Chambre{" +
+                "id_chambre=" + id_chambre +
+                ", numero='" + numero + '\'' +
+                ", etage='" + etage + '\'' +
+                ", nb_lits='" + nb_lits + '\'' +
+                ", disponible='" + disponible + '\'' +
+                '}';
+    }
 }

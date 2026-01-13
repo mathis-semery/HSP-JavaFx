@@ -10,7 +10,7 @@ public class DemandeProduit {
     private String statut;
     private String motif_refus;
 
-    public DemandeProduit(int id_demande,int id_medecin,int id_produit, int id_gestionnaire, double quantite, String date_demande, String statut, String motif_refus) {
+    public DemandeProduit(int id_demande, int id_medecin, int id_produit, int id_gestionnaire, double quantite, String date_demande, String statut, String motif_refus) {
         this.id_demande = id_demande;
         this.id_medecin = id_medecin;
         this.id_produit = id_produit;
@@ -84,5 +84,19 @@ public class DemandeProduit {
 
     public void setMotif_refus(String motif_refus) {
         this.motif_refus = motif_refus;
+    }
+
+    @Override
+    public String toString() {
+        return "DemandeProduit{" +
+                "id_demande=" + id_demande +
+                ", id_medecin=" + id_medecin +
+                ", id_produit=" + id_produit +
+                ", id_gestionnaire=" + id_gestionnaire +
+                ", quantite=" + quantite +
+                ", date_demande='" + date_demande + '\'' +
+                ", statut='" + statut + '\'' +
+                ", motif_refus='" + motif_refus + '\'' +
+                '}';
     }
 }

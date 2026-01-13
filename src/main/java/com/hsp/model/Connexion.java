@@ -45,4 +45,14 @@ public class Connexion {
     public void setId_utilisateur(int id_utilisateur) {
         this.id_utilisateur = id_utilisateur;
     }
+
+    @Override
+    public String toString() {
+        return "Connexion{" +
+                "id_connexion=" + id_connexion +
+                ", id_utilisateur=" + id_utilisateur +
+                ", date_connexion='" + date_connexion + '\'' +
+                ", ip_adresse='" + ip_adresse + '\'' +
+                '}';
+    }
 }

@@ -84,6 +84,20 @@ public class Dossier {
     public void setDate_creation(String date_creation) {
         this.date_creation = date_creation;
     }
+
+    @Override
+    public String toString() {
+        return "Dossier{" +
+                "id_dossier=" + id_dossier +
+                ", id_patient=" + id_patient +
+                ", id_medecin=" + id_medecin +
+                ", date_arrivee='" + date_arrivee + '\'' +
+                ", symptomes='" + symptomes + '\'' +
+                ", niveau_gravite='" + niveau_gravite + '\'' +
+                ", statut='" + statut + '\'' +
+                ", date_creation='" + date_creation + '\'' +
+                '}';
+    }
 }
 
 
