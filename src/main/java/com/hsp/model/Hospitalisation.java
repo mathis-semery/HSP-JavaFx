@@ -17,9 +17,7 @@ public class Hospitalisation {
     public Hospitalisation() {
     }
 
-    public Hospitalisation(int id_hospitalisation, int id_dossier, int id_chambre, int id_medecin,
-                           LocalDate date_debut, LocalDate date_fin,
-                           String description_maladie, LocalDateTime date_creation) {
+    public Hospitalisation(int id_hospitalisation, int id_dossier, int id_chambre, int id_medecin, LocalDate date_debut, LocalDate date_fin, String description_maladie, LocalDateTime date_creation) {
         this.id_hospitalisation = id_hospitalisation;
         this.id_dossier = id_dossier;
         this.id_chambre = id_chambre;

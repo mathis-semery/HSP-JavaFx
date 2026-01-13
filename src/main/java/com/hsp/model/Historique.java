@@ -15,9 +15,7 @@ public class Historique {
     public Historique() {
     }
 
-    public Historique(int id_historique, int id_utilisateur, String action,
-                      String table_concernee, int id_enregistrement,
-                      LocalDateTime date_action, String details) {
+    public Historique(int id_historique, int id_utilisateur, String action, String table_concernee, int id_enregistrement, LocalDateTime date_action, String details) {
         this.id_historique = id_historique;
         this.id_utilisateur = id_utilisateur;
         this.action = action;

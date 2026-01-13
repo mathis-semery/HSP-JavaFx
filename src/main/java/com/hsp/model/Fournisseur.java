@@ -15,8 +15,7 @@ public class Fournisseur {
     public Fournisseur() {
     }
 
-    public Fournisseur(int id_fournisseur, String nom, String contact, String email,
-                       String telephone, String adresse, LocalDate date_creation) {
+    public Fournisseur(int id_fournisseur, String nom, String contact, String email, String telephone, String adresse, LocalDate date_creation) {
         this.id_fournisseur = id_fournisseur;
         this.nom = nom;
         this.contact = contact;
