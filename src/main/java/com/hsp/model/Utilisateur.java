@@ -7,27 +7,29 @@ public class Utilisateur {
     private String mdp;
     private int id;
     private String role;
+    private String date_creation;
 
-    public Utilisateur(int id, String nom, String prenom, String email, String mdp, String role) {
+    public Utilisateur(int id, String nom, String prenom, String email, String mdp, String role, String date_creation) {
         this.id = id;
         this.nom = nom;
         this.prenom = prenom;
         this.email = email;
         this.mdp = mdp;
         this.role = role;
-    }
-
-    public Utilisateur(String nom, String prenom, String email, String mdp, String role) {
-        this.nom = nom;
-        this.prenom = prenom;
-        this.email = email;
-        this.mdp = mdp;
-        this.role = "ROLE_USER";
+        this.date_creation = date_creation;
     }
 
     public Utilisateur(String email, String mdp) {
         this.email = email;
         this.mdp = mdp;
+    }
+
+    public String getDate_creation() {
+        return date_creation;
+    }
+
+    public void setDate_creation(String date_creation) {
+        this.date_creation = date_creation;
     }
 
     @Override
