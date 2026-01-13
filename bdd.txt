@@ -14,13 +14,6 @@ CREATE TABLE utilisateur (
     date_creation DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-CREATE TABLE connexion (
-    id_connexion INT PRIMARY KEY AUTO_INCREMENT,
-    id_utilisateur INT NOT NULL,
-    date_connexion DATETIME DEFAULT CURRENT_TIMESTAMP,
-    ip_adresse VARCHAR(45)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
 CREATE TABLE historique (
     id_historique INT PRIMARY KEY AUTO_INCREMENT,
     id_utilisateur INT NOT NULL,
