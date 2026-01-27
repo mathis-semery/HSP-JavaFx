@@ -73,6 +73,7 @@ public class LigneReapprovisionnement {
         return prixUnitaire.multiply(new BigDecimal(quantiteCommandee));
     }
 
+
     // toString
     @Override
     public String toString() {

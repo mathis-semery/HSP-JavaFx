@@ -63,6 +63,7 @@ public class LigneDemande {
                 '}';
     }
 
+
     // equals et hashCode (important pour les clés composites)
     @Override
     public boolean equals(Object o) {

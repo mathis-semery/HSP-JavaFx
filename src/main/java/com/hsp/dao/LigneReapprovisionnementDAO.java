@@ -42,6 +42,7 @@ public class LigneReapprovisionnementDAO {
         return lignes;
     }
 
+
     // READ - Get by ids (clé primaire composite)
     public LigneReapprovisionnement getByIds(int idReappro, int idFournisseur, int idProduit) throws SQLException {
         String sql = "SELECT * FROM ligne_reapprovisionnement WHERE id_reappro = ? AND id_fournisseur = ? AND id_produit = ?";
