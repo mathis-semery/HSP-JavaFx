@@ -35,6 +35,7 @@ CREATE TABLE patient (
     date_creation DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+
 CREATE TABLE dossier (
     id_dossier INT PRIMARY KEY AUTO_INCREMENT,
     id_patient INT NOT NULL,
@@ -95,28 +96,36 @@ CREATE TABLE produit_fournisseur (
 CREATE TABLE demande_produit (
     id_demande INT PRIMARY KEY AUTO_INCREMENT,
     id_medecin INT NOT NULL,
-    id_produit INT NOT NULL,
     id_gestionnaire INT,
-    quantite INT NOT NULL,
     date_demande DATETIME DEFAULT CURRENT_TIMESTAMP,
     statut ENUM('Attente', 'Validee', 'Refusee') DEFAULT 'Attente',
     motif_refus TEXT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+CREATE TABLE ligne_demande (
+    id_demande INT NOT NULL,
+    id_produit INT NOT NULL,
+    quantite_demandee INT NOT NULL,
+    statut ENUM('Attente', 'Validee', 'Refusee') DEFAULT 'Attente',
+    PRIMARY KEY (id_demande, id_produit)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 CREATE TABLE reapprovisionnement (
     id_reappro INT PRIMARY KEY AUTO_INCREMENT,
-    id_produit INT NOT NULL,
-    id_fournisseur INT NOT NULL,
     id_gestionnaire INT NOT NULL,
-    quantite INT NOT NULL,
     date_commande DATETIME DEFAULT CURRENT_TIMESTAMP,
     date_reception DATETIME
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-ALTER TABLE connexion
-    ADD CONSTRAINT fk_connexion_utilisateur
-        FOREIGN KEY (id_utilisateur) REFERENCES utilisateur(id_utilisateur)
-        ON DELETE CASCADE ON UPDATE CASCADE;
+CREATE TABLE ligne_reapprovisionnement (
+    id_reappro INT NOT NULL,
+    id_fournisseur INT NOT NULL,
+    id_produit INT NOT NULL,
+    quantite_commandee INT NOT NULL,
+    prix_unitaire DECIMAL(10,2),
+    PRIMARY KEY (id_reappro, id_fournisseur, id_produit)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 
 ALTER TABLE historique
     ADD CONSTRAINT fk_historique_utilisateur
@@ -157,23 +166,33 @@ ALTER TABLE demande_produit
     ADD CONSTRAINT fk_demande_medecin
         FOREIGN KEY (id_medecin) REFERENCES utilisateur(id_utilisateur)
         ON DELETE RESTRICT ON UPDATE CASCADE,
-    ADD CONSTRAINT fk_demande_produit
-        FOREIGN KEY (id_produit) REFERENCES produit(id_produit)
-        ON DELETE CASCADE ON UPDATE CASCADE,
     ADD CONSTRAINT fk_demande_gestionnaire
         FOREIGN KEY (id_gestionnaire) REFERENCES utilisateur(id_utilisateur)
         ON DELETE SET NULL ON UPDATE CASCADE;
 
-ALTER TABLE reapprovisionnement
-    ADD CONSTRAINT fk_reappro_produit
-        FOREIGN KEY (id_produit) REFERENCES produit(id_produit)
+ALTER TABLE ligne_demande
+    ADD CONSTRAINT fk_ligne_demande_demande
+        FOREIGN KEY (id_demande) REFERENCES demande_produit(id_demande)
         ON DELETE CASCADE ON UPDATE CASCADE,
-    ADD CONSTRAINT fk_reappro_fournisseur
-        FOREIGN KEY (id_fournisseur) REFERENCES fournisseur(id_fournisseur)
-        ON DELETE RESTRICT ON UPDATE CASCADE,
+    ADD CONSTRAINT fk_ligne_demande_produit
+        FOREIGN KEY (id_produit) REFERENCES produit(id_produit)
+        ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE reapprovisionnement
     ADD CONSTRAINT fk_reappro_gestionnaire
         FOREIGN KEY (id_gestionnaire) REFERENCES utilisateur(id_utilisateur)
         ON DELETE RESTRICT ON UPDATE CASCADE;
+
+ALTER TABLE ligne_reapprovisionnement
+    ADD CONSTRAINT fk_ligne_reappro_reappro
+        FOREIGN KEY (id_reappro) REFERENCES reapprovisionnement(id_reappro)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    ADD CONSTRAINT fk_ligne_reappro_fournisseur
+        FOREIGN KEY (id_fournisseur) REFERENCES fournisseur(id_fournisseur)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    ADD CONSTRAINT fk_ligne_reappro_produit
+        FOREIGN KEY (id_produit) REFERENCES produit(id_produit)
+        ON DELETE CASCADE ON UPDATE CASCADE;
 
 CREATE INDEX idx_utilisateur_email ON utilisateur(email);
 CREATE INDEX idx_utilisateur_role ON utilisateur(role);
@@ -232,6 +251,26 @@ INSERT INTO dossier (id_patient, id_secretaire, id_medecin, date_arrivee, sympto
 (2, 1, 3, NOW() - INTERVAL 2 HOUR, 'Fièvre, maux de tête', 2, 'Attente'),
 (3, 1, 2, NOW() - INTERVAL 1 DAY, 'Fracture du bras', 3, 'Termine');
 
+INSERT INTO demande_produit (id_medecin, id_gestionnaire, statut) VALUES
+(2, 4, 'Validee'),
+(3, NULL, 'Attente');
+
+INSERT INTO ligne_demande (id_demande, id_produit, quantite_demandee, statut) VALUES
+(1, 1, 100, 'Validee'),
+(1, 3, 50, 'Validee'),
+(2, 2, 10, 'Attente'),
+(2, 5, 20, 'Attente');
+
+INSERT INTO reapprovisionnement (id_gestionnaire, date_reception) VALUES
+(4, NOW() + INTERVAL 2 DAY),
+(4, NULL);
+
+INSERT INTO ligne_reapprovisionnement (id_reappro, id_fournisseur, id_produit, quantite_commandee, prix_unitaire) VALUES
+(1, 1, 1, 500, 2.50),
+(1, 1, 4, 200, 8.00),
+(2, 2, 3, 300, 4.00),
+(2, 3, 2, 100, 14.50);
+
 CREATE VIEW vue_patients_attente AS
 SELECT
     d.id_dossier,
@@ -267,3 +306,41 @@ SELECT
 FROM chambre
 WHERE disponible = TRUE
 ORDER BY etage, numero;
+
+CREATE VIEW vue_demandes_details AS
+SELECT
+    dp.id_demande,
+    u.nom AS medecin_nom,
+    u.prenom AS medecin_prenom,
+    dp.date_demande,
+    dp.statut AS statut_demande,
+    p.libelle AS produit,
+    ld.quantite_demandee,
+    ld.statut AS statut_ligne,
+    g.nom AS gestionnaire_nom,
+    g.prenom AS gestionnaire_prenom
+FROM demande_produit dp
+JOIN utilisateur u ON dp.id_medecin = u.id_utilisateur
+JOIN ligne_demande ld ON dp.id_demande = ld.id_demande
+JOIN produit p ON ld.id_produit = p.id_produit
+LEFT JOIN utilisateur g ON dp.id_gestionnaire = g.id_utilisateur
+ORDER BY dp.date_demande DESC;
+
+CREATE VIEW vue_reappro_details AS
+SELECT
+    r.id_reappro,
+    u.nom AS gestionnaire_nom,
+    u.prenom AS gestionnaire_prenom,
+    r.date_commande,
+    r.date_reception,
+    f.nom AS fournisseur,
+    p.libelle AS produit,
+    lr.quantite_commandee,
+    lr.prix_unitaire,
+    (lr.quantite_commandee * lr.prix_unitaire) AS montant_total
+FROM reapprovisionnement r
+JOIN utilisateur u ON r.id_gestionnaire = u.id_utilisateur
+JOIN ligne_reapprovisionnement lr ON r.id_reappro = lr.id_reappro
+JOIN fournisseur f ON lr.id_fournisseur = f.id_fournisseur
+JOIN produit p ON lr.id_produit = p.id_produit
+ORDER BY r.date_commande DESC;
