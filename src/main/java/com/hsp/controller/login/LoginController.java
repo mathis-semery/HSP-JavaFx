@@ -197,8 +197,28 @@ public class LoginController {
     @FXML
     private void onSignUpClicked() {
         System.out.println("S'inscrire cliqué");
-        // TODO: Navigation vers la page d'inscription
+        redirectToSignIn();
     }
+
+    private void redirectToSignIn() {
+        try {
+            // Charger la page d'inscription
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/auth/Signin.fxml"));
+            Parent root = loader.load();
+
+            // Obtenir la fenêtre actuelle et la remplacer
+            Stage stage = (Stage) loginButton.getScene().getWindow();
+            Scene scene = new Scene(root, 900, 700);
+            stage.setScene(scene);
+            stage.setTitle("Inscription - HSP Urgences");
+            stage.show();
+
+        } catch (IOException e) {
+            showAlert("Erreur", "Impossible de charger la page d'inscription : " + e.getMessage(), Alert.AlertType.ERROR);
+            e.printStackTrace();
+        }
+    }
+
 
     @FXML
     private void onFieldHover(MouseEvent event) {
