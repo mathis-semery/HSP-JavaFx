@@ -57,6 +57,22 @@ public class HospitalisationDAO {
         return hospitalisations;
     }
 
+    public List<Hospitalisation> findByChambreId(int idChambre) {
+        List<Hospitalisation> hospitalisations = new ArrayList<>();
+        String sql = "SELECT * FROM hospitalisation WHERE id_chambre = ?";
+        try (Connection cnx = Database.getConnexion();
+             PreparedStatement stmt = cnx.prepareStatement(sql)) {
+            stmt.setInt(1, idChambre);
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                hospitalisations.add(mapResultSet(rs));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return hospitalisations;
+    }
+
     public boolean insert(Hospitalisation hospitalisation) {
         String sql = "INSERT INTO hospitalisation (id_dossier, id_chambre, id_medecin, date_debut, date_fin, description_maladie) VALUES (?, ?, ?, ?, ?, ?)";
         try (Connection cnx = Database.getConnexion();
