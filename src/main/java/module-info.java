@@ -13,6 +13,7 @@ module com.hsp.hsp_urgences {
     opens com.hsp.controller.dossier to javafx.fxml;
     opens com.hsp.controller.hospitalisation to javafx.fxml;
     opens com.hsp.controller.stock to javafx.fxml;
+    opens com.hsp.controller.login to javafx.fxml;
 
     exports com.hsp;
 }
