@@ -1,7 +1,117 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.layout.VBox?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
 
-<VBox xmlns:fx="http://javafx.com/fxml">
+<ScrollPane fitToWidth="true" xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.hsp.controller.dossier.DossierDetailController">
 
-</VBox>
+    <VBox spacing="20" style="-fx-padding: 20;">
+
+        <!-- En-tete -->
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <Button text="Retour a la liste" onAction="#retourListe"
+                    style="-fx-background-color: #757575; -fx-text-fill: white;"/>
+            <Label fx:id="lblTitre" text="Detail du dossier"
+                   style="-fx-font-size: 22px; -fx-font-weight: bold;"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Label fx:id="lblStatut" text=""
+                   style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-padding: 5 15; -fx-background-radius: 5;"/>
+        </HBox>
+
+        <Separator/>
+
+        <!-- Informations du dossier -->
+        <Label text="Informations du dossier" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+
+        <GridPane hgap="15" vgap="10" style="-fx-padding: 0 0 0 10;">
+            <columnConstraints>
+                <ColumnConstraints percentWidth="20"/>
+                <ColumnConstraints percentWidth="30"/>
+                <ColumnConstraints percentWidth="20"/>
+                <ColumnConstraints percentWidth="30"/>
+            </columnConstraints>
+
+            <Label text="ID Dossier :" style="-fx-font-weight: bold;" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+            <Label fx:id="lblIdDossier" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+            <Label text="Date d'arrivee :" style="-fx-font-weight: bold;" GridPane.rowIndex="0" GridPane.columnIndex="2"/>
+            <Label fx:id="lblDateArrivee" GridPane.rowIndex="0" GridPane.columnIndex="3"/>
+
+            <Label text="Niveau de gravite :" style="-fx-font-weight: bold;" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+            <Label fx:id="lblGravite" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+            <Label text="Statut :" style="-fx-font-weight: bold;" GridPane.rowIndex="1" GridPane.columnIndex="2"/>
+            <Label fx:id="lblStatutInfo" GridPane.rowIndex="1" GridPane.columnIndex="3"/>
+
+            <Label text="Medecin :" style="-fx-font-weight: bold;" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+            <Label fx:id="lblMedecin" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+            <Label text="Date creation :" style="-fx-font-weight: bold;" GridPane.rowIndex="2" GridPane.columnIndex="2"/>
+            <Label fx:id="lblDateCreation" GridPane.rowIndex="2" GridPane.columnIndex="3"/>
+        </GridPane>
+
+        <!-- Symptomes -->
+        <Label text="Symptomes" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+        <Label fx:id="lblSymptomes" wrapText="true"
+               style="-fx-padding: 10; -fx-background-color: #f5f5f5; -fx-background-radius: 5;"/>
+
+        <Separator/>
+
+        <!-- Informations du patient -->
+        <Label text="Informations du patient" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+
+        <GridPane hgap="15" vgap="10" style="-fx-padding: 0 0 0 10;">
+            <columnConstraints>
+                <ColumnConstraints percentWidth="20"/>
+                <ColumnConstraints percentWidth="30"/>
+                <ColumnConstraints percentWidth="20"/>
+                <ColumnConstraints percentWidth="30"/>
+            </columnConstraints>
+
+            <Label text="Nom :" style="-fx-font-weight: bold;" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+            <Label fx:id="lblPatientNom" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+            <Label text="Prenom :" style="-fx-font-weight: bold;" GridPane.rowIndex="0" GridPane.columnIndex="2"/>
+            <Label fx:id="lblPatientPrenom" GridPane.rowIndex="0" GridPane.columnIndex="3"/>
+
+            <Label text="N Secu :" style="-fx-font-weight: bold;" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+            <Label fx:id="lblPatientNumSecu" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+            <Label text="Email :" style="-fx-font-weight: bold;" GridPane.rowIndex="1" GridPane.columnIndex="2"/>
+            <Label fx:id="lblPatientEmail" GridPane.rowIndex="1" GridPane.columnIndex="3"/>
+
+            <Label text="Telephone :" style="-fx-font-weight: bold;" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+            <Label fx:id="lblPatientTelephone" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+            <Label text="Adresse :" style="-fx-font-weight: bold;" GridPane.rowIndex="2" GridPane.columnIndex="2"/>
+            <Label fx:id="lblPatientAdresse" GridPane.rowIndex="2" GridPane.columnIndex="3"/>
+        </GridPane>
+
+        <Separator/>
+
+        <!-- Actions medicales (medecin) -->
+        <Label text="Actions medicales" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+
+        <HBox fx:id="boxActionsMedicales" spacing="10" alignment="CENTER_LEFT">
+            <Button fx:id="btnPrendreEnCharge" text="Prendre en charge" onAction="#prendreEnCharge"
+                    style="-fx-background-color: #2196F3; -fx-text-fill: white; -fx-font-weight: bold;" prefWidth="180"/>
+            <Button fx:id="btnOrdonnance" text="Ordonnance (Sortie)" onAction="#cloturerOrdonnance"
+                    style="-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold;" prefWidth="180"/>
+            <Button fx:id="btnHospitaliser" text="Hospitaliser" onAction="#hospitaliser"
+                    style="-fx-background-color: #FF9800; -fx-text-fill: white; -fx-font-weight: bold;" prefWidth="180"/>
+        </HBox>
+
+        <Separator/>
+
+        <!-- Actions administration -->
+        <HBox spacing="10" alignment="CENTER_RIGHT">
+            <Button fx:id="btnModifier" text="Modifier" onAction="#modifierDossier"
+                    style="-fx-background-color: #2196F3; -fx-text-fill: white;" prefWidth="120"/>
+            <Button fx:id="btnSupprimer" text="Supprimer" onAction="#supprimerDossier"
+                    style="-fx-background-color: #f44336; -fx-text-fill: white;" prefWidth="120"/>
+        </HBox>
+
+    </VBox>
+</ScrollPane>

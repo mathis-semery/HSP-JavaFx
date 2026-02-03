@@ -1,7 +1,49 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.layout.VBox?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
 
-<VBox xmlns:fx="http://javafx.com/fxml">
+<VBox spacing="15" xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.hsp.controller.dossier.DossierListController"
+      style="-fx-padding: 20;">
+
+    <!-- Titre -->
+    <Label fx:id="lblTitre" text="Dossiers de prise en charge"
+           style="-fx-font-size: 22px; -fx-font-weight: bold;"/>
+
+    <!-- Barre d'outils -->
+    <HBox spacing="10" alignment="CENTER_LEFT">
+        <ComboBox fx:id="comboFiltre" promptText="Filtrer par statut" prefWidth="180"/>
+        <TextField fx:id="champRecherche" promptText="Rechercher un patient..." prefWidth="250"/>
+        <Button text="Rechercher" onAction="#rechercher" style="-fx-background-color: #2196F3; -fx-text-fill: white;"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button text="Actualiser" onAction="#actualiser" style="-fx-background-color: #757575; -fx-text-fill: white;"/>
+        <Button fx:id="btnNouveau" text="+ Nouveau dossier" onAction="#nouveauDossier"
+                style="-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold;"/>
+    </HBox>
+
+    <!-- Tableau des dossiers -->
+    <TableView fx:id="tableDossiers" VBox.vgrow="ALWAYS">
+        <columns>
+            <TableColumn fx:id="colId" text="ID" prefWidth="50"/>
+            <TableColumn fx:id="colPatient" text="Patient" prefWidth="180"/>
+            <TableColumn fx:id="colDateArrivee" text="Date d'arrivee" prefWidth="150"/>
+            <TableColumn fx:id="colSymptomes" text="Symptomes" prefWidth="200"/>
+            <TableColumn fx:id="colGravite" text="Gravite" prefWidth="70"/>
+            <TableColumn fx:id="colStatut" text="Statut" prefWidth="120"/>
+        </columns>
+        <placeholder>
+            <Label text="Aucun dossier trouve"/>
+        </placeholder>
+    </TableView>
+
+    <!-- Barre inferieure -->
+    <HBox spacing="10" alignment="CENTER_LEFT">
+        <Label fx:id="lblCount" text=""/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button text="Voir le detail" onAction="#voirDetail"
+                style="-fx-background-color: #2196F3; -fx-text-fill: white;"/>
+    </HBox>
 
 </VBox>

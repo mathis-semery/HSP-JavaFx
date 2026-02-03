@@ -191,6 +191,7 @@ public class AuthService {
             return motDePasse.equals(hash);
         }
     }
+// Inserer dans la base de donnees
 
     /**
      * Enregistre une connexion dans la table connexion
@@ -208,7 +209,6 @@ public class AuthService {
                 "127.0.0.1"         // Adresse IP (localhost par defaut)
         );
 
-        // Inserer dans la base de donnees
         connexionDAO.insert(connexion);
 
         // Enregistrer aussi dans l'historique
