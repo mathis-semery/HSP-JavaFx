@@ -1,7 +1,72 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.layout.VBox?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
 
-<VBox xmlns:fx="http://javafx.com/fxml">
+<VBox spacing="20" xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.hsp.controller.patient.PatientFormController"
+      style="-fx-padding: 20;">
+
+    <!-- En-tete -->
+    <HBox spacing="10" alignment="CENTER_LEFT">
+        <Button text="Retour" onAction="#retourListe"
+                style="-fx-background-color: #757575; -fx-text-fill: white;"/>
+        <Label fx:id="lblTitre" text="Nouveau patient"
+               style="-fx-font-size: 22px; -fx-font-weight: bold;"/>
+    </HBox>
+
+    <Separator/>
+
+    <!-- Formulaire -->
+    <GridPane hgap="15" vgap="15" style="-fx-padding: 10;">
+        <columnConstraints>
+            <ColumnConstraints percentWidth="25"/>
+            <ColumnConstraints percentWidth="75"/>
+        </columnConstraints>
+
+        <!-- Nom -->
+        <Label text="Nom *" style="-fx-font-weight: bold;" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+        <TextField fx:id="champNom" promptText="Nom du patient" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+        <!-- Prenom -->
+        <Label text="Prenom *" style="-fx-font-weight: bold;" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+        <TextField fx:id="champPrenom" promptText="Prenom du patient" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+        <!-- Numero de securite sociale -->
+        <Label text="N Securite Sociale *" style="-fx-font-weight: bold;" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+        <TextField fx:id="champNumSecu" promptText="Numero de securite sociale (15 chiffres)" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+        <!-- Email -->
+        <Label text="Email" style="-fx-font-weight: bold;" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+        <TextField fx:id="champEmail" promptText="exemple@email.com" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+
+        <!-- Telephone -->
+        <Label text="Telephone" style="-fx-font-weight: bold;" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+        <TextField fx:id="champTelephone" promptText="Numero de telephone" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+
+        <!-- Adresse -->
+        <Label text="Adresse" style="-fx-font-weight: bold;" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
+        <TextArea fx:id="champAdresse" promptText="Adresse complete du patient"
+                  prefRowCount="3" wrapText="true"
+                  GridPane.rowIndex="5" GridPane.columnIndex="1"/>
+
+        <!-- Message d'erreur -->
+        <Label text="" GridPane.rowIndex="6" GridPane.columnIndex="0"/>
+        <Label fx:id="lblMessage" text=""
+               style="-fx-text-fill: #f44336; -fx-font-style: italic;"
+               wrapText="true"
+               GridPane.rowIndex="6" GridPane.columnIndex="1"/>
+    </GridPane>
+
+    <Separator/>
+
+    <!-- Boutons d'action -->
+    <HBox spacing="10" alignment="CENTER_RIGHT">
+        <Button text="Annuler" onAction="#retourListe"
+                style="-fx-background-color: #757575; -fx-text-fill: white;" prefWidth="120"/>
+        <Button fx:id="btnEnregistrer" text="Enregistrer" onAction="#enregistrer"
+                style="-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold;" prefWidth="150"/>
+    </HBox>
 
 </VBox>
