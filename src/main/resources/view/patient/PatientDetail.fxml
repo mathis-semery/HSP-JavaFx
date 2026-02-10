@@ -1,7 +1,94 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.layout.VBox?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
 
-<VBox xmlns:fx="http://javafx.com/fxml">
+<ScrollPane fitToWidth="true" xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.hsp.controller.patient.PatientDetailController">
 
-</VBox>
+    <VBox spacing="20" style="-fx-padding: 20;">
+
+        <!-- En-tete -->
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <Button text="Retour a la liste" onAction="#retourListe"
+                    style="-fx-background-color: #757575; -fx-text-fill: white;"/>
+            <Label fx:id="lblTitre" text="Detail du patient"
+                   style="-fx-font-size: 22px; -fx-font-weight: bold;"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Label fx:id="lblDateCreation" text=""
+                   style="-fx-font-size: 12px; -fx-text-fill: #757575;"/>
+        </HBox>
+
+        <Separator/>
+
+        <!-- Informations du patient -->
+        <Label text="Informations du patient" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+
+        <GridPane hgap="15" vgap="10" style="-fx-padding: 0 0 0 10;">
+            <columnConstraints>
+                <ColumnConstraints percentWidth="20"/>
+                <ColumnConstraints percentWidth="30"/>
+                <ColumnConstraints percentWidth="20"/>
+                <ColumnConstraints percentWidth="30"/>
+            </columnConstraints>
+
+            <Label text="ID Patient :" style="-fx-font-weight: bold;" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+            <Label fx:id="lblId" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+            <Label text="Nom :" style="-fx-font-weight: bold;" GridPane.rowIndex="0" GridPane.columnIndex="2"/>
+            <Label fx:id="lblNom" GridPane.rowIndex="0" GridPane.columnIndex="3"/>
+
+            <Label text="Prenom :" style="-fx-font-weight: bold;" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+            <Label fx:id="lblPrenom" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+            <Label text="N Secu :" style="-fx-font-weight: bold;" GridPane.rowIndex="1" GridPane.columnIndex="2"/>
+            <Label fx:id="lblNumSecu" GridPane.rowIndex="1" GridPane.columnIndex="3"/>
+
+            <Label text="Email :" style="-fx-font-weight: bold;" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+            <Label fx:id="lblEmail" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+            <Label text="Telephone :" style="-fx-font-weight: bold;" GridPane.rowIndex="2" GridPane.columnIndex="2"/>
+            <Label fx:id="lblTelephone" GridPane.rowIndex="2" GridPane.columnIndex="3"/>
+
+            <Label text="Adresse :" style="-fx-font-weight: bold;" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+            <Label fx:id="lblAdresse" wrapText="true" GridPane.rowIndex="3" GridPane.columnIndex="1"
+                   GridPane.columnSpan="3"/>
+        </GridPane>
+
+        <Separator/>
+
+        <!-- Dossiers de prise en charge -->
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <Label text="Dossiers de prise en charge" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Label fx:id="lblDossierCount" text="" style="-fx-text-fill: #757575;"/>
+            <Button text="+ Nouveau dossier" onAction="#nouveauDossier"
+                    style="-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold;"/>
+        </HBox>
+
+        <TableView fx:id="tableDossiers" prefHeight="200">
+            <columns>
+                <TableColumn fx:id="colDossierId" text="ID" prefWidth="50"/>
+                <TableColumn fx:id="colDossierDate" text="Date d'arrivee" prefWidth="150"/>
+                <TableColumn fx:id="colDossierSymptomes" text="Symptomes" prefWidth="200"/>
+                <TableColumn fx:id="colDossierGravite" text="Gravite" prefWidth="70"/>
+                <TableColumn fx:id="colDossierStatut" text="Statut" prefWidth="120"/>
+            </columns>
+            <placeholder>
+                <Label text="Aucun dossier pour ce patient"/>
+            </placeholder>
+        </TableView>
+
+        <Separator/>
+
+        <!-- Actions -->
+        <HBox spacing="10" alignment="CENTER_RIGHT">
+            <Button fx:id="btnModifier" text="Modifier le patient" onAction="#modifierPatient"
+                    style="-fx-background-color: #FF9800; -fx-text-fill: white;" prefWidth="160"/>
+            <Button fx:id="btnSupprimer" text="Supprimer le patient" onAction="#supprimerPatient"
+                    style="-fx-background-color: #f44336; -fx-text-fill: white;" prefWidth="160"/>
+        </HBox>
+
+    </VBox>
+</ScrollPane>
