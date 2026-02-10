@@ -1,7 +1,55 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.layout.VBox?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
 
-<VBox xmlns:fx="http://javafx.com/fxml">
+<VBox spacing="15" xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.hsp.controller.patient.PatientListController"
+      style="-fx-padding: 20;">
+
+    <!-- Titre -->
+    <Label fx:id="lblTitre" text="Gestion des patients"
+           style="-fx-font-size: 22px; -fx-font-weight: bold;"/>
+
+    <!-- Barre d'outils -->
+    <HBox spacing="10" alignment="CENTER_LEFT">
+        <TextField fx:id="champRecherche" promptText="Rechercher un patient (nom, prenom, email, N secu)..." prefWidth="350"
+                   onAction="#rechercher"/>
+        <Button text="Rechercher" onAction="#rechercher"
+                style="-fx-background-color: #2196F3; -fx-text-fill: white;"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button text="Actualiser" onAction="#actualiser"
+                style="-fx-background-color: #757575; -fx-text-fill: white;"/>
+        <Button fx:id="btnNouveau" text="+ Nouveau patient" onAction="#nouveauPatient"
+                style="-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold;"/>
+    </HBox>
+
+    <!-- Tableau des patients -->
+    <TableView fx:id="tablePatients" VBox.vgrow="ALWAYS">
+        <columns>
+            <TableColumn fx:id="colId" text="ID" prefWidth="50"/>
+            <TableColumn fx:id="colNom" text="Nom" prefWidth="120"/>
+            <TableColumn fx:id="colPrenom" text="Prenom" prefWidth="120"/>
+            <TableColumn fx:id="colNumSecu" text="N Securite Sociale" prefWidth="160"/>
+            <TableColumn fx:id="colEmail" text="Email" prefWidth="180"/>
+            <TableColumn fx:id="colTelephone" text="Telephone" prefWidth="120"/>
+        </columns>
+        <placeholder>
+            <Label text="Aucun patient trouve"/>
+        </placeholder>
+    </TableView>
+
+    <!-- Barre inferieure -->
+    <HBox spacing="10" alignment="CENTER_LEFT">
+        <Label fx:id="lblCount" text=""/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button text="Voir le detail" onAction="#voirDetail"
+                style="-fx-background-color: #2196F3; -fx-text-fill: white;"/>
+        <Button text="Modifier" onAction="#modifierPatient"
+                style="-fx-background-color: #FF9800; -fx-text-fill: white;"/>
+        <Button text="Supprimer" onAction="#supprimerPatient"
+                style="-fx-background-color: #f44336; -fx-text-fill: white;"/>
+    </HBox>
 
 </VBox>

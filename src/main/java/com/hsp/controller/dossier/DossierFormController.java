@@ -120,6 +120,18 @@ public class DossierFormController implements Initializable {
         }
     }
 
+    public void preselectionnerPatient(int idPatient) {
+        Patient patient = patientService.getPatientById(idPatient);
+        if (patient != null) {
+            for (Patient p : comboPatient.getItems()) {
+                if (p.getId_patient() == patient.getId_patient()) {
+                    comboPatient.setValue(p);
+                    break;
+                }
+            }
+        }
+    }
+
     @FXML
     private void enregistrer() {
         // Validation
