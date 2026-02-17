@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<VBox spacing="0" xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.hsp.controller.admin.AdminDashboardController"
+      style="-fx-background-color: #f0f2f5;">
+
+    <!-- Header -->
+    <HBox alignment="CENTER_LEFT" spacing="20"
+          style="-fx-background-color: linear-gradient(to right, #667eea 0%, #764ba2 100%); -fx-padding: 20 30;">
+        <Label fx:id="lblBienvenue" text="Tableau de bord - Administrateur"
+               style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: white;"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button fx:id="btnDeconnexion" text="Deconnexion" onAction="#deconnexion"
+                style="-fx-background-color: rgba(255,255,255,0.2); -fx-text-fill: white; -fx-font-size: 13px; -fx-background-radius: 8; -fx-padding: 8 20; -fx-cursor: hand;"/>
+    </HBox>
+
+    <!-- Contenu principal -->
+    <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS"
+                style="-fx-background-color: transparent; -fx-background: transparent;">
+        <VBox spacing="25" style="-fx-padding: 30;">
+
+            <!-- Section : Gestion des Patients -->
+            <VBox spacing="10">
+                <Label text="Gestion des Patients"
+                       style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #2d3748;"/>
+                <HBox spacing="15">
+                    <Button fx:id="btnPatients" text="Patients" onAction="#ouvrirPatients"
+                            prefWidth="200" prefHeight="80"
+                            style="-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-size: 15px; -fx-font-weight: bold; -fx-background-radius: 12; -fx-cursor: hand;"/>
+                    <Button fx:id="btnDossiers" text="Dossiers medicaux" onAction="#ouvrirDossiers"
+                            prefWidth="200" prefHeight="80"
+                            style="-fx-background-color: #2196F3; -fx-text-fill: white; -fx-font-size: 15px; -fx-font-weight: bold; -fx-background-radius: 12; -fx-cursor: hand;"/>
+                </HBox>
+            </VBox>
+
+            <Separator/>
+
+            <!-- Section : Hospitalisation -->
+            <VBox spacing="10">
+                <Label text="Hospitalisation"
+                       style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #2d3748;"/>
+                <HBox spacing="15">
+                    <Button fx:id="btnHospitalisations" text="Hospitalisations" onAction="#ouvrirHospitalisations"
+                            prefWidth="200" prefHeight="80"
+                            style="-fx-background-color: #FF9800; -fx-text-fill: white; -fx-font-size: 15px; -fx-font-weight: bold; -fx-background-radius: 12; -fx-cursor: hand;"/>
+                    <Button fx:id="btnChambres" text="Chambres" onAction="#ouvrirChambres"
+                            prefWidth="200" prefHeight="80"
+                            style="-fx-background-color: #9C27B0; -fx-text-fill: white; -fx-font-size: 15px; -fx-font-weight: bold; -fx-background-radius: 12; -fx-cursor: hand;"/>
+                </HBox>
+            </VBox>
+
+            <Separator/>
+
+            <!-- Section : Gestion des Stocks -->
+            <VBox spacing="10">
+                <Label text="Gestion des Stocks"
+                       style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #2d3748;"/>
+                <HBox spacing="15">
+                    <Button fx:id="btnProduits" text="Produits" onAction="#ouvrirProduits"
+                            prefWidth="200" prefHeight="80"
+                            style="-fx-background-color: #00BCD4; -fx-text-fill: white; -fx-font-size: 15px; -fx-font-weight: bold; -fx-background-radius: 12; -fx-cursor: hand;"/>
+                    <Button fx:id="btnFournisseurs" text="Fournisseurs" onAction="#ouvrirFournisseurs"
+                            prefWidth="200" prefHeight="80"
+                            style="-fx-background-color: #607D8B; -fx-text-fill: white; -fx-font-size: 15px; -fx-font-weight: bold; -fx-background-radius: 12; -fx-cursor: hand;"/>
+                    <Button fx:id="btnDemandes" text="Demandes" onAction="#ouvrirDemandes"
+                            prefWidth="200" prefHeight="80"
+                            style="-fx-background-color: #E91E63; -fx-text-fill: white; -fx-font-size: 15px; -fx-font-weight: bold; -fx-background-radius: 12; -fx-cursor: hand;"/>
+                    <Button fx:id="btnReappro" text="Reapprovisionnement" onAction="#ouvrirReappro"
+                            prefWidth="200" prefHeight="80"
+                            style="-fx-background-color: #795548; -fx-text-fill: white; -fx-font-size: 15px; -fx-font-weight: bold; -fx-background-radius: 12; -fx-cursor: hand;"/>
+                </HBox>
+            </VBox>
+
+        </VBox>
+    </ScrollPane>
+
+</VBox>

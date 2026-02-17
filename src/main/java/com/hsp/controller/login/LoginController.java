@@ -164,6 +164,10 @@ public class LoginController {
                     fxmlFile = "dashboard_gestionnaire.fxml";
                     windowTitle = "Tableau de bord - Gestionnaire";
                     break;
+                case "Admin":
+                    fxmlFile = "/view/dashboard/AdminDashboard.fxml";
+                    windowTitle = "Tableau de bord - Administrateur";
+                    break;
                 default:
                     showAlert("Erreur", "Rôle utilisateur non reconnu", Alert.AlertType.ERROR);
                     return;

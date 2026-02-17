@@ -120,6 +120,11 @@ public class AuthService {
             return false;
         }
 
+        // L'admin a acces a tous les roles
+        if ("Admin".equalsIgnoreCase(roleUtilisateur)) {
+            return true;
+        }
+
         return role.equalsIgnoreCase(roleUtilisateur);
     }
 
