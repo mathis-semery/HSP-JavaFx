@@ -240,7 +240,7 @@ public class HospitalisationListController implements Initializable {
     @FXML
     private void ajouterHospitalisation() {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/hsp/view/hospitalisation/hospitalisation-form.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/hospitalisation/HospitalisationForm.fxml"));
             Parent root = loader.load();
 
             HospitalisationFormController controller = loader.getController();
@@ -266,7 +266,7 @@ public class HospitalisationListController implements Initializable {
         }
 
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/hsp/view/hospitalisation/hospitalisation-form.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/hospitalisation/HospitalisationForm.fxml"));
             Parent root = loader.load();
 
             HospitalisationFormController controller = loader.getController();
@@ -317,7 +317,7 @@ public class HospitalisationListController implements Initializable {
         }
 
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/hsp/view/hospitalisation/hospitalisation-detail.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/hospitalisation/ChambreGrid.fxml"));
             Parent root = loader.load();
 
             HospitalisationDetailController controller = loader.getController();
