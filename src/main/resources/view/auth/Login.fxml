@@ -87,23 +87,6 @@
             </VBox.margin>
         </Button>
 
-        <!-- Séparateur -->
-        <HBox alignment="CENTER" spacing="10">
-            <VBox.margin>
-                <Insets top="10" bottom="10"/>
-            </VBox.margin>
-            <Separator prefWidth="80" style="-fx-background-color: #e2e8f0;"/>
-            <Label text="OU" style="-fx-font-size: 12; -fx-text-fill: #a0aec0;"/>
-            <Separator prefWidth="80" style="-fx-background-color: #e2e8f0;"/>
-        </HBox>
-
-        <!-- Inscription -->
-        <HBox alignment="CENTER" spacing="5">
-            <Label text="Pas encore de compte ?" style="-fx-font-size: 13; -fx-text-fill: #718096;"/>
-            <Hyperlink text="S'inscrire"
-                       style="-fx-font-size: 13; -fx-text-fill: #667eea; -fx-font-weight: bold; -fx-border-width: 0;"
-                       onAction="#onSignUpClicked"/>
-        </HBox>
     </VBox>
 
 </StackPane>

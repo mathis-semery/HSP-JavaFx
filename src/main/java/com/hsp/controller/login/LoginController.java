@@ -1,5 +1,6 @@
 package com.hsp.controller.login;
 
+import com.hsp.controller.dashboard.MedecinDashboardController;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
@@ -8,7 +9,6 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 import java.sql.*;
-import org.mindrot.jbcrypt.BCrypt;
 import java.io.IOException;
 
 public class LoginController {
@@ -27,8 +27,8 @@ public class LoginController {
 
     // Configuration de la base de données
     private static final String DB_URL = "jdbc:mysql://localhost:3306/hsp_urgences";
-    private static final String DB_USER = "root";  // À modifier selon votre configuration
-    private static final String DB_PASSWORD = "";  // À modifier selon votre configuration
+    private static final String DB_USER = "root";
+    private static final String DB_PASSWORD = "";
 
     @FXML
     private void initialize() {
@@ -79,39 +79,32 @@ public class LoginController {
             // Connexion à la base de données
             conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
 
-            // Requête pour récupérer l'utilisateur
-            String query = "SELECT id_utilisateur, nom, prenom, mot_de_passe, role FROM utilisateur WHERE email = ?";
+            // Requête pour récupérer l'utilisateur avec vérification directe du mot de passe
+            String query = "SELECT id_utilisateur, nom, prenom, role FROM utilisateur WHERE email = ? AND mot_de_passe = ?";
             stmt = conn.prepareStatement(query);
             stmt.setString(1, email);
+            stmt.setString(2, password);
             rs = stmt.executeQuery();
 
             if (rs.next()) {
+                // Connexion réussie
                 int userId = rs.getInt("id_utilisateur");
                 String nom = rs.getString("nom");
                 String prenom = rs.getString("prenom");
-                String hashedPassword = rs.getString("mot_de_passe");
                 String role = rs.getString("role");
 
-                // Vérification du mot de passe avec BCrypt
-                if (BCrypt.checkpw(password, hashedPassword)) {
-                    // Connexion réussie
-                    System.out.println("Connexion réussie pour : " + prenom + " " + nom + " (" + role + ")");
+                System.out.println("Connexion réussie pour : " + prenom + " " + nom + " (" + role + ")");
 
-                    // Enregistrer dans l'historique
-                    enregistrerHistorique(conn, userId, "Connexion", "utilisateur", userId, "Connexion réussie");
+                // Enregistrer dans l'historique
+                enregistrerHistorique(conn, userId, "Connexion", "utilisateur", userId, "Connexion réussie");
 
-                    // Rediriger vers le tableau de bord approprié selon le rôle
-                    redirectToDashboard(role);
+                // Rediriger vers le tableau de bord approprié selon le rôle
+                redirectToDashboard(role, userId, prenom + " " + nom);
 
-                } else {
-                    // Mot de passe incorrect
-                    showAlert("Erreur", "Email ou mot de passe incorrect", Alert.AlertType.ERROR);
-                    System.out.println("Échec de connexion pour : " + email);
-                }
             } else {
-                // Utilisateur non trouvé
+                // Utilisateur non trouvé ou mot de passe incorrect
                 showAlert("Erreur", "Email ou mot de passe incorrect", Alert.AlertType.ERROR);
-                System.out.println("Utilisateur non trouvé : " + email);
+                System.out.println("Échec de connexion pour : " + email);
             }
 
         } catch (SQLException e) {
@@ -145,7 +138,7 @@ public class LoginController {
         }
     }
 
-    private void redirectToDashboard(String role) {
+    private void redirectToDashboard(String role, int userId, String userName) {
         try {
             String fxmlFile = "";
             String windowTitle = "";
@@ -153,15 +146,15 @@ public class LoginController {
             // Choisir le tableau de bord selon le rôle
             switch (role) {
                 case "Secretaire":
-                    fxmlFile = "dashboard_secretaire.fxml";
+                    fxmlFile = "/view/dashboard/Dashboard_Secretaire.fxml";
                     windowTitle = "Tableau de bord - Secrétaire";
                     break;
                 case "Medecin":
-                    fxmlFile = "dashboard_medecin.fxml";
+                    fxmlFile = "/view/dashboard/DashboardMedecin.fxml";
                     windowTitle = "Tableau de bord - Médecin";
                     break;
                 case "Gestionnaire":
-                    fxmlFile = "dashboard_gestionnaire.fxml";
+                    fxmlFile = "/view/dashboard/Dashboard_Gestionnaire.fxml";
                     windowTitle = "Tableau de bord - Gestionnaire";
                     break;
                 default:
@@ -173,11 +166,19 @@ public class LoginController {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlFile));
             Parent root = loader.load();
 
+            // Passer les informations de l'utilisateur au contrôleur du dashboard
+            if (role.equals("Medecin")) {
+                MedecinDashboardController controller = loader.getController();
+                controller.setMedecinInfo(userId, "Dr. " + userName);
+            }
+            // TODO: Faire de même pour les autres rôles
+
             // Obtenir la fenêtre actuelle et la remplacer
             Stage stage = (Stage) loginButton.getScene().getWindow();
-            Scene scene = new Scene(root, 1200, 800);
+            Scene scene = new Scene(root, 1400, 900);
             stage.setScene(scene);
             stage.setTitle(windowTitle);
+            stage.setMaximized(true); // Maximiser la fenêtre
             stage.show();
 
             showAlert("Succès", "Connexion réussie ! Bienvenue.", Alert.AlertType.INFORMATION);
@@ -194,30 +195,6 @@ public class LoginController {
         showAlert("Information", "Un email de réinitialisation vous sera envoyé", Alert.AlertType.INFORMATION);
     }
 
-    @FXML
-    private void onSignUpClicked() {
-        System.out.println("S'inscrire cliqué");
-        redirectToSignIn();
-    }
-
-    private void redirectToSignIn() {
-        try {
-            // Charger la page d'inscription
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/auth/Signin.fxml"));
-            Parent root = loader.load();
-
-            // Obtenir la fenêtre actuelle et la remplacer
-            Stage stage = (Stage) loginButton.getScene().getWindow();
-            Scene scene = new Scene(root, 900, 700);
-            stage.setScene(scene);
-            stage.setTitle("Inscription - HSP Urgences");
-            stage.show();
-
-        } catch (IOException e) {
-            showAlert("Erreur", "Impossible de charger la page d'inscription : " + e.getMessage(), Alert.AlertType.ERROR);
-            e.printStackTrace();
-        }
-    }
 
 
     @FXML
