@@ -146,7 +146,7 @@ public class LoginController {
             // Choisir le tableau de bord selon le rôle
             switch (role) {
                 case "Secretaire":
-                    fxmlFile = "/view/dashboard/Dashboard_Secretaire.fxml";
+                    fxmlFile = "/view/dashboard/DashboardSecretaire.fxml";
                     windowTitle = "Tableau de bord - Secrétaire";
                     break;
                 case "Medecin":
@@ -154,7 +154,7 @@ public class LoginController {
                     windowTitle = "Tableau de bord - Médecin";
                     break;
                 case "Gestionnaire":
-                    fxmlFile = "/view/dashboard/Dashboard_Gestionnaire.fxml";
+                    fxmlFile = "/view/dashboard/DashboardGestionnaire.fxml";
                     windowTitle = "Tableau de bord - Gestionnaire";
                     break;
                 default:
