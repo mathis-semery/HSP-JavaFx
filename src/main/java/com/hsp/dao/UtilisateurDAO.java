@@ -54,6 +54,21 @@ public class UtilisateurDAO {
         return null;
     }
 
+    public List<Utilisateur> findMedecins() {
+        List<Utilisateur> medecins = new ArrayList<>();
+        String sql = "SELECT * FROM utilisateur WHERE role = 'Medecin'";
+        try (Connection cnx = Database.getConnexion();
+             Statement stmt = cnx.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                medecins.add(mapResultSet(rs));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return medecins;
+    }
+
     public boolean insert(Utilisateur utilisateur) {
         String sql = "INSERT INTO utilisateur (nom, prenom, email, mdp, role) VALUES (?, ?, ?, ?, ?)";
         try (Connection cnx = Database.getConnexion();
@@ -105,7 +120,7 @@ public class UtilisateurDAO {
                 rs.getString("nom"),
                 rs.getString("prenom"),
                 rs.getString("email"),
-                rs.getString("mdp"),
+                rs.getString("mot_de_passe"),
                 rs.getString("role"),
                 rs.getString("date_creation")
         );

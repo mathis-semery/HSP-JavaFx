@@ -1,7 +1,80 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.layout.VBox?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
 
-<VBox xmlns:fx="http://javafx.com/fxml">
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.hsp.controller.demande.DemandeFormController"
+      spacing="16"
+      prefWidth="440"
+      style="-fx-background-color: #f0f4f8;">
+
+    <padding><Insets top="24" right="28" bottom="24" left="28"/></padding>
+
+    <!-- Titre dynamique -->
+    <Label fx:id="titre"
+           text="Demande de produit"
+           style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #1a73e8;"/>
+
+    <Separator/>
+
+    <!-- Médecin -->
+    <VBox spacing="4">
+        <Label text="Médecin *"
+               style="-fx-font-weight: bold; -fx-text-fill: #555;"/>
+        <ComboBox fx:id="medecinField" maxWidth="Infinity"
+                  promptText="Sélectionnez un médecin"/>
+    </VBox>
+
+    <!-- Produit -->
+    <VBox spacing="4">
+        <Label text="Produit *"
+               style="-fx-font-weight: bold; -fx-text-fill: #555;"/>
+        <ComboBox fx:id="produitField" maxWidth="Infinity"
+                  promptText="Sélectionnez un produit"/>
+    </VBox>
+
+    <!-- Quantité -->
+    <VBox spacing="4">
+        <Label text="Quantité *"
+               style="-fx-font-weight: bold; -fx-text-fill: #555;"/>
+        <TextField fx:id="quantiteField" promptText="Ex : 10"/>
+    </VBox>
+
+    <!-- Statut -->
+    <VBox spacing="4">
+        <Label text="Statut *"
+               style="-fx-font-weight: bold; -fx-text-fill: #555;"/>
+        <ComboBox fx:id="statutField" maxWidth="Infinity"/>
+    </VBox>
+
+    <!-- Motif de refus (visible uniquement si statut = Refusée) -->
+    <VBox spacing="4">
+        <Label fx:id="motifRefusLabel"
+               text="Motif de refus *"
+               style="-fx-font-weight: bold; -fx-text-fill: #e53935;"/>
+        <TextArea fx:id="motifRefusField"
+                  promptText="Expliquez la raison du refus…"
+                  prefRowCount="3"
+                  wrapText="true"/>
+    </VBox>
+
+    <Separator/>
+
+    <!-- Boutons -->
+    <HBox spacing="10" alignment="CENTER_RIGHT">
+        <Button fx:id="annuler"
+                text="Annuler"
+                onAction="#annuler"
+                style="-fx-background-color: #e0e0e0; -fx-font-weight: bold;
+                       -fx-cursor: hand; -fx-padding: 8 18 8 18;"/>
+        <Button fx:id="valider"
+                text="✔ Valider"
+                onAction="#valider"
+                style="-fx-background-color: #1a73e8; -fx-text-fill: white;
+                       -fx-font-weight: bold; -fx-cursor: hand; -fx-padding: 8 18 8 18;"/>
+    </HBox>
 
 </VBox>
