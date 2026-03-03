@@ -1,7 +1,80 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.layout.VBox?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
 
-<VBox xmlns:fx="http://javafx.com/fxml">
+<VBox spacing="20" xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.hsp.controller.ordonnance.OrdonnanceFormController"
+      style="-fx-padding: 20;">
+
+    <!-- En-tete -->
+    <HBox spacing="10" alignment="CENTER_LEFT">
+        <Button text="Retour" onAction="#retourListe"
+                style="-fx-background-color: #757575; -fx-text-fill: white;"/>
+        <Label fx:id="lblTitre" text="Nouvelle ordonnance"
+               style="-fx-font-size: 22px; -fx-font-weight: bold;"/>
+    </HBox>
+
+    <Separator/>
+
+    <!-- Formulaire -->
+    <GridPane hgap="15" vgap="15" style="-fx-padding: 10;">
+        <columnConstraints>
+            <ColumnConstraints percentWidth="25"/>
+            <ColumnConstraints percentWidth="75"/>
+        </columnConstraints>
+
+        <!-- Dossier -->
+        <Label text="Dossier patient *" style="-fx-font-weight: bold;" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+        <ComboBox fx:id="comboDossier" prefWidth="400" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+        <!-- Date ordonnance -->
+        <Label text="Date ordonnance *" style="-fx-font-weight: bold;" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+        <DatePicker fx:id="dateOrdonnance" prefWidth="200" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+        <!-- Medicaments -->
+        <Label text="Medicaments *" style="-fx-font-weight: bold;" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+        <TextArea fx:id="champMedicaments" promptText="Liste des medicaments prescrits (un par ligne)..."
+                  prefRowCount="4" wrapText="true"
+                  GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+        <!-- Posologie -->
+        <Label text="Posologie *" style="-fx-font-weight: bold;" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+        <TextArea fx:id="champPosologie" promptText="Dosage et frequence de prise..."
+                  prefRowCount="3" wrapText="true"
+                  GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+
+        <!-- Duree traitement -->
+        <Label text="Duree du traitement" style="-fx-font-weight: bold;" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+        <TextField fx:id="champDuree" promptText="Ex: 7 jours, 1 mois..." GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+
+        <!-- Notes -->
+        <Label text="Notes / Instructions" style="-fx-font-weight: bold;" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
+        <TextArea fx:id="champNotes" promptText="Instructions complementaires, contre-indications..."
+                  prefRowCount="3" wrapText="true"
+                  GridPane.rowIndex="5" GridPane.columnIndex="1"/>
+
+        <!-- Statut -->
+        <Label text="Statut" style="-fx-font-weight: bold;" GridPane.rowIndex="6" GridPane.columnIndex="0"/>
+        <ComboBox fx:id="comboStatut" prefWidth="200" GridPane.rowIndex="6" GridPane.columnIndex="1"/>
+
+        <!-- Message d'erreur -->
+        <Label text="" GridPane.rowIndex="7" GridPane.columnIndex="0"/>
+        <Label fx:id="lblMessage" text=""
+               style="-fx-text-fill: #f44336; -fx-font-style: italic;"
+               wrapText="true"
+               GridPane.rowIndex="7" GridPane.columnIndex="1"/>
+    </GridPane>
+
+    <Separator/>
+
+    <!-- Boutons d'action -->
+    <HBox spacing="10" alignment="CENTER_RIGHT">
+        <Button text="Annuler" onAction="#retourListe"
+                style="-fx-background-color: #757575; -fx-text-fill: white;" prefWidth="120"/>
+        <Button fx:id="btnEnregistrer" text="Enregistrer" onAction="#enregistrer"
+                style="-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold;" prefWidth="180"/>
+    </HBox>
 
 </VBox>
