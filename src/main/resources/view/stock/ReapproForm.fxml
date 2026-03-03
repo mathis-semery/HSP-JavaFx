@@ -1,7 +1,76 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.layout.VBox?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
 
-<VBox xmlns:fx="http://javafx.com/fxml">
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.hsp.controller.reappro.ReapproFormController"
+      spacing="16"
+      prefWidth="440"
+      style="-fx-background-color: #f0f4f8;">
+
+    <padding><Insets top="24" right="28" bottom="24" left="28"/></padding>
+
+    <!-- Titre dynamique -->
+    <Label fx:id="titre"
+           text="Réapprovisionnement"
+           style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #1a73e8;"/>
+
+    <Separator/>
+
+    <!-- Produit -->
+    <VBox spacing="4">
+        <Label text="Produit *"
+               style="-fx-font-weight: bold; -fx-text-fill: #555;"/>
+        <ComboBox fx:id="produitField" maxWidth="Infinity"
+                  promptText="Sélectionnez un produit"/>
+    </VBox>
+
+    <!-- Fournisseur -->
+    <VBox spacing="4">
+        <Label text="Fournisseur *"
+               style="-fx-font-weight: bold; -fx-text-fill: #555;"/>
+        <ComboBox fx:id="fournisseurField" maxWidth="Infinity"
+                  promptText="Sélectionnez un fournisseur"/>
+    </VBox>
+
+    <!-- Quantité -->
+    <VBox spacing="4">
+        <Label text="Quantité *"
+               style="-fx-font-weight: bold; -fx-text-fill: #555;"/>
+        <TextField fx:id="quantiteField" promptText="Ex : 100"/>
+    </VBox>
+
+    <!-- Date de commande -->
+    <VBox spacing="4">
+        <Label text="Date de commande *"
+               style="-fx-font-weight: bold; -fx-text-fill: #555;"/>
+        <DatePicker fx:id="dateCommandeField" maxWidth="Infinity"/>
+    </VBox>
+
+    <!-- Date de réception -->
+    <VBox spacing="4">
+        <Label text="Date de réception (optionnelle)"
+               style="-fx-font-weight: bold; -fx-text-fill: #555;"/>
+        <DatePicker fx:id="dateReceptionField" maxWidth="Infinity"/>
+    </VBox>
+
+    <Separator/>
+
+    <!-- Boutons -->
+    <HBox spacing="10" alignment="CENTER_RIGHT">
+        <Button fx:id="annuler"
+                text="Annuler"
+                onAction="#annuler"
+                style="-fx-background-color: #e0e0e0; -fx-font-weight: bold;
+                       -fx-cursor: hand; -fx-padding: 8 18 8 18;"/>
+        <Button fx:id="valider"
+                text="✔ Valider"
+                onAction="#valider"
+                style="-fx-background-color: #1a73e8; -fx-text-fill: white;
+                       -fx-font-weight: bold; -fx-cursor: hand; -fx-padding: 8 18 8 18;"/>
+    </HBox>
 
 </VBox>
