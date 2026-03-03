@@ -1,7 +1,55 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.layout.VBox?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
 
-<VBox xmlns:fx="http://javafx.com/fxml">
+<VBox spacing="15" xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.hsp.controller.ordonnance.OrdonnanceListController"
+      style="-fx-padding: 20;">
+
+    <!-- Titre -->
+    <Label fx:id="lblTitre" text="Gestion des ordonnances"
+           style="-fx-font-size: 22px; -fx-font-weight: bold;"/>
+
+    <!-- Barre d'outils -->
+    <HBox spacing="10" alignment="CENTER_LEFT">
+        <TextField fx:id="champRecherche" promptText="Rechercher (patient, medicament, statut)..." prefWidth="350"
+                   onAction="#rechercher"/>
+        <Button text="Rechercher" onAction="#rechercher"
+                style="-fx-background-color: #2196F3; -fx-text-fill: white;"/>
+        <ComboBox fx:id="comboFiltre" prefWidth="130"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button text="Actualiser" onAction="#actualiser"
+                style="-fx-background-color: #757575; -fx-text-fill: white;"/>
+        <Button text="+ Nouvelle ordonnance" onAction="#nouvelleOrdonnance"
+                style="-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold;"/>
+    </HBox>
+
+    <!-- Tableau des ordonnances -->
+    <TableView fx:id="tableOrdonnances" VBox.vgrow="ALWAYS">
+        <columns>
+            <TableColumn fx:id="colId" text="ID" prefWidth="50"/>
+            <TableColumn fx:id="colPatient" text="Patient" prefWidth="160"/>
+            <TableColumn fx:id="colMedecin" text="Medecin" prefWidth="160"/>
+            <TableColumn fx:id="colDate" text="Date" prefWidth="130"/>
+            <TableColumn fx:id="colMedicaments" text="Medicaments" prefWidth="200"/>
+            <TableColumn fx:id="colDuree" text="Duree" prefWidth="100"/>
+            <TableColumn fx:id="colStatut" text="Statut" prefWidth="90"/>
+        </columns>
+        <placeholder>
+            <Label text="Aucune ordonnance trouvee"/>
+        </placeholder>
+    </TableView>
+
+    <!-- Barre inferieure -->
+    <HBox spacing="10" alignment="CENTER_LEFT">
+        <Label fx:id="lblCount" text=""/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button text="Modifier" onAction="#modifierOrdonnance"
+                style="-fx-background-color: #FF9800; -fx-text-fill: white;"/>
+        <Button text="Supprimer" onAction="#supprimerOrdonnance"
+                style="-fx-background-color: #f44336; -fx-text-fill: white;"/>
+    </HBox>
 
 </VBox>
