@@ -10,7 +10,10 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import java.io.IOException;
 import java.net.URL;
+import java.sql.*;
 import java.util.ResourceBundle;
+
+import static com.hsp.controller.login.LoginController.*;
 
 public class GestionnaireDashboardController implements Initializable {
 
@@ -30,6 +33,8 @@ public class GestionnaireDashboardController implements Initializable {
     @FXML private TextField quantityField;
     @FXML private TextField seuilField;
     @FXML private ComboBox<String> categorieComboBox;
+    @FXML private ComboBox<Integer> dangerositeProduitComboBox;
+    @FXML private TextField descriptionProduitField;
 
     private String currentGestionnaireName = "Gestionnaire";
     private int currentGestionnaireId = 1;
@@ -37,9 +42,15 @@ public class GestionnaireDashboardController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         if (userNameLabel != null) userNameLabel.setText(currentGestionnaireName);
+
         if (categorieComboBox != null) {
             categorieComboBox.getItems().addAll("Médicaments", "Matériel médical", "Consommables", "Équipements");
         }
+
+        if (dangerositeProduitComboBox != null) {
+            dangerositeProduitComboBox.getItems().addAll(1, 2, 3, 4, 5);
+        }
+
         loadDashboardData();
         showDashboard();
     }
@@ -89,17 +100,86 @@ public class GestionnaireDashboardController implements Initializable {
             showAlert(Alert.AlertType.WARNING, "Attention", "La quantité est obligatoire");
             return;
         }
+        if (dangerositeProduitComboBox.getValue() == null) {
+            showAlert(Alert.AlertType.WARNING, "Attention", "Le niveau de dangerosité est obligatoire");
+            return;
+        }
 
-        showAlert(Alert.AlertType.INFORMATION, "Succès", "Produit ajouté au stock !");
-        productNameField.clear();
-        quantityField.clear();
-        seuilField.clear();
-        categorieComboBox.setValue(null);
+        Connection conn = null;
+        try {
+            conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+
+            String query = "INSERT INTO produit (libelle, description, niveau_dangerosite, quantite_stock) VALUES (?, ?, ?, ?)";
+            PreparedStatement pstmt = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+            pstmt.setString(1, productNameField.getText());
+            pstmt.setString(2, descriptionProduitField.getText());
+            pstmt.setInt(3, dangerositeProduitComboBox.getValue());
+            pstmt.setInt(4, Integer.parseInt(quantityField.getText()));
+            pstmt.executeUpdate();
+
+            // Récupérer l'ID du produit
+            ResultSet rs = pstmt.getGeneratedKeys();
+            int productId = 0;
+            if (rs.next()) {
+                productId = rs.getInt(1);
+            }
+
+            // Enregistrer dans l'historique
+            String queryHisto = "INSERT INTO historique (id_utilisateur, action, table_concernee, id_enregistrement, details) VALUES (?, 'Creation', 'produit', ?, ?)";
+            PreparedStatement pstmt2 = conn.prepareStatement(queryHisto);
+            pstmt2.setInt(1, currentGestionnaireId);
+            pstmt2.setInt(2, productId);
+            pstmt2.setString(3, "Produit: " + productNameField.getText());
+            pstmt2.executeUpdate();
+
+            pstmt.close();
+            pstmt2.close();
+            conn.close();
+
+
+            showAlert(Alert.AlertType.INFORMATION, "Succès", "Produit ajouté au stock !");
+
+            productNameField.clear();
+            quantityField.clear();
+            descriptionProduitField.clear();
+            dangerositeProduitComboBox.setValue(null);
+
+        } catch (SQLException e) {
+            showAlert(Alert.AlertType.ERROR, "Erreur", "Erreur BD : " + e.getMessage());
+        } catch (NumberFormatException e) {
+            showAlert(Alert.AlertType.ERROR, "Erreur", "La quantité doit être un nombre");
+        }
     }
 
     @FXML
     private void onValidateDemande() {
-        showAlert(Alert.AlertType.INFORMATION, "Succès", "Demande validée !");
+        int demandeId = 1; // À remplacer
+
+        Connection conn = null;
+        try {
+            conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+
+            String query = "UPDATE demande_produit SET statut = 'Validee', id_gestionnaire = ? WHERE id_demande = ?";
+            PreparedStatement pstmt = conn.prepareStatement(query);
+            pstmt.setInt(1, currentGestionnaireId);
+            pstmt.setInt(2, demandeId);
+            pstmt.executeUpdate();
+
+            // Valider aussi les lignes de demande
+            String queryLignes = "UPDATE ligne_demande SET statut = 'Validee' WHERE id_demande = ?";
+            PreparedStatement pstmt2 = conn.prepareStatement(queryLignes);
+            pstmt2.setInt(1, demandeId);
+            pstmt2.executeUpdate();
+
+            pstmt.close();
+            pstmt2.close();
+            conn.close();
+
+            showAlert(Alert.AlertType.INFORMATION, "Succès", "Demande validée !");
+
+        } catch (SQLException e) {
+            showAlert(Alert.AlertType.ERROR, "Erreur", "Erreur BD : " + e.getMessage());
+        }
     }
 
     @FXML
