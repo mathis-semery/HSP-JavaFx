@@ -1,7 +1,67 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.layout.VBox?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
 
-<VBox xmlns:fx="http://javafx.com/fxml">
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.hsp.controller.produit.ProduitListController"
+      spacing="12"
+      style="-fx-background-color: #f0f4f8;">
+
+    <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+
+    <!-- Titre -->
+    <Label text="Gestion des Produits"
+           style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #1a73e8;"/>
+
+    <!-- Barre recherche + filtre -->
+    <HBox spacing="10" alignment="CENTER_LEFT">
+        <TextField fx:id="recherche"
+                   promptText="Rechercher par libellé, description…"
+                   prefWidth="280"
+                   onKeyReleased="#rechercher"/>
+        <ComboBox fx:id="filtreDangerosite" prefWidth="160"/>
+        <Button text="🔄 Rafraîchir"
+                onAction="#rafraichir"
+                style="-fx-background-color: #e0e0e0; -fx-font-weight: bold; -fx-cursor: hand;"/>
+    </HBox>
+
+    <!-- Tableau -->
+    <TableView fx:id="table" VBox.vgrow="ALWAYS"
+               style="-fx-background-color: white;">
+        <columns>
+            <TableColumn fx:id="idCol"           text="ID"           prefWidth="50"/>
+            <TableColumn fx:id="libelleCol"      text="Libellé"      prefWidth="160"/>
+            <TableColumn fx:id="descriptionCol"  text="Description"  prefWidth="200"/>
+            <TableColumn fx:id="dangerositeCol"  text="Dangerosité"  prefWidth="110"/>
+            <TableColumn fx:id="stockCol"        text="Stock"        prefWidth="80"/>
+            <TableColumn fx:id="dateCreationCol" text="Créé le"      prefWidth="110"/>
+        </columns>
+        <placeholder>
+            <Label text="Aucun produit trouvé."
+                   style="-fx-text-fill: #888; -fx-font-size: 14px;"/>
+        </placeholder>
+    </TableView>
+
+    <!-- Boutons -->
+    <HBox spacing="10" alignment="CENTER_RIGHT">
+        <Button fx:id="ajouter"
+                text="➕ Ajouter"
+                onAction="#ajouterProduit"
+                style="-fx-background-color: #34a853; -fx-text-fill: white;
+                       -fx-font-weight: bold; -fx-cursor: hand; -fx-padding: 8 16 8 16;"/>
+        <Button fx:id="modifier"
+                text="✏️ Modifier"
+                onAction="#modifierProduit"
+                style="-fx-background-color: #f9a825; -fx-text-fill: white;
+                       -fx-font-weight: bold; -fx-cursor: hand; -fx-padding: 8 16 8 16;"/>
+        <Button fx:id="supprimer"
+                text="🗑 Supprimer"
+                onAction="#supprimerProduit"
+                style="-fx-background-color: #e53935; -fx-text-fill: white;
+                       -fx-font-weight: bold; -fx-cursor: hand; -fx-padding: 8 16 8 16;"/>
+    </HBox>
 
 </VBox>

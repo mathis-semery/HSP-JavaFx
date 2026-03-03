@@ -1,7 +1,119 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.layout.VBox?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
 
-<VBox xmlns:fx="http://javafx.com/fxml">
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.hsp.controller.stock.StockDetailController"
+      spacing="16"
+      prefWidth="680"
+      prefHeight="560"
+      style="-fx-background-color: #f0f4f8;">
+
+    <padding><Insets top="24" right="28" bottom="24" left="28"/></padding>
+
+    <!-- Titre + bouton rafraîchir -->
+    <HBox alignment="CENTER_LEFT" spacing="12">
+        <Label fx:id="titre"
+               text="Vue d'ensemble du Stock"
+               style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #1a73e8;"
+               HBox.hgrow="ALWAYS"/>
+        <Button text="🔄 Rafraîchir"
+                onAction="#rafraichir"
+                style="-fx-background-color: #e0e0e0; -fx-font-weight: bold; -fx-cursor: hand;"/>
+    </HBox>
+
+    <Separator/>
+
+    <!-- Cartes statistiques -->
+    <HBox spacing="14">
+
+        <!-- Total produits -->
+        <VBox spacing="4" alignment="CENTER"
+              style="-fx-background-color: white; -fx-background-radius: 10;
+                     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.07), 8, 0, 0, 2);
+                     -fx-padding: 16;"
+              HBox.hgrow="ALWAYS" prefHeight="90">
+            <Label text="Total produits"
+                   style="-fx-font-size: 11px; -fx-text-fill: #888; -fx-font-weight: bold;
+                          -fx-text-transform: uppercase;"/>
+            <Label fx:id="totalProduits" text="—"
+                   style="-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #1a73e8;"/>
+        </VBox>
+
+        <!-- Stock bas -->
+        <VBox spacing="4" alignment="CENTER"
+              style="-fx-background-color: white; -fx-background-radius: 10;
+                     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.07), 8, 0, 0, 2);
+                     -fx-padding: 16;"
+              HBox.hgrow="ALWAYS" prefHeight="90">
+            <Label text="Stock critique (≤10)"
+                   style="-fx-font-size: 11px; -fx-text-fill: #888; -fx-font-weight: bold;"/>
+            <Label fx:id="produitsStockBas" text="—"
+                   style="-fx-font-size: 28px; -fx-font-weight: bold;"/>
+        </VBox>
+
+        <!-- Demandes en attente -->
+        <VBox spacing="4" alignment="CENTER"
+              style="-fx-background-color: white; -fx-background-radius: 10;
+                     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.07), 8, 0, 0, 2);
+                     -fx-padding: 16;"
+              HBox.hgrow="ALWAYS" prefHeight="90">
+            <Label text="Demandes en attente"
+                   style="-fx-font-size: 11px; -fx-text-fill: #888; -fx-font-weight: bold;"/>
+            <Label fx:id="demandesEnAttente" text="—"
+                   style="-fx-font-size: 28px; -fx-font-weight: bold;"/>
+        </VBox>
+
+        <!-- Valeur totale -->
+        <VBox spacing="4" alignment="CENTER"
+              style="-fx-background-color: white; -fx-background-radius: 10;
+                     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.07), 8, 0, 0, 2);
+                     -fx-padding: 16;"
+              HBox.hgrow="ALWAYS" prefHeight="90">
+            <Label text="Valeur totale"
+                   style="-fx-font-size: 11px; -fx-text-fill: #888; -fx-font-weight: bold;"/>
+            <Label fx:id="valeurTotaleStock" text="—"
+                   style="-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #34a853;"/>
+        </VBox>
+
+    </HBox>
+
+    <!-- Listes alertes + dernières actions -->
+    <HBox spacing="14" VBox.vgrow="ALWAYS">
+
+        <!-- Alertes stock -->
+        <VBox spacing="8" HBox.hgrow="ALWAYS">
+            <Label text="⚠️ Alertes de stock"
+                   style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #e53935;"/>
+            <ListView fx:id="alertesStock"
+                      VBox.vgrow="ALWAYS"
+                      style="-fx-background-color: white; -fx-background-radius: 8;
+                             -fx-border-color: #ffcdd2; -fx-border-radius: 8;"/>
+        </VBox>
+
+        <!-- Dernières actions -->
+        <VBox spacing="8" HBox.hgrow="ALWAYS">
+            <Label text="📋 Dernières actions"
+                   style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #1a73e8;"/>
+            <ListView fx:id="dernieresActions"
+                      VBox.vgrow="ALWAYS"
+                      style="-fx-background-color: white; -fx-background-radius: 8;
+                             -fx-border-color: #bbdefb; -fx-border-radius: 8;"/>
+        </VBox>
+
+    </HBox>
+
+    <Separator/>
+
+    <!-- Bouton fermer -->
+    <HBox alignment="CENTER_RIGHT">
+        <Button text="Fermer"
+                onAction="#fermer"
+                style="-fx-background-color: #1a73e8; -fx-text-fill: white; -fx-font-weight: bold;
+                       -fx-cursor: hand; -fx-padding: 8 20 8 20;"/>
+    </HBox>
 
 </VBox>

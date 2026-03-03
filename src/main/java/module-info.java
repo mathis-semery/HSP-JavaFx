@@ -11,6 +11,9 @@ module com.hsp.hsp_urgences {
     // Exporter les packages de contrôleurs pour que JavaFX FXML puisse y accéder
     opens com.hsp.controller.login to javafx.fxml;
     opens com.hsp.controller.dashboard to javafx.fxml;
+    opens com.hsp.controller.stock to javafx.fxml;
+    opens com.hsp.controller.fournisseur to javafx.fxml;
+    opens com.hsp.controller.produit to javafx.fxml;
 
     // Si vous avez d'autres contrôleurs, ajoutez-les ici
     // opens com.hsp.controller.auth to javafx.fxml;

@@ -47,7 +47,7 @@ public class StockListController implements Initializable {
     @FXML
     private void ouvrirProduits() {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/hsp/view/stock/ProduitList.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/stock/ProduitList.fxml"));
             Parent root = loader.load();
 
             Stage stage = new Stage();
@@ -64,7 +64,7 @@ public class StockListController implements Initializable {
     @FXML
     private void ouvrirFournisseurs() {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/hsp/view/stock/FournisseurList.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/stock/FournisseurList.fxml"));
             Parent root = loader.load();
 
             Stage stage = new Stage();
@@ -81,7 +81,7 @@ public class StockListController implements Initializable {
     @FXML
     private void ouvrirDemandes() {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/hsp/view/stock/DemandeList.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/stock/DemandeList.fxml"));
             Parent root = loader.load();
 
             Stage stage = new Stage();
@@ -98,7 +98,7 @@ public class StockListController implements Initializable {
     @FXML
     private void ouvrirReapprovisionnement() {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/hsp/view/stock/ReapproList.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/stock/ReapproList.fxml"));
             Parent root = loader.load();
 
             Stage stage = new Stage();
