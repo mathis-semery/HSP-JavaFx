@@ -26,9 +26,9 @@ public class LoginController {
     private Button loginButton;
 
     // Configuration de la base de données
-    private static final String DB_URL = "jdbc:mysql://localhost:3306/hsp_urgences";
-    private static final String DB_USER = "root";
-    private static final String DB_PASSWORD = "";
+    public static final String DB_URL = "jdbc:mysql://localhost:3306/hsp_urgences";
+    public static final String DB_USER = "root";
+    public static final String DB_PASSWORD = "";
 
     @FXML
     private void initialize() {

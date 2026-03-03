@@ -10,7 +10,10 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import java.io.IOException;
 import java.net.URL;
+import java.sql.*;
 import java.util.ResourceBundle;
+
+import static com.hsp.controller.login.LoginController.*;
 
 public class SecretaireDashboardController implements Initializable {
 
@@ -34,6 +37,8 @@ public class SecretaireDashboardController implements Initializable {
     @FXML private TextField searchField;
     @FXML private TableView<?> allPatientsTable;
     @FXML private TableView<?> waitingTriageTable;
+    @FXML private TextField numSecuField;
+    @FXML private TextField emailPatientField;
 
     private String currentSecretaireName = "Secrétaire";
     private int currentSecretaireId = 1;
@@ -84,12 +89,17 @@ public class SecretaireDashboardController implements Initializable {
 
     @FXML
     private void onSavePatient() {
+        // Validation
         if (nomField.getText().trim().isEmpty()) {
             showAlert(Alert.AlertType.WARNING, "Attention", "Le nom est obligatoire");
             return;
         }
         if (prenomField.getText().trim().isEmpty()) {
             showAlert(Alert.AlertType.WARNING, "Attention", "Le prénom est obligatoire");
+            return;
+        }
+        if (numSecuField.getText().trim().isEmpty()) {
+            showAlert(Alert.AlertType.WARNING, "Attention", "Le numéro de sécurité sociale est obligatoire");
             return;
         }
         if (dateNaissancePicker.getValue() == null) {
@@ -101,22 +111,74 @@ public class SecretaireDashboardController implements Initializable {
             return;
         }
 
-        showAlert(Alert.AlertType.INFORMATION, "Succès",
-                "Patient " + prenomField.getText() + " " + nomField.getText() + " enregistré !");
-        clearRegistrationForm();
-        showDashboard();
+        // Sauvegarder dans la BD
+        Connection conn = null;
+        try {
+            conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+
+            // Insérer le patient
+            String queryPatient = "INSERT INTO patient (nom, prenom, num_secu, email, telephone, adresse) VALUES (?, ?, ?, ?, ?, ?)";
+            PreparedStatement pstmt = conn.prepareStatement(queryPatient, Statement.RETURN_GENERATED_KEYS);
+            pstmt.setString(1, nomField.getText());
+            pstmt.setString(2, prenomField.getText());
+            pstmt.setString(3, numSecuField.getText());
+            pstmt.setString(4, emailPatientField.getText());
+            pstmt.setString(5, telephoneField.getText());
+            pstmt.setString(6, adresseField.getText());
+            pstmt.executeUpdate();
+
+            // Récupérer l'ID du patient créé
+            ResultSet rs = pstmt.getGeneratedKeys();
+            int patientId = 0;
+            if (rs.next()) {
+                patientId = rs.getInt(1);
+            }
+
+            // Créer le dossier de prise en charge
+            String queryDossier = "INSERT INTO dossier (id_patient, id_secretaire, date_arrivee, symptomes, niveau_gravite, statut) VALUES (?, ?, NOW(), ?, ?, 'Attente')";
+            PreparedStatement pstmt2 = conn.prepareStatement(queryDossier);
+            pstmt2.setInt(1, patientId);
+            pstmt2.setInt(2, currentSecretaireId);
+            pstmt2.setString(3, motifTextArea.getText());
+            pstmt2.setInt(4, 3); // Niveau gravité par défaut (à ajuster avec un ComboBox)
+            pstmt2.executeUpdate();
+
+            // Enregistrer dans l'historique
+            String queryHisto = "INSERT INTO historique (id_utilisateur, action, table_concernee, id_enregistrement, details) VALUES (?, 'Creation', 'patient', ?, ?)";
+            PreparedStatement pstmt3 = conn.prepareStatement(queryHisto);
+            pstmt3.setInt(1, currentSecretaireId);
+            pstmt3.setInt(2, patientId);
+            pstmt3.setString(3, "Patient: " + prenomField.getText() + " " + nomField.getText());
+            pstmt3.executeUpdate();
+
+            pstmt.close();
+            pstmt2.close();
+            pstmt3.close();
+            conn.close();
+
+            showAlert(Alert.AlertType.INFORMATION, "Succès",
+                    "Patient " + prenomField.getText() + " " + nomField.getText() + " enregistré avec succès !");
+
+            clearRegistrationForm();
+            showDashboard();
+
+        } catch (SQLException e) {
+            showAlert(Alert.AlertType.ERROR, "Erreur", "Erreur lors de l'enregistrement : " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     private void clearRegistrationForm() {
         if (nomField != null) nomField.clear();
         if (prenomField != null) prenomField.clear();
+        if (numSecuField != null) numSecuField.clear();
+        if (emailPatientField != null) emailPatientField.clear();
         if (dateNaissancePicker != null) dateNaissancePicker.setValue(null);
         if (sexeComboBox != null) sexeComboBox.setValue(null);
         if (telephoneField != null) telephoneField.clear();
         if (adresseField != null) adresseField.clear();
         if (motifTextArea != null) motifTextArea.clear();
     }
-
     @FXML private void onRefreshList() {
         showAlert(Alert.AlertType.INFORMATION, "Actualisation", "Liste actualisée");
     }
