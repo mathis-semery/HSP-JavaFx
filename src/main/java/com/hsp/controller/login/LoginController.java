@@ -1,6 +1,8 @@
 package com.hsp.controller.login;
 
+import com.hsp.controller.dashboard.GestionnaireDashboardController;
 import com.hsp.controller.dashboard.MedecinDashboardController;
+import com.hsp.controller.dashboard.SecretaireDashboardController;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
@@ -170,8 +172,13 @@ public class LoginController {
             if (role.equals("Medecin")) {
                 MedecinDashboardController controller = loader.getController();
                 controller.setMedecinInfo(userId, "Dr. " + userName);
+            } else if (role.equals("Secretaire")) {
+                SecretaireDashboardController controller = loader.getController();
+                controller.setSecretaireInfo(userId, userName);
+            } else if (role.equals("Gestionnaire")) {
+                GestionnaireDashboardController controller = loader.getController();
+                controller.setGestionnaireInfo(userId, userName);
             }
-            // TODO: Faire de même pour les autres rôles
 
             // Obtenir la fenêtre actuelle et la remplacer
             Stage stage = (Stage) loginButton.getScene().getWindow();

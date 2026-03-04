@@ -1,153 +1,644 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.*?>
+<?import javafx.geometry.Insets?>
 
-<BorderPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="com.hsp.controller.dashboard.MedecinDashboardController"
-            stylesheets="@../../css/dashboard.css"
-            style="-fx-background-color: #f5f5f5;">
+<BorderPane
+        xmlns="http://javafx.com/javafx/21"
+        xmlns:fx="http://javafx.com/fxml/1"
+        fx:controller="com.hsp.controller.dashboard.MedecinDashboardController"
+        prefWidth="1280" prefHeight="820"
+        style="-fx-background-color: #F4F6FB; -fx-font-family: 'Segoe UI', Arial, sans-serif;">
 
-    <!-- HEADER -->
-    <top>
-        <HBox style="-fx-background-color: #667eea; -fx-padding: 20;">
-            <Label fx:id="userNameLabel" text="Dr. [Nom]" style="-fx-text-fill: white; -fx-font-size: 18px; -fx-font-weight: bold;"/>
-            <Region HBox.hgrow="ALWAYS"/>
-            <Button text="Déconnexion" onAction="#onLogout" style="-fx-background-color: white; -fx-text-fill: #667eea;"/>
-        </HBox>
-    </top>
-
-    <!-- SIDEBAR -->
+    <!-- ═══════════════════════════════════════════════════════
+         SIDEBAR
+    ═══════════════════════════════════════════════════════ -->
     <left>
-        <VBox style="-fx-background-color: #2d3748; -fx-padding: 20;" spacing="10" prefWidth="250">
-            <Label text="MENU" style="-fx-text-fill: white; -fx-font-weight: bold;"/>
-            <Separator/>
+        <VBox prefWidth="240" spacing="0"
+              style="-fx-background-color: #0D1B2A;
+                     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.35), 18, 0, 4, 0);">
 
-            <Button text="📋 Tableau de bord" onAction="#showDashboard" prefWidth="220"
-                    style="-fx-background-color: #4a5568; -fx-text-fill: white;"/>
-            <Button text="🩺 Patients en attente" onAction="#showWaitingPatients" prefWidth="220"
-                    style="-fx-background-color: #4a5568; -fx-text-fill: white;"/>
+            <!-- En-tête logo -->
+            <VBox alignment="CENTER" spacing="0"
+                  style="-fx-background-color: #091422; -fx-padding: 30 20 26 20;">
 
-            <Region VBox.vgrow="ALWAYS"/>
+                <StackPane alignment="CENTER" style="-fx-padding: 0 0 10 0;">
+                    <Rectangle width="44" height="44" arcWidth="10" arcHeight="10"
+                               fill="#1565C0"/>
+                    <Label text="✚" style="-fx-text-fill: white; -fx-font-size: 24px; -fx-font-weight: bold;"/>
+                </StackPane>
 
-            <VBox style="-fx-background-color: #4a5568; -fx-padding: 10; -fx-background-radius: 5;">
-                <Label text="Patients à traiter" style="-fx-text-fill: #a0aec0;"/>
-                <Label fx:id="waitingCountLabel" text="0" style="-fx-text-fill: white; -fx-font-size: 24px; -fx-font-weight: bold;"/>
+                <Label text="HSP Urgences"
+                       style="-fx-text-fill: #FFFFFF; -fx-font-size: 17px;
+                              -fx-font-weight: bold;"/>
+                <Label text="Système de Gestion Hospitalière"
+                       style="-fx-text-fill: #546E8A; -fx-font-size: 9px; -fx-padding: 3 0 0 0;"/>
             </VBox>
+
+            <!-- Carte médecin connecté -->
+            <HBox alignment="CENTER_LEFT" spacing="12"
+                  style="-fx-background-color: #132030; -fx-padding: 14 18 14 18;
+                         -fx-border-color: #1E3448; -fx-border-width: 1 0 1 0;">
+                <StackPane>
+                    <Circle radius="20" fill="#1565C0"/>
+                    <Label text="DR" style="-fx-text-fill: white; -fx-font-size: 10px; -fx-font-weight: bold;"/>
+                </StackPane>
+                <VBox spacing="2">
+                    <Label fx:id="userNameLabel" text="Dr. Martin"
+                           style="-fx-text-fill: #E8F0FE; -fx-font-size: 13px; -fx-font-weight: bold;"/>
+                    <Label text="Médecin Urgentiste"
+                           style="-fx-text-fill: #546E8A; -fx-font-size: 10px;"/>
+                </VBox>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Circle radius="5" fill="#26C281"/>
+            </HBox>
+
+            <!-- Navigation -->
+            <VBox spacing="4" VBox.vgrow="ALWAYS"
+                  style="-fx-padding: 18 10 18 10;">
+
+                <Label text="MENU PRINCIPAL"
+                       style="-fx-text-fill: #37526A; -fx-font-size: 9px;
+                              -fx-font-weight: bold; -fx-padding: 0 4 8 8;"/>
+
+                <Button onAction="#showDashboard" maxWidth="Infinity" focusTraversable="false"
+                        style="-fx-background-color: #1565C0; -fx-text-fill: white;
+                               -fx-font-size: 13px; -fx-font-weight: bold;
+                               -fx-padding: 12 16 12 16; -fx-background-radius: 10;
+                               -fx-cursor: hand; -fx-border-width: 0; -fx-alignment: CENTER_LEFT;">
+                    <graphic>
+                        <HBox spacing="10" alignment="CENTER_LEFT">
+                            <Label text="▦" style="-fx-text-fill: white; -fx-font-size: 14px;"/>
+                            <Label text="Tableau de bord" style="-fx-text-fill: white; -fx-font-size: 13px; -fx-font-weight: bold;"/>
+                        </HBox>
+                    </graphic>
+                </Button>
+
+                <Button onAction="#showWaitingPatients" maxWidth="Infinity" focusTraversable="false"
+                        style="-fx-background-color: transparent; -fx-padding: 12 16 12 16;
+                               -fx-background-radius: 10; -fx-cursor: hand; -fx-border-width: 0;
+                               -fx-alignment: CENTER_LEFT;">
+                    <graphic>
+                        <HBox spacing="10" alignment="CENTER_LEFT">
+                            <Label text="⏱" style="-fx-text-fill: #F0A500; -fx-font-size: 14px;"/>
+                            <Label text="Patients en attente" style="-fx-text-fill: #B0C8DE; -fx-font-size: 13px;"/>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <Label fx:id="waitingCountLabel" text="0"
+                                   style="-fx-background-color: #C0392B; -fx-text-fill: white;
+                                          -fx-font-size: 10px; -fx-font-weight: bold;
+                                          -fx-padding: 2 7 2 7; -fx-background-radius: 12;"/>
+                        </HBox>
+                    </graphic>
+                </Button>
+
+                <Button onAction="#showHospitalizations" maxWidth="Infinity" focusTraversable="false"
+                        style="-fx-background-color: transparent; -fx-padding: 12 16 12 16;
+                               -fx-background-radius: 10; -fx-cursor: hand; -fx-border-width: 0;
+                               -fx-alignment: CENTER_LEFT;">
+                    <graphic>
+                        <HBox spacing="10" alignment="CENTER_LEFT">
+                            <Label text="🛏" style="-fx-font-size: 14px;"/>
+                            <Label text="Hospitalisations" style="-fx-text-fill: #B0C8DE; -fx-font-size: 13px;"/>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <Label fx:id="hospitalizationCountLabel" text="0"
+                                   style="-fx-background-color: #1565C0; -fx-text-fill: white;
+                                          -fx-font-size: 10px; -fx-font-weight: bold;
+                                          -fx-padding: 2 7 2 7; -fx-background-radius: 12;"/>
+                        </HBox>
+                    </graphic>
+                </Button>
+
+                <Button onAction="#showProductRequests" maxWidth="Infinity" focusTraversable="false"
+                        style="-fx-background-color: transparent; -fx-padding: 12 16 12 16;
+                               -fx-background-radius: 10; -fx-cursor: hand; -fx-border-width: 0;
+                               -fx-alignment: CENTER_LEFT;">
+                    <graphic>
+                        <HBox spacing="10" alignment="CENTER_LEFT">
+                            <Label text="💊" style="-fx-font-size: 14px;"/>
+                            <Label text="Demandes produits" style="-fx-text-fill: #B0C8DE; -fx-font-size: 13px;"/>
+                        </HBox>
+                    </graphic>
+                </Button>
+
+                <Button onAction="#showHistory" maxWidth="Infinity" focusTraversable="false"
+                        style="-fx-background-color: transparent; -fx-padding: 12 16 12 16;
+                               -fx-background-radius: 10; -fx-cursor: hand; -fx-border-width: 0;
+                               -fx-alignment: CENTER_LEFT;">
+                    <graphic>
+                        <HBox spacing="10" alignment="CENTER_LEFT">
+                            <Label text="📋" style="-fx-font-size: 14px;"/>
+                            <Label text="Historique" style="-fx-text-fill: #B0C8DE; -fx-font-size: 13px;"/>
+                        </HBox>
+                    </graphic>
+                </Button>
+
+                <Region VBox.vgrow="ALWAYS"/>
+
+                <Separator style="-fx-background-color: #1E3448; -fx-opacity: 0.6;"/>
+                <Label text="Service des Urgences"
+                       style="-fx-text-fill: #37526A; -fx-font-size: 9px; -fx-padding: 8 0 0 8;"/>
+            </VBox>
+
+            <!-- Déconnexion -->
+            <Button text="🔓  Se déconnecter" onAction="#onLogout"
+                    maxWidth="Infinity" focusTraversable="false"
+                    style="-fx-background-color: #1A0A0A; -fx-text-fill: #CF6679;
+                           -fx-font-size: 12px; -fx-font-weight: bold;
+                           -fx-padding: 16 20 16 20; -fx-background-radius: 0;
+                           -fx-cursor: hand; -fx-border-color: #3D1F26;
+                           -fx-border-width: 1 0 0 0; -fx-alignment: CENTER_LEFT;"/>
         </VBox>
     </left>
 
-    <!-- MAIN CONTENT -->
+    <!-- ═══════════════════════════════════════════════════════
+         CONTENU CENTRAL
+    ═══════════════════════════════════════════════════════ -->
     <center>
-        <StackPane fx:id="contentPane" style="-fx-background-color: white;">
-            <padding>
-                <Insets top="30" right="30" bottom="30" left="30"/>
-            </padding>
+        <StackPane style="-fx-background-color: #F4F6FB;">
 
-            <!-- Dashboard View (default) -->
-            <VBox fx:id="dashboardView" spacing="20">
-                <Label text="Tableau de bord" style="-fx-font-size: 24px; -fx-font-weight: bold;"/>
+            <!-- ════════════════════════════════════
+                 VUE 1 — TABLEAU DE BORD
+            ════════════════════════════════════ -->
+            <VBox fx:id="dashboardView" spacing="22"
+                  style="-fx-padding: 32 30 30 30;"
+                  visible="true" managed="true">
 
-                <!-- Stats Cards -->
-                <HBox spacing="20">
-                    <VBox style="-fx-background-color: #e6f2ff; -fx-padding: 20; -fx-background-radius: 10;" spacing="10" prefWidth="200">
-                        <Label text="Patients aujourd'hui" style="-fx-text-fill: #1a73e8;"/>
-                        <Label fx:id="todayPatientsLabel" text="0" style="-fx-font-size: 32px; -fx-font-weight: bold; -fx-text-fill: #1a73e8;"/>
+                <!-- Titre -->
+                <HBox alignment="CENTER_LEFT">
+                    <VBox spacing="3">
+                        <Label text="Tableau de bord"
+                               style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #0D1B2A;"/>
+                        <Label text="Vue d'ensemble de votre activité médicale"
+                               style="-fx-font-size: 12px; -fx-text-fill: #7F93A8;"/>
                     </VBox>
-
-                    <VBox style="-fx-background-color: #fff3e0; -fx-padding: 20; -fx-background-radius: 10;" spacing="10" prefWidth="200">
-                        <Label text="En attente" style="-fx-text-fill: #f57c00;"/>
-                        <Label fx:id="waitingPatientsLabel" text="0" style="-fx-font-size: 32px; -fx-font-weight: bold; -fx-text-fill: #f57c00;"/>
-                    </VBox>
-
-                    <VBox style="-fx-background-color: #f3e5f5; -fx-padding: 20; -fx-background-radius: 10;" spacing="10" prefWidth="200">
-                        <Label text="Hospitalisations" style="-fx-text-fill: #8e24aa;"/>
-                        <Label fx:id="hospitalizationsLabel" text="0" style="-fx-font-size: 32px; -fx-font-weight: bold; -fx-text-fill: #8e24aa;"/>
-                    </VBox>
-
-                    <VBox style="-fx-background-color: #e8f5e9; -fx-padding: 20; -fx-background-radius: 10;" spacing="10" prefWidth="200">
-                        <Label text="Demandes produits" style="-fx-text-fill: #388e3c;"/>
-                        <Label fx:id="productRequestsLabel" text="0" style="-fx-font-size: 32px; -fx-font-weight: bold; -fx-text-fill: #388e3c;"/>
-                    </VBox>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <StackPane>
+                        <Rectangle width="110" height="36" arcWidth="10" arcHeight="10" fill="#E8F0FE"/>
+                        <Label text="● EN DIRECT"
+                               style="-fx-text-fill: #1565C0; -fx-font-size: 11px; -fx-font-weight: bold;"/>
+                    </StackPane>
                 </HBox>
 
-                <!-- Message de test -->
-                <Label text="✅ Le dashboard est chargé et visible !"
-                       style="-fx-font-size: 18px; -fx-text-fill: #388e3c; -fx-padding: 20; -fx-background-color: #e8f5e9; -fx-background-radius: 5;"/>
+                <!-- Cartes KPI -->
+                <HBox spacing="16">
 
-                <!-- Urgent Patients Table -->
-                <VBox style="-fx-background-color: #fff8f8; -fx-padding: 20; -fx-background-radius: 10;">
-                    <Label text="⚠️ Patients urgents (Gravité 4-5)" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #d32f2f;"/>
-                    <TableView fx:id="urgentPatientsTable" prefHeight="200">
+                    <!-- Patients aujourd'hui -->
+                    <VBox HBox.hgrow="ALWAYS" spacing="12"
+                          style="-fx-background-color: white; -fx-padding: 22;
+                                 -fx-background-radius: 14;
+                                 -fx-effect: dropshadow(gaussian, rgba(13,27,42,0.07), 12, 0, 0, 3);">
+                        <HBox spacing="10" alignment="CENTER_LEFT">
+                            <StackPane>
+                                <Rectangle width="40" height="40" arcWidth="10" arcHeight="10" fill="#EEF4FF"/>
+                                <Label text="📅" style="-fx-font-size: 18px;"/>
+                            </StackPane>
+                            <Label text="Patients aujourd'hui"
+                                   style="-fx-text-fill: #7F93A8; -fx-font-size: 11px;"/>
+                        </HBox>
+                        <Label fx:id="todayPatientsLabel" text="—"
+                               style="-fx-font-size: 36px; -fx-font-weight: bold; -fx-text-fill: #0D1B2A;"/>
+                        <Label text="↑ Ce jour"
+                               style="-fx-font-size: 10px; -fx-text-fill: #26C281;"/>
+                    </VBox>
+
+                    <!-- En attente -->
+                    <VBox HBox.hgrow="ALWAYS" spacing="12"
+                          style="-fx-background-color: white; -fx-padding: 22;
+                                 -fx-background-radius: 14;
+                                 -fx-effect: dropshadow(gaussian, rgba(13,27,42,0.07), 12, 0, 0, 3);">
+                        <HBox spacing="10" alignment="CENTER_LEFT">
+                            <StackPane>
+                                <Rectangle width="40" height="40" arcWidth="10" arcHeight="10" fill="#FFF4E5"/>
+                                <Label text="⏱" style="-fx-font-size: 18px;"/>
+                            </StackPane>
+                            <Label text="En attente"
+                                   style="-fx-text-fill: #7F93A8; -fx-font-size: 11px;"/>
+                        </HBox>
+                        <Label fx:id="waitingPatientsLabel" text="—"
+                               style="-fx-font-size: 36px; -fx-font-weight: bold; -fx-text-fill: #E67E22;"/>
+                        <Label text="Non pris en charge"
+                               style="-fx-font-size: 10px; -fx-text-fill: #7F93A8;"/>
+                    </VBox>
+
+                    <!-- Hospitalisations -->
+                    <VBox HBox.hgrow="ALWAYS" spacing="12"
+                          style="-fx-background-color: white; -fx-padding: 22;
+                                 -fx-background-radius: 14;
+                                 -fx-effect: dropshadow(gaussian, rgba(13,27,42,0.07), 12, 0, 0, 3);">
+                        <HBox spacing="10" alignment="CENTER_LEFT">
+                            <StackPane>
+                                <Rectangle width="40" height="40" arcWidth="10" arcHeight="10" fill="#E8F5EE"/>
+                                <Label text="🛏" style="-fx-font-size: 18px;"/>
+                            </StackPane>
+                            <Label text="Mes hospitalisations"
+                                   style="-fx-text-fill: #7F93A8; -fx-font-size: 11px;"/>
+                        </HBox>
+                        <Label fx:id="hospitalizationsLabel" text="—"
+                               style="-fx-font-size: 36px; -fx-font-weight: bold; -fx-text-fill: #1A9E5C;"/>
+                        <Label text="Actives en ce moment"
+                               style="-fx-font-size: 10px; -fx-text-fill: #7F93A8;"/>
+                    </VBox>
+
+                    <!-- Demandes produits -->
+                    <VBox HBox.hgrow="ALWAYS" spacing="12"
+                          style="-fx-background-color: white; -fx-padding: 22;
+                                 -fx-background-radius: 14;
+                                 -fx-effect: dropshadow(gaussian, rgba(13,27,42,0.07), 12, 0, 0, 3);">
+                        <HBox spacing="10" alignment="CENTER_LEFT">
+                            <StackPane>
+                                <Rectangle width="40" height="40" arcWidth="10" arcHeight="10" fill="#F3EEF9"/>
+                                <Label text="💊" style="-fx-font-size: 18px;"/>
+                            </StackPane>
+                            <Label text="Demandes produits"
+                                   style="-fx-text-fill: #7F93A8; -fx-font-size: 11px;"/>
+                        </HBox>
+                        <Label fx:id="productRequestsLabel" text="—"
+                               style="-fx-font-size: 36px; -fx-font-weight: bold; -fx-text-fill: #7B2FBE;"/>
+                        <Label text="En attente de traitement"
+                               style="-fx-font-size: 10px; -fx-text-fill: #7F93A8;"/>
+                    </VBox>
+
+                </HBox>
+
+                <!-- Table patients urgents -->
+                <VBox VBox.vgrow="ALWAYS" spacing="0"
+                      style="-fx-background-color: white; -fx-background-radius: 14;
+                             -fx-effect: dropshadow(gaussian, rgba(13,27,42,0.07), 12, 0, 0, 3);">
+
+                    <HBox alignment="CENTER_LEFT" spacing="12"
+                          style="-fx-padding: 18 22 16 22;
+                                 -fx-border-color: transparent transparent #EEF1F7 transparent;
+                                 -fx-border-width: 0 0 1 0;">
+                        <StackPane>
+                            <Rectangle width="28" height="28" arcWidth="6" arcHeight="6" fill="#FFEBEE"/>
+                            <Label text="🚨" style="-fx-font-size: 13px;"/>
+                        </StackPane>
+                        <Label text="Patients urgents"
+                               style="-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #0D1B2A;"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Label text="Filtrer :" style="-fx-text-fill: #7F93A8; -fx-font-size: 11px;"/>
+                        <ComboBox fx:id="gravityFilterComboBox" prefWidth="150"
+                                  style="-fx-background-radius: 8; -fx-font-size: 12px;
+                                         -fx-background-color: #F4F6FB; -fx-border-color: #D8E2EC;
+                                         -fx-border-radius: 8; -fx-border-width: 1;"/>
+                    </HBox>
+
+                    <TableView fx:id="urgentPatientsTable" VBox.vgrow="ALWAYS"
+                               style="-fx-background-color: transparent; -fx-border-width: 0;
+                                      -fx-table-cell-border-color: #F0F3F8;">
                         <columns>
-                            <TableColumn text="Patient" prefWidth="200"/>
-                            <TableColumn text="Arrivée" prefWidth="150"/>
-                            <TableColumn text="Symptômes" prefWidth="300"/>
+                            <TableColumn text="Patient" prefWidth="170"/>
+                            <TableColumn text="Heure d'arrivée" prefWidth="130"/>
+                            <TableColumn text="Gravité" prefWidth="90"/>
+                            <TableColumn text="Symptômes" prefWidth="260"/>
+                            <TableColumn text="Statut" prefWidth="110"/>
+                            <TableColumn text="Action" prefWidth="120"/>
                         </columns>
+                        <placeholder>
+                            <VBox alignment="CENTER" spacing="8" style="-fx-padding: 30 0 30 0;">
+                                <Label text="✓" style="-fx-font-size: 28px; -fx-text-fill: #26C281;"/>
+                                <Label text="Aucun patient urgent pour le moment"
+                                       style="-fx-text-fill: #7F93A8; -fx-font-size: 13px;"/>
+                            </VBox>
+                        </placeholder>
                     </TableView>
                 </VBox>
             </VBox>
 
-            <!-- Waiting Patients View -->
-            <VBox fx:id="waitingPatientsView" spacing="20" visible="false">
-                <Label text="Patients en attente" style="-fx-font-size: 24px; -fx-font-weight: bold;"/>
-                <Label text="Liste des patients en attente..." style="-fx-font-size: 16px;"/>
+            <!-- ════════════════════════════════════
+                 VUE 2 — PATIENTS EN ATTENTE
+            ════════════════════════════════════ -->
+            <VBox fx:id="waitingPatientsView" spacing="22"
+                  style="-fx-padding: 32 30 30 30;"
+                  visible="false" managed="false">
 
-                <ComboBox fx:id="gravityFilterComboBox" prefWidth="150" promptText="Tous"/>
-                <TableView fx:id="waitingPatientsTable" prefHeight="500">
-                    <columns>
-                        <TableColumn text="Patient" prefWidth="200"/>
-                        <TableColumn text="Arrivée" prefWidth="150"/>
-                    </columns>
-                </TableView>
+                <HBox alignment="CENTER_LEFT">
+                    <VBox spacing="3">
+                        <Label text="Patients en attente"
+                               style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #0D1B2A;"/>
+                        <Label text="Patients non encore pris en charge"
+                               style="-fx-font-size: 12px; -fx-text-fill: #7F93A8;"/>
+                    </VBox>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Button text="🔄  Actualiser" onAction="#onRefreshWaiting"
+                            style="-fx-background-color: #1565C0; -fx-text-fill: white;
+                                   -fx-font-size: 12px; -fx-font-weight: bold;
+                                   -fx-padding: 10 20 10 20; -fx-background-radius: 9;
+                                   -fx-cursor: hand; -fx-border-width: 0;"/>
+                </HBox>
+
+                <VBox VBox.vgrow="ALWAYS" spacing="0"
+                      style="-fx-background-color: white; -fx-background-radius: 14;
+                             -fx-effect: dropshadow(gaussian, rgba(13,27,42,0.07), 12, 0, 0, 3);">
+                    <HBox alignment="CENTER_LEFT" spacing="10"
+                          style="-fx-padding: 18 22 16 22;
+                                 -fx-border-color: transparent transparent #EEF1F7 transparent;
+                                 -fx-border-width: 0 0 1 0;">
+                        <Label text="⏱" style="-fx-font-size: 16px;"/>
+                        <Label text="File d'attente en temps réel"
+                               style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #0D1B2A;"/>
+                    </HBox>
+                    <TableView fx:id="waitingPatientsTable" VBox.vgrow="ALWAYS"
+                               style="-fx-background-color: transparent; -fx-border-width: 0;
+                                      -fx-table-cell-border-color: #F0F3F8;">
+                        <columns>
+                            <TableColumn text="N° Dossier" prefWidth="90"/>
+                            <TableColumn text="Nom" prefWidth="140"/>
+                            <TableColumn text="Prénom" prefWidth="120"/>
+                            <TableColumn text="Âge" prefWidth="60"/>
+                            <TableColumn text="Arrivée" prefWidth="130"/>
+                            <TableColumn text="Gravité" prefWidth="100"/>
+                            <TableColumn text="Symptômes" prefWidth="200"/>
+                            <TableColumn text="Action" prefWidth="100"/>
+                        </columns>
+                        <placeholder>
+                            <VBox alignment="CENTER" spacing="8" style="-fx-padding: 40 0 40 0;">
+                                <Label text="✓" style="-fx-font-size: 28px; -fx-text-fill: #26C281;"/>
+                                <Label text="Aucun patient en attente"
+                                       style="-fx-text-fill: #7F93A8; -fx-font-size: 13px;"/>
+                            </VBox>
+                        </placeholder>
+                    </TableView>
+                </VBox>
             </VBox>
 
-            <!-- Hospitalizations View -->
-            <VBox fx:id="hospitalizationsView" spacing="20" visible="false">
-                <Label text="Mes hospitalisations" style="-fx-font-size: 24px; -fx-font-weight: bold;"/>
-                <TableView fx:id="activeHospitalizationsTable" prefHeight="400">
-                    <columns>
-                        <TableColumn text="Patient" prefWidth="200"/>
-                    </columns>
-                </TableView>
-                <TableView fx:id="completedHospitalizationsTable" prefHeight="0"/>
-            </VBox>
+            <!-- ════════════════════════════════════
+                 VUE 3 — HOSPITALISATIONS
+            ════════════════════════════════════ -->
+            <VBox fx:id="hospitalizationsView" spacing="22"
+                  style="-fx-padding: 32 30 30 30;"
+                  visible="false" managed="false">
 
-            <!-- Product Requests View -->
-            <VBox fx:id="productRequestsView" spacing="20" visible="false">
-                <Label text="Demandes de produits" style="-fx-font-size: 24px; -fx-font-weight: bold;"/>
-                <TableView fx:id="myRequestsTable" prefHeight="400">
-                    <columns>
-                        <TableColumn text="Date" prefWidth="150"/>
-                    </columns>
-                </TableView>
-            </VBox>
+                <HBox alignment="CENTER_LEFT">
+                    <VBox spacing="3">
+                        <Label text="Hospitalisations"
+                               style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #0D1B2A;"/>
+                        <Label text="Gestion des patients hospitalisés"
+                               style="-fx-font-size: 12px; -fx-text-fill: #7F93A8;"/>
+                    </VBox>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Button text="➕  Nouvelle hospitalisation" onAction="#onNewHospitalization"
+                            style="-fx-background-color: #1A9E5C; -fx-text-fill: white;
+                                   -fx-font-size: 12px; -fx-font-weight: bold;
+                                   -fx-padding: 10 20 10 20; -fx-background-radius: 9;
+                                   -fx-cursor: hand; -fx-border-width: 0;"/>
+                </HBox>
 
-            <!-- Treatment View -->
-            <VBox fx:id="treatmentView" spacing="20" visible="false">
-                <Label text="Prise en charge du patient" style="-fx-font-size: 24px; -fx-font-weight: bold;"/>
-
-                <Label fx:id="patientNameLabel" text="[Nom]"/>
-                <Label fx:id="arrivalDateLabel" text="[Date]"/>
-                <Label fx:id="gravityLevelLabel" text="[Gravité]"/>
-                <TextArea fx:id="symptomsTextArea" prefRowCount="3"/>
-
-                <RadioButton fx:id="ordonnanceRadio" text="Ordonnance"/>
-                <RadioButton fx:id="hospitalizationRadio" text="Hospitalisation"/>
-
-                <VBox fx:id="hospitalizationDetails" visible="false">
-                    <ComboBox fx:id="chambreComboBox" promptText="Chambre"/>
-                    <TextArea fx:id="maladieTextArea" promptText="Maladie" prefRowCount="3"/>
+                <!-- Actives -->
+                <VBox VBox.vgrow="ALWAYS" spacing="0"
+                      style="-fx-background-color: white; -fx-background-radius: 14;
+                             -fx-effect: dropshadow(gaussian, rgba(13,27,42,0.07), 12, 0, 0, 3);">
+                    <HBox alignment="CENTER_LEFT" spacing="10"
+                          style="-fx-padding: 16 22 14 22;
+                                 -fx-border-color: transparent transparent #EEF1F7 transparent;
+                                 -fx-border-width: 0 0 1 0;">
+                        <Rectangle width="10" height="24" arcWidth="4" arcHeight="4" fill="#1A9E5C"/>
+                        <Label text="Hospitalisations actives"
+                               style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #0D1B2A;"/>
+                    </HBox>
+                    <TableView fx:id="activeHospitalizationsTable" prefHeight="220"
+                               style="-fx-background-color: transparent; -fx-border-width: 0;
+                                      -fx-table-cell-border-color: #F0F3F8;">
+                        <columns>
+                            <TableColumn text="Patient" prefWidth="160"/>
+                            <TableColumn text="Chambre" prefWidth="90"/>
+                            <TableColumn text="Date début" prefWidth="130"/>
+                            <TableColumn text="Diagnostic" prefWidth="240"/>
+                            <TableColumn text="Durée" prefWidth="80"/>
+                            <TableColumn text="Action" prefWidth="110"/>
+                        </columns>
+                        <placeholder>
+                            <Label text="Aucune hospitalisation active"
+                                   style="-fx-text-fill: #7F93A8; -fx-font-size: 12px;"/>
+                        </placeholder>
+                    </TableView>
                 </VBox>
 
-                <HBox spacing="10">
-                    <Button text="Valider" onAction="#onValidateTreatment"/>
-                    <Button text="Annuler" onAction="#onCancelTreatment"/>
-                </HBox>
+                <!-- Terminées -->
+                <VBox VBox.vgrow="ALWAYS" spacing="0"
+                      style="-fx-background-color: white; -fx-background-radius: 14;
+                             -fx-effect: dropshadow(gaussian, rgba(13,27,42,0.07), 12, 0, 0, 3);">
+                    <HBox alignment="CENTER_LEFT" spacing="10"
+                          style="-fx-padding: 16 22 14 22;
+                                 -fx-border-color: transparent transparent #EEF1F7 transparent;
+                                 -fx-border-width: 0 0 1 0;">
+                        <Rectangle width="10" height="24" arcWidth="4" arcHeight="4" fill="#7F93A8"/>
+                        <Label text="Hospitalisations terminées"
+                               style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #0D1B2A;"/>
+                    </HBox>
+                    <TableView fx:id="completedHospitalizationsTable" prefHeight="180"
+                               style="-fx-background-color: transparent; -fx-border-width: 0;
+                                      -fx-table-cell-border-color: #F0F3F8;">
+                        <columns>
+                            <TableColumn text="Patient" prefWidth="160"/>
+                            <TableColumn text="Chambre" prefWidth="90"/>
+                            <TableColumn text="Date début" prefWidth="130"/>
+                            <TableColumn text="Date fin" prefWidth="130"/>
+                            <TableColumn text="Diagnostic" prefWidth="280"/>
+                        </columns>
+                        <placeholder>
+                            <Label text="Aucune hospitalisation terminée"
+                                   style="-fx-text-fill: #7F93A8; -fx-font-size: 12px;"/>
+                        </placeholder>
+                    </TableView>
+                </VBox>
             </VBox>
 
+            <!-- ════════════════════════════════════
+                 VUE 4 — DEMANDES PRODUITS
+            ════════════════════════════════════ -->
+            <VBox fx:id="productRequestsView" spacing="22"
+                  style="-fx-padding: 32 30 30 30;"
+                  visible="false" managed="false">
+
+                <VBox spacing="3">
+                    <Label text="Demandes de produits"
+                           style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #0D1B2A;"/>
+                    <Label text="Suivi de vos demandes pharmaceutiques"
+                           style="-fx-font-size: 12px; -fx-text-fill: #7F93A8;"/>
+                </VBox>
+
+                <VBox VBox.vgrow="ALWAYS" spacing="0"
+                      style="-fx-background-color: white; -fx-background-radius: 14;
+                             -fx-effect: dropshadow(gaussian, rgba(13,27,42,0.07), 12, 0, 0, 3);">
+                    <HBox alignment="CENTER_LEFT" spacing="10"
+                          style="-fx-padding: 16 22 14 22;
+                                 -fx-border-color: transparent transparent #EEF1F7 transparent;
+                                 -fx-border-width: 0 0 1 0;">
+                        <Label text="💊" style="-fx-font-size: 16px;"/>
+                        <Label text="Mes demandes"
+                               style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #0D1B2A;"/>
+                    </HBox>
+                    <TableView fx:id="myRequestsTable" VBox.vgrow="ALWAYS"
+                               style="-fx-background-color: transparent; -fx-border-width: 0;
+                                      -fx-table-cell-border-color: #F0F3F8;">
+                        <columns>
+                            <TableColumn text="N° Demande" prefWidth="110"/>
+                            <TableColumn text="Patient" prefWidth="160"/>
+                            <TableColumn text="Produit" prefWidth="180"/>
+                            <TableColumn text="Quantité" prefWidth="90"/>
+                            <TableColumn text="Date" prefWidth="130"/>
+                            <TableColumn text="Statut" prefWidth="130"/>
+                        </columns>
+                        <placeholder>
+                            <VBox alignment="CENTER" spacing="8" style="-fx-padding: 40 0 40 0;">
+                                <Label text="💊" style="-fx-font-size: 28px;"/>
+                                <Label text="Aucune demande de produit"
+                                       style="-fx-text-fill: #7F93A8; -fx-font-size: 13px;"/>
+                            </VBox>
+                        </placeholder>
+                    </TableView>
+                </VBox>
+            </VBox>
+
+            <!-- ════════════════════════════════════
+                 VUE 5 — DÉCISION DE TRAITEMENT
+            ════════════════════════════════════ -->
+            <VBox fx:id="treatmentView" spacing="20"
+                  style="-fx-padding: 32 30 30 30;"
+                  visible="false" managed="false">
+
+                <VBox spacing="3">
+                    <Label text="Décision de traitement"
+                           style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #0D1B2A;"/>
+                    <Label text="Choisissez la prise en charge adaptée au patient"
+                           style="-fx-font-size: 12px; -fx-text-fill: #7F93A8;"/>
+                </VBox>
+
+                <!-- Infos patient -->
+                <VBox spacing="16"
+                      style="-fx-background-color: white; -fx-padding: 24 26 24 26;
+                                     -fx-background-radius: 14;
+                                     -fx-effect: dropshadow(gaussian, rgba(13,27,42,0.07), 12, 0, 0, 3);">
+                    <HBox alignment="CENTER_LEFT" spacing="10">
+                        <Rectangle width="4" height="20" arcWidth="2" arcHeight="2" fill="#1565C0"/>
+                        <Label text="Informations du patient"
+                               style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #0D1B2A;"/>
+                    </HBox>
+                    <Separator style="-fx-background-color: #EEF1F7;"/>
+
+                    <GridPane hgap="16" vgap="12">
+                        <columnConstraints>
+                            <ColumnConstraints minWidth="110" prefWidth="120"/>
+                            <ColumnConstraints hgrow="ALWAYS"/>
+                        </columnConstraints>
+                        <Label text="Nom :" style="-fx-text-fill: #7F93A8; -fx-font-size: 12px;"
+                               GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                        <Label fx:id="patientNameLabel" text="—"
+                               style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #0D1B2A;"
+                               GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+                        <Label text="Arrivée :" style="-fx-text-fill: #7F93A8; -fx-font-size: 12px;"
+                               GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                        <Label fx:id="arrivalDateLabel" text="—"
+                               style="-fx-font-size: 13px; -fx-text-fill: #0D1B2A;"
+                               GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+                        <Label text="Niveau gravité :" style="-fx-text-fill: #7F93A8; -fx-font-size: 12px;"
+                               GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+                        <Label fx:id="gravityLevelLabel" text="—"
+                               style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #C0392B;"
+                               GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+                    </GridPane>
+
+                    <VBox spacing="6">
+                        <Label text="Symptômes déclarés :"
+                               style="-fx-font-size: 12px; -fx-text-fill: #7F93A8;"/>
+                        <TextArea fx:id="symptomsTextArea"
+                                  prefHeight="90" editable="false" wrapText="true"
+                                  style="-fx-background-color: #F4F6FB; -fx-background-radius: 8;
+                                                 -fx-border-color: #DDE4EE; -fx-border-radius: 8;
+                                                 -fx-border-width: 1; -fx-font-size: 12px; -fx-text-fill: #3D4F60;"/>
+                    </VBox>
+                </VBox>
+
+                <!-- Carte décision -->
+                <VBox spacing="18"
+                      style="-fx-background-color: white; -fx-padding: 24 26 24 26;
+                                     -fx-background-radius: 14;
+                                     -fx-effect: dropshadow(gaussian, rgba(13,27,42,0.07), 12, 0, 0, 3);">
+                    <HBox alignment="CENTER_LEFT" spacing="10">
+                        <Rectangle width="4" height="20" arcWidth="2" arcHeight="2" fill="#1565C0"/>
+                        <Label text="Décision médicale"
+                               style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #0D1B2A;"/>
+                    </HBox>
+                    <Separator style="-fx-background-color: #EEF1F7;"/>
+
+                    <!-- Options de traitement -->
+                    <HBox spacing="16">
+                        <!-- Ordonnance -->
+                        <VBox HBox.hgrow="ALWAYS" spacing="8" alignment="CENTER"
+                              style="-fx-background-color: #F0FBF5; -fx-padding: 20;
+                                             -fx-background-radius: 10; -fx-border-color: #B2DFCC;
+                                             -fx-border-width: 1.5; -fx-border-radius: 10;">
+                            <Label text="📄" style="-fx-font-size: 26px;"/>
+                            <RadioButton fx:id="ordonnanceRadio" text="Ordonnance + sortie"
+                                         style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #1A9E5C;"/>
+                            <Label text="Le patient quitte l'établissement avec ordonnance."
+                                   wrapText="true" style="-fx-font-size: 10px; -fx-text-fill: #5A8A6A; -fx-alignment: CENTER;"/>
+                        </VBox>
+                        <!-- Hospitalisation -->
+                        <VBox HBox.hgrow="ALWAYS" spacing="8" alignment="CENTER"
+                              style="-fx-background-color: #EEF4FF; -fx-padding: 20;
+                                             -fx-background-radius: 10; -fx-border-color: #A8C4F0;
+                                             -fx-border-width: 1.5; -fx-border-radius: 10;">
+                            <Label text="🛏" style="-fx-font-size: 26px;"/>
+                            <RadioButton fx:id="hospitalizationRadio" text="Hospitalisation"
+                                         style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #1565C0;"/>
+                            <Label text="Le patient nécessite une admission en chambre."
+                                   wrapText="true" style="-fx-font-size: 10px; -fx-text-fill: #4A6A9A; -fx-alignment: CENTER;"/>
+                        </VBox>
+                    </HBox>
+
+                    <!-- Détails hospitalisation -->
+                    <VBox fx:id="hospitalizationDetails" spacing="14"
+                          visible="false" managed="false"
+                          style="-fx-background-color: #F4F8FF; -fx-padding: 18 20 18 20;
+                                         -fx-background-radius: 10; -fx-border-color: #C8DEFF;
+                                         -fx-border-width: 1; -fx-border-radius: 10;">
+                        <Label text="Paramètres d'hospitalisation"
+                               style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #1565C0;"/>
+                        <VBox spacing="6">
+                            <Label text="Chambre disponible :"
+                                   style="-fx-font-size: 12px; -fx-text-fill: #5A7090;"/>
+                            <ComboBox fx:id="chambreComboBox"
+                                      promptText="Sélectionner une chambre" prefWidth="240"
+                                      style="-fx-background-radius: 8; -fx-font-size: 12px;
+                                                     -fx-background-color: white; -fx-border-color: #C8DEFF;
+                                                     -fx-border-radius: 8; -fx-border-width: 1;"/>
+                        </VBox>
+                        <VBox spacing="6">
+                            <Label text="Diagnostic / Description de la maladie :"
+                                   style="-fx-font-size: 12px; -fx-text-fill: #5A7090;"/>
+                            <TextArea fx:id="maladieTextArea"
+                                      prefHeight="90" wrapText="true"
+                                      promptText="Décrivez le diagnostic, les soins requis..."
+                                      style="-fx-background-color: white; -fx-background-radius: 8;
+                                                     -fx-border-color: #C8DEFF; -fx-border-radius: 8;
+                                                     -fx-border-width: 1; -fx-font-size: 12px;"/>
+                        </VBox>
+                    </VBox>
+
+                    <!-- Boutons -->
+                    <HBox spacing="12" alignment="CENTER_RIGHT" style="-fx-padding: 6 0 0 0;">
+                        <Button text="✖  Annuler" onAction="#onCancelTreatment"
+                                style="-fx-background-color: #F0F3F8; -fx-text-fill: #5A7090;
+                                               -fx-font-size: 13px; -fx-font-weight: bold;
+                                               -fx-padding: 12 26 12 26; -fx-background-radius: 9;
+                                               -fx-cursor: hand; -fx-border-width: 0;"/>
+                        <Button text="✔  Valider la décision" onAction="#onValidateTreatment"
+                                style="-fx-background-color: #1565C0; -fx-text-fill: white;
+                                               -fx-font-size: 13px; -fx-font-weight: bold;
+                                               -fx-padding: 12 26 12 26; -fx-background-radius: 9;
+                                               -fx-cursor: hand; -fx-border-width: 0;
+                                               -fx-effect: dropshadow(gaussian, rgba(21,101,192,0.4), 10, 0, 0, 4);"/>
+                    </HBox>
+                </VBox>
+            </VBox>
         </StackPane>
     </center>
 
-</BorderPane>
+
+
+
+        </BorderPane>

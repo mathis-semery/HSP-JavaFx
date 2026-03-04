@@ -78,13 +78,15 @@
                         <TextField fx:id="quantityField" GridPane.columnIndex="1" GridPane.rowIndex="1" prefWidth="300"/>
                         <Label text="Seuil alerte :" GridPane.columnIndex="0" GridPane.rowIndex="2" style="-fx-font-weight: bold;"/>
                         <TextField fx:id="seuilField" GridPane.columnIndex="1" GridPane.rowIndex="2" prefWidth="300"/>
-                        <Label text="Catégorie :" GridPane.columnIndex="0" GridPane.rowIndex="3" style="-fx-font-weight: bold;"/>
-                        <ComboBox fx:id="categorieComboBox" GridPane.columnIndex="1" GridPane.rowIndex="3" prefWidth="300"/>
+                        <Label text="Dangerosité (1-5) :" GridPane.columnIndex="0" GridPane.rowIndex="3" style="-fx-font-weight: bold;"/>
+                        <ComboBox fx:id="dangerositeProduitComboBox" GridPane.columnIndex="1" GridPane.rowIndex="3" prefWidth="300"/>
+                        <Label text="Description :" GridPane.columnIndex="0" GridPane.rowIndex="4" style="-fx-font-weight: bold;"/>
+                        <TextField fx:id="descriptionProduitField" GridPane.columnIndex="1" GridPane.rowIndex="4" prefWidth="300"/>
                     </GridPane>
                     <Button text="✅ Ajouter au stock" onAction="#onAddProduct"
                             style="-fx-background-color: #8b5cf6; -fx-text-fill: white; -fx-padding: 12 30;"/>
                 </VBox>
-                <TableView fx:id="productsTable" prefHeight="300">
+                <TableView fx:id="stockProductsTable" prefHeight="300">
                     <columns>
                         <TableColumn text="Produit" prefWidth="200"/>
                         <TableColumn text="Quantité" prefWidth="100"/>
