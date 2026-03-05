@@ -1,6 +1,8 @@
 package com.hsp.controller.produit;
 
+import com.hsp.dao.HistoriqueDAO;
 import com.hsp.dao.ProduitDAO;
+import com.hsp.model.Historique;
 import com.hsp.model.Produit;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -15,55 +17,38 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import java.net.URL;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
 
 public class ProduitListController implements Initializable {
 
-    @FXML
-    private TableView<Produit> table;
-
-    @FXML
-    private TableColumn<Produit, String> idCol;
-
-    @FXML
-    private TableColumn<Produit, String> libelleCol;
-
-    @FXML
-    private TableColumn<Produit, String> descriptionCol;
-
-    @FXML
-    private TableColumn<Produit, String> dangerositeCol;
-
-    @FXML
-    private TableColumn<Produit, String> stockCol;
-
-    @FXML
-    private TableColumn<Produit, String> dateCreationCol;
-
-    @FXML
-    private TextField recherche;
-
-    @FXML
-    private Button ajouter;
-
-    @FXML
-    private Button modifier;
-
-    @FXML
-    private Button supprimer;
-
-    @FXML
-    private ComboBox<String> filtreDangerosite;
+    @FXML private TableView<Produit> table;
+    @FXML private TableColumn<Produit, String> idCol;
+    @FXML private TableColumn<Produit, String> libelleCol;
+    @FXML private TableColumn<Produit, String> descriptionCol;
+    @FXML private TableColumn<Produit, String> dangerositeCol;
+    @FXML private TableColumn<Produit, String> stockCol;
+    @FXML private TableColumn<Produit, String> dateCreationCol;
+    @FXML private TextField recherche;
+    @FXML private Button ajouter;
+    @FXML private Button modifier;
+    @FXML private Button supprimer;
+    @FXML private ComboBox<String> filtreDangerosite;
 
     private ProduitDAO produitDAO;
+    private HistoriqueDAO historiqueDAO;
     private ObservableList<Produit> produits;
+
+    // ID de l'utilisateur connecté — à setter depuis le controller parent (ex: StockListController)
+    private int idUtilisateurConnecte = 1;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        produitDAO = new ProduitDAO();
-        produits = FXCollections.observableArrayList();
+        produitDAO    = new ProduitDAO();
+        historiqueDAO = new HistoriqueDAO();
+        produits      = FXCollections.observableArrayList();
 
         configurerColonnes();
         configurerFiltre();
@@ -79,6 +64,10 @@ public class ProduitListController implements Initializable {
         });
     }
 
+    public void setIdUtilisateurConnecte(int id) {
+        this.idUtilisateurConnecte = id;
+    }
+
     private void configurerColonnes() {
         idCol.setCellValueFactory(cellData ->
                 new SimpleStringProperty(String.valueOf(cellData.getValue().getId_produit())));
@@ -88,9 +77,7 @@ public class ProduitListController implements Initializable {
 
         descriptionCol.setCellValueFactory(cellData -> {
             String desc = cellData.getValue().getDescription();
-            if (desc != null && desc.length() > 50) {
-                desc = desc.substring(0, 47) + "...";
-            }
+            if (desc != null && desc.length() > 50) desc = desc.substring(0, 47) + "...";
             return new SimpleStringProperty(desc != null ? desc : "");
         });
 
@@ -98,20 +85,11 @@ public class ProduitListController implements Initializable {
             int niveau = cellData.getValue().getNiveau_dangerosite();
             String texte;
             switch (niveau) {
-                case 1:
-                    texte = "Faible";
-                    break;
-                case 2:
-                    texte = "Moyen";
-                    break;
-                case 3:
-                    texte = "Élevé";
-                    break;
-                case 4:
-                    texte = "Très élevé";
-                    break;
-                default:
-                    texte = "Non défini";
+                case 1: texte = "Faible";     break;
+                case 2: texte = "Moyen";      break;
+                case 3: texte = "Élevé";      break;
+                case 4: texte = "Très élevé"; break;
+                default: texte = "Non défini";
             }
             return new SimpleStringProperty(texte);
         });
@@ -147,7 +125,6 @@ public class ProduitListController implements Initializable {
     private void rechercher() {
         String texte = recherche.getText().toLowerCase().trim();
         List<Produit> tous = produitDAO.findAll();
-
         produits.clear();
 
         if (texte.isEmpty()) {
@@ -155,58 +132,30 @@ public class ProduitListController implements Initializable {
         } else {
             for (Produit produit : tous) {
                 boolean correspond = false;
-
-                if (String.valueOf(produit.getId_produit()).contains(texte)) {
-                    correspond = true;
-                }
-
-                if (produit.getLibelle() != null && produit.getLibelle().toLowerCase().contains(texte)) {
-                    correspond = true;
-                }
-
-                if (produit.getDescription() != null && produit.getDescription().toLowerCase().contains(texte)) {
-                    correspond = true;
-                }
-
-                if (correspond) {
-                    produits.add(produit);
-                }
+                if (String.valueOf(produit.getId_produit()).contains(texte))                              correspond = true;
+                if (produit.getLibelle() != null && produit.getLibelle().toLowerCase().contains(texte)) correspond = true;
+                if (produit.getDescription() != null && produit.getDescription().toLowerCase().contains(texte)) correspond = true;
+                if (correspond) produits.add(produit);
             }
         }
-
         appliquerFiltre();
     }
 
     @FXML
-    private void filtrerProduits() {
-        rechercher();
-    }
+    private void filtrerProduits() { rechercher(); }
 
     private void appliquerFiltre() {
-        if (filtreDangerosite == null || "Tous".equals(filtreDangerosite.getValue())) {
-            return;
-        }
-
+        if (filtreDangerosite == null || "Tous".equals(filtreDangerosite.getValue())) return;
         String valeur = filtreDangerosite.getValue();
         int niveauFiltre;
         switch (valeur) {
-            case "Faible":
-                niveauFiltre = 1;
-                break;
-            case "Moyen":
-                niveauFiltre = 2;
-                break;
-            case "Élevé":
-                niveauFiltre = 3;
-                break;
-            case "Très élevé":
-                niveauFiltre = 4;
-                break;
-            default:
-                return;
+            case "Faible":     niveauFiltre = 1; break;
+            case "Moyen":      niveauFiltre = 2; break;
+            case "Élevé":      niveauFiltre = 3; break;
+            case "Très élevé": niveauFiltre = 4; break;
+            default: return;
         }
-
-        produits.removeIf(produit -> produit.getNiveau_dangerosite() != niveauFiltre);
+        produits.removeIf(p -> p.getNiveau_dangerosite() != niveauFiltre);
     }
 
     @FXML
@@ -217,6 +166,7 @@ public class ProduitListController implements Initializable {
 
             ProduitFormController controller = loader.getController();
             controller.setMode(ProduitFormController.Mode.CREATION);
+            controller.setIdUtilisateurConnecte(idUtilisateurConnecte); // ← transmet l'ID
 
             Stage stage = new Stage();
             stage.setTitle("Nouveau produit");
@@ -233,9 +183,7 @@ public class ProduitListController implements Initializable {
     @FXML
     private void modifierProduit() {
         Produit selection = table.getSelectionModel().getSelectedItem();
-        if (selection == null) {
-            return;
-        }
+        if (selection == null) return;
 
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/stock/ProduitForm.fxml"));
@@ -244,6 +192,7 @@ public class ProduitListController implements Initializable {
             ProduitFormController controller = loader.getController();
             controller.setMode(ProduitFormController.Mode.MODIFICATION);
             controller.setProduit(selection);
+            controller.setIdUtilisateurConnecte(idUtilisateurConnecte); // ← transmet l'ID
 
             Stage stage = new Stage();
             stage.setTitle("Modifier le produit");
@@ -260,9 +209,7 @@ public class ProduitListController implements Initializable {
     @FXML
     private void supprimerProduit() {
         Produit selection = table.getSelectionModel().getSelectedItem();
-        if (selection == null) {
-            return;
-        }
+        if (selection == null) return;
 
         Alert confirmation = new Alert(Alert.AlertType.CONFIRMATION);
         confirmation.setTitle("Confirmation de suppression");
@@ -273,6 +220,9 @@ public class ProduitListController implements Initializable {
         if (resultat.isPresent() && resultat.get() == ButtonType.OK) {
             boolean succes = produitDAO.delete(selection.getId_produit());
             if (succes) {
+                // Enregistrement dans l'historique après suppression réussie
+                enregistrerHistorique("SUPPRESSION", "produit", selection.getId_produit(),
+                        "Suppression du produit : " + selection.getLibelle());
                 chargerProduits();
                 afficherInfo("Succès", "Le produit a été supprimé.");
             } else {
@@ -284,10 +234,18 @@ public class ProduitListController implements Initializable {
     @FXML
     private void rafraichir() {
         recherche.clear();
-        if (filtreDangerosite != null) {
-            filtreDangerosite.setValue("Tous");
-        }
+        if (filtreDangerosite != null) filtreDangerosite.setValue("Tous");
         chargerProduits();
+    }
+
+    private void enregistrerHistorique(String action, String table, int idEntite, String details) {
+        try {
+            Historique h = new Historique(
+                    0, idUtilisateurConnecte, action, table, idEntite, LocalDateTime.now(), details);
+            historiqueDAO.insert(h);
+        } catch (Exception e) {
+            System.err.println("⚠️ Impossible d'enregistrer l'historique : " + e.getMessage());
+        }
     }
 
     private void afficherErreur(String titre, String message) {

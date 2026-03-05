@@ -1,9 +1,11 @@
 package com.hsp.controller.reappro;
 
 import com.hsp.dao.FournisseurDAO;
+import com.hsp.dao.HistoriqueDAO;
 import com.hsp.dao.ProduitDAO;
 import com.hsp.dao.ReapprovisionnementDAO;
 import com.hsp.model.Fournisseur;
+import com.hsp.model.Historique;
 import com.hsp.model.Produit;
 import com.hsp.model.Reapprovisionnement;
 import javafx.fxml.FXML;
@@ -14,6 +16,7 @@ import javafx.util.StringConverter;
 
 import java.net.URL;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.ResourceBundle;
 
@@ -38,14 +41,16 @@ public class ReapproFormController implements Initializable {
     private ReapprovisionnementDAO reapproDAO;
     private ProduitDAO produitDAO;
     private FournisseurDAO fournisseurDAO;
+    private HistoriqueDAO historiqueDAO;   // ← AJOUT
 
     private int idGestionnaire = 1;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        reapproDAO = new ReapprovisionnementDAO();
-        produitDAO = new ProduitDAO();
+        reapproDAO     = new ReapprovisionnementDAO();
+        produitDAO     = new ProduitDAO();
         fournisseurDAO = new FournisseurDAO();
+        historiqueDAO  = new HistoriqueDAO();   // ← AJOUT
 
         chargerProduits();
         chargerFournisseurs();
@@ -60,12 +65,8 @@ public class ReapproFormController implements Initializable {
         List<Produit> produits = produitDAO.findAll();
         produitField.getItems().addAll(produits);
         produitField.setConverter(new StringConverter<Produit>() {
-            @Override
-            public String toString(Produit produit) {
-                return produit != null ? produit.getLibelle() : "";
-            }
-            @Override
-            public Produit fromString(String s) { return null; }
+            @Override public String toString(Produit produit) { return produit != null ? produit.getLibelle() : ""; }
+            @Override public Produit fromString(String s)     { return null; }
         });
     }
 
@@ -74,12 +75,8 @@ public class ReapproFormController implements Initializable {
         List<Fournisseur> fournisseurs = fournisseurDAO.findAll();
         fournisseurField.getItems().addAll(fournisseurs);
         fournisseurField.setConverter(new StringConverter<Fournisseur>() {
-            @Override
-            public String toString(Fournisseur fournisseur) {
-                return fournisseur != null ? fournisseur.getNom() : "";
-            }
-            @Override
-            public Fournisseur fromString(String s) { return null; }
+            @Override public String toString(Fournisseur f) { return f != null ? f.getNom() : ""; }
+            @Override public Fournisseur fromString(String s) { return null; }
         });
     }
 
@@ -106,56 +103,39 @@ public class ReapproFormController implements Initializable {
     private void remplirFormulaire() {
         if (reappro == null) return;
 
-        if (produitField != null) {
-            produitField.getItems().stream()
-                    .filter(p -> p.getId_produit() == reappro.getId_produit())
-                    .findFirst()
-                    .ifPresent(produitField::setValue);
-        }
-
-        if (fournisseurField != null) {
-            fournisseurField.getItems().stream()
-                    .filter(f -> f.getId_fournisseur() == reappro.getId_fournisseur())
-                    .findFirst()
-                    .ifPresent(fournisseurField::setValue);
-        }
-
-        if (quantiteField != null) {
-            quantiteField.setText(String.valueOf(reappro.getQuantite()));
-        }
-
-        if (dateCommandeField != null) {
-            dateCommandeField.setValue(reappro.getDate_commande());
-        }
-
-        if (dateReceptionField != null) {
-            dateReceptionField.setValue(reappro.getDate_reception());
-        }
+        if (produitField != null)
+            produitField.getItems().stream().filter(p -> p.getId_produit() == reappro.getId_produit()).findFirst().ifPresent(produitField::setValue);
+        if (fournisseurField != null)
+            fournisseurField.getItems().stream().filter(f -> f.getId_fournisseur() == reappro.getId_fournisseur()).findFirst().ifPresent(fournisseurField::setValue);
+        if (quantiteField    != null) quantiteField.setText(String.valueOf(reappro.getQuantite()));
+        if (dateCommandeField  != null) dateCommandeField.setValue(reappro.getDate_commande());
+        if (dateReceptionField != null) dateReceptionField.setValue(reappro.getDate_reception());
     }
 
     @FXML
     private void valider() {
         if (!validerFormulaire()) return;
 
-        Produit produit = produitField.getValue();
+        Produit produit         = produitField.getValue();
         Fournisseur fournisseur = fournisseurField.getValue();
-        int quantite = Integer.parseInt(quantiteField.getText().trim());
-        LocalDate dateCommande = dateCommandeField.getValue();
+        int quantite            = Integer.parseInt(quantiteField.getText().trim());
+        LocalDate dateCommande  = dateCommandeField.getValue();
         LocalDate dateReception = dateReceptionField != null ? dateReceptionField.getValue() : null;
 
         boolean succes;
 
         if (mode == Mode.CREATION) {
             Reapprovisionnement nouveau = new Reapprovisionnement(
-                    0,
-                    produit.getId_produit(),
-                    fournisseur.getId_fournisseur(),
-                    idGestionnaire,
-                    quantite,
-                    dateCommande,
-                    dateReception
-            );
+                    0, produit.getId_produit(), fournisseur.getId_fournisseur(),
+                    idGestionnaire, quantite, dateCommande, dateReception);
             succes = reapproDAO.insert(nouveau);
+
+            if (succes) {
+                enregistrerHistorique("CREATION", "reapprovisionnement", 0,
+                        "Réappro. produit : " + produit.getLibelle()
+                                + " | fournisseur : " + fournisseur.getNom()
+                                + " | qté : " + quantite);
+            }
         } else {
             reappro.setId_produit(produit.getId_produit());
             reappro.setId_fournisseur(fournisseur.getId_fournisseur());
@@ -163,55 +143,47 @@ public class ReapproFormController implements Initializable {
             reappro.setDate_commande(dateCommande);
             reappro.setDate_reception(dateReception);
             succes = reapproDAO.update(reappro);
+
+            if (succes) {
+                enregistrerHistorique("MODIFICATION", "reapprovisionnement", reappro.getId_reappro(),
+                        "Modification réappro. #" + reappro.getId_reappro()
+                                + " | produit : " + produit.getLibelle()
+                                + " | qté : " + quantite);
+            }
         }
 
-        if (succes) {
-            fermer();
-        } else {
-            afficherErreur("Erreur", "Impossible d'enregistrer le réapprovisionnement.");
-        }
+        if (succes) fermer();
+        else afficherErreur("Erreur", "Impossible d'enregistrer le réapprovisionnement.");
     }
 
     private boolean validerFormulaire() {
         StringBuilder erreurs = new StringBuilder();
-
-        if (produitField == null || produitField.getValue() == null) {
-            erreurs.append("- Le produit est obligatoire\n");
-        }
-
-        if (fournisseurField == null || fournisseurField.getValue() == null) {
-            erreurs.append("- Le fournisseur est obligatoire\n");
-        }
-
+        if (produitField    == null || produitField.getValue()    == null) erreurs.append("- Le produit est obligatoire\n");
+        if (fournisseurField == null || fournisseurField.getValue() == null) erreurs.append("- Le fournisseur est obligatoire\n");
         if (quantiteField == null || quantiteField.getText().trim().isEmpty()) {
             erreurs.append("- La quantité est obligatoire\n");
         } else {
             try {
                 int q = Integer.parseInt(quantiteField.getText().trim());
-                if (q <= 0) {
-                    erreurs.append("- La quantité doit être supérieure à 0\n");
-                }
-            } catch (NumberFormatException e) {
-                erreurs.append("- La quantité doit être un nombre entier\n");
-            }
+                if (q <= 0) erreurs.append("- La quantité doit être supérieure à 0\n");
+            } catch (NumberFormatException e) { erreurs.append("- La quantité doit être un nombre entier\n"); }
         }
-
-        if (dateCommandeField == null || dateCommandeField.getValue() == null) {
-            erreurs.append("- La date de commande est obligatoire\n");
-        }
-
-        if (erreurs.length() > 0) {
-            afficherErreur("Erreurs de validation", erreurs.toString());
-            return false;
-        }
-
+        if (dateCommandeField == null || dateCommandeField.getValue() == null) erreurs.append("- La date de commande est obligatoire\n");
+        if (erreurs.length() > 0) { afficherErreur("Erreurs de validation", erreurs.toString()); return false; }
         return true;
     }
 
-    @FXML
-    private void annuler() {
-        fermer();
+    // ← AJOUT : méthode utilitaire historique
+    private void enregistrerHistorique(String action, String table, int idEntite, String details) {
+        try {
+            historiqueDAO.insert(new Historique(
+                    0, idGestionnaire, action, table, idEntite, LocalDateTime.now(), details));
+        } catch (Exception e) {
+            System.err.println("⚠️ Historique non enregistré : " + e.getMessage());
+        }
     }
+
+    @FXML private void annuler() { fermer(); }
 
     private void fermer() {
         Stage stage = (Stage) valider.getScene().getWindow();
@@ -220,9 +192,6 @@ public class ReapproFormController implements Initializable {
 
     private void afficherErreur(String titre, String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle(titre);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
+        alert.setTitle(titre); alert.setHeaderText(null); alert.setContentText(message); alert.showAndWait();
     }
 }

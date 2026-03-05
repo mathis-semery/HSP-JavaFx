@@ -93,18 +93,18 @@
                    maxWidth="160"/>
         </VBox>
 
-        <!-- Statistiques -->
+        <!-- Historique -->
         <VBox spacing="8" alignment="CENTER"
               style="-fx-background-color: white; -fx-background-radius: 10;
                      -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 8, 0, 0, 2);
                      -fx-padding: 20; -fx-cursor: hand;"
               prefWidth="180" prefHeight="130"
-              onMouseClicked="#ouvrirStatistiques"
+              onMouseClicked="#ouvrirHistorique"
               GridPane.columnIndex="1" GridPane.rowIndex="1">
             <Label text="📊" style="-fx-font-size: 32px;"/>
-            <Label text="Statistiques"
+            <Label text="Historique"
                    style="-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #888;"/>
-            <Label text="En cours de développement"
+            <Label text="Accès a l'Historique de toutes les actions"
                    style="-fx-font-size: 11px; -fx-text-fill: #aaa; -fx-wrap-text: true;"
                    maxWidth="160"/>
         </VBox>

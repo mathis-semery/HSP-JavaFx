@@ -113,20 +113,24 @@ public class StockListController implements Initializable {
     }
 
     @FXML
-    private void ouvrirStatistiques() {
-        afficherInfo("Information", "Fonctionnalité en cours de développement.");
+    private void ouvrirHistorique() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/historique/HistoriqueList.fxml"));
+            Parent root = loader.load();
+
+            Stage stage = new Stage();
+            stage.setTitle("Gestion des Historique");
+            stage.setScene(new Scene(root));
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.showAndWait();
+        } catch (Exception e) {
+            e.printStackTrace();
+            afficherErreur("Erreur", "Impossible d'ouvrir la gestion des Historiques.");
+        }
     }
 
     private void afficherErreur(String titre, String message) {
         javafx.scene.control.Alert alert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.ERROR);
-        alert.setTitle(titre);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
-    }
-
-    private void afficherInfo(String titre, String message) {
-        javafx.scene.control.Alert alert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.INFORMATION);
         alert.setTitle(titre);
         alert.setHeaderText(null);
         alert.setContentText(message);

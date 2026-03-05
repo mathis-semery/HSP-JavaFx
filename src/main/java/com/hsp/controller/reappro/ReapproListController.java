@@ -1,9 +1,11 @@
 package com.hsp.controller.reappro;
 
 import com.hsp.dao.FournisseurDAO;
+import com.hsp.dao.HistoriqueDAO;
 import com.hsp.dao.ProduitDAO;
 import com.hsp.dao.ReapprovisionnementDAO;
 import com.hsp.model.Fournisseur;
+import com.hsp.model.Historique;
 import com.hsp.model.Produit;
 import com.hsp.model.Reapprovisionnement;
 import javafx.beans.property.SimpleStringProperty;
@@ -19,6 +21,7 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import java.net.URL;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
@@ -40,14 +43,18 @@ public class ReapproListController implements Initializable {
     private ReapprovisionnementDAO reapproDAO;
     private ProduitDAO produitDAO;
     private FournisseurDAO fournisseurDAO;
+    private HistoriqueDAO historiqueDAO;   // ← AJOUT
     private ObservableList<Reapprovisionnement> reappros;
+
+    private int idUtilisateurConnecte = 1;   // ← AJOUT
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        reapproDAO = new ReapprovisionnementDAO();
-        produitDAO = new ProduitDAO();
+        reapproDAO     = new ReapprovisionnementDAO();
+        produitDAO     = new ProduitDAO();
         fournisseurDAO = new FournisseurDAO();
-        reappros = FXCollections.observableArrayList();
+        historiqueDAO  = new HistoriqueDAO();   // ← AJOUT
+        reappros       = FXCollections.observableArrayList();
 
         configurerColonnes();
         chargerReappros();
@@ -56,11 +63,12 @@ public class ReapproListController implements Initializable {
         supprimer.disableProperty().bind(table.getSelectionModel().selectedItemProperty().isNull());
 
         table.setOnMouseClicked(event -> {
-            if (event.getClickCount() == 2 && table.getSelectionModel().getSelectedItem() != null) {
+            if (event.getClickCount() == 2 && table.getSelectionModel().getSelectedItem() != null)
                 modifierReappro();
-            }
         });
     }
+
+    public void setIdUtilisateurConnecte(int id) { this.idUtilisateurConnecte = id; }   // ← AJOUT
 
     private void configurerColonnes() {
         idCol.setCellValueFactory(cellData ->
@@ -102,31 +110,17 @@ public class ReapproListController implements Initializable {
         List<Reapprovisionnement> tous = reapproDAO.findAll();
         reappros.clear();
 
-        if (texte.isEmpty()) {
-            reappros.addAll(tous);
-        } else {
-            for (Reapprovisionnement r : tous) {
-                boolean correspond = String.valueOf(r.getId_reappro()).contains(texte) ||
-                        String.valueOf(r.getQuantite()).contains(texte);
+        if (texte.isEmpty()) { reappros.addAll(tous); return; }
 
-                Produit produit = produitDAO.findById(r.getId_produit());
-                if (produit != null && produit.getLibelle().toLowerCase().contains(texte)) {
-                    correspond = true;
-                }
-
-                Fournisseur fournisseur = fournisseurDAO.findById(r.getId_fournisseur());
-                if (fournisseur != null && fournisseur.getNom().toLowerCase().contains(texte)) {
-                    correspond = true;
-                }
-
-                if (r.getDate_commande() != null && r.getDate_commande().toString().contains(texte)) {
-                    correspond = true;
-                }
-
-                if (correspond) {
-                    reappros.add(r);
-                }
-            }
+        for (Reapprovisionnement r : tous) {
+            boolean correspond = String.valueOf(r.getId_reappro()).contains(texte)
+                    || String.valueOf(r.getQuantite()).contains(texte);
+            Produit produit = produitDAO.findById(r.getId_produit());
+            if (produit != null && produit.getLibelle().toLowerCase().contains(texte)) correspond = true;
+            Fournisseur fournisseur = fournisseurDAO.findById(r.getId_fournisseur());
+            if (fournisseur != null && fournisseur.getNom().toLowerCase().contains(texte)) correspond = true;
+            if (r.getDate_commande() != null && r.getDate_commande().toString().contains(texte)) correspond = true;
+            if (correspond) reappros.add(r);
         }
     }
 
@@ -138,6 +132,7 @@ public class ReapproListController implements Initializable {
 
             ReapproFormController controller = loader.getController();
             controller.setMode(ReapproFormController.Mode.CREATION);
+            controller.setIdGestionnaire(idUtilisateurConnecte);   // ← AJOUT
 
             Stage stage = new Stage();
             stage.setTitle("Nouveau réapprovisionnement");
@@ -163,6 +158,7 @@ public class ReapproListController implements Initializable {
             ReapproFormController controller = loader.getController();
             controller.setMode(ReapproFormController.Mode.MODIFICATION);
             controller.setReappro(selection);
+            controller.setIdGestionnaire(idUtilisateurConnecte);   // ← AJOUT
 
             Stage stage = new Stage();
             stage.setTitle("Modifier le réapprovisionnement");
@@ -190,6 +186,9 @@ public class ReapproListController implements Initializable {
         if (resultat.isPresent() && resultat.get() == ButtonType.OK) {
             boolean succes = reapproDAO.delete(selection.getId_reappro());
             if (succes) {
+                // ← AJOUT
+                enregistrerHistorique("SUPPRESSION", "reapprovisionnement", selection.getId_reappro(),
+                        "Suppression du réapprovisionnement #" + selection.getId_reappro());
                 chargerReappros();
                 afficherInfo("Succès", "Le réapprovisionnement a été supprimé.");
             } else {
@@ -199,24 +198,25 @@ public class ReapproListController implements Initializable {
     }
 
     @FXML
-    private void rafraichir() {
-        recherche.clear();
-        chargerReappros();
+    private void rafraichir() { recherche.clear(); chargerReappros(); }
+
+    // ← AJOUT
+    private void enregistrerHistorique(String action, String table, int idEntite, String details) {
+        try {
+            historiqueDAO.insert(new Historique(
+                    0, idUtilisateurConnecte, action, table, idEntite, LocalDateTime.now(), details));
+        } catch (Exception e) {
+            System.err.println("⚠️ Historique non enregistré : " + e.getMessage());
+        }
     }
 
     private void afficherErreur(String titre, String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle(titre);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
+        alert.setTitle(titre); alert.setHeaderText(null); alert.setContentText(message); alert.showAndWait();
     }
 
     private void afficherInfo(String titre, String message) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle(titre);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
+        alert.setTitle(titre); alert.setHeaderText(null); alert.setContentText(message); alert.showAndWait();
     }
 }

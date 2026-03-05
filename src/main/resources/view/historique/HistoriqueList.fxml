@@ -1,7 +1,54 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.layout.VBox?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
 
-<VBox xmlns:fx="http://javafx.com/fxml">
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.hsp.controller.historique.HistoriqueListController"
+      spacing="12"
+      prefWidth="1000"
+      prefHeight="600"
+      style="-fx-background-color: #f0f4f8;">
+
+    <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+
+    <!-- Titre -->
+    <Label text="📋 Historique des actions"
+           style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #1a73e8;"/>
+    <Label text="Traçabilité complète de toutes les actions effectuées sur le stock"
+           style="-fx-font-size: 12px; -fx-text-fill: #888;"/>
+
+    <!-- Barre recherche + filtres -->
+    <HBox spacing="10" alignment="CENTER_LEFT">
+        <TextField fx:id="recherche"
+                   promptText="Rechercher par utilisateur, détails, date…"
+                   prefWidth="270"
+                   onKeyReleased="#rechercher"/>
+        <ComboBox fx:id="filtreAction" prefWidth="150"/>
+        <ComboBox fx:id="filtreTable"  prefWidth="170"/>
+        <Button text="🔄 Rafraîchir"
+                onAction="#rafraichir"
+                style="-fx-background-color: #e0e0e0; -fx-font-weight: bold; -fx-cursor: hand;"/>
+    </HBox>
+
+    <!-- Tableau -->
+    <TableView fx:id="table" VBox.vgrow="ALWAYS"
+               style="-fx-background-color: white;">
+        <columns>
+            <TableColumn fx:id="idCol"               text="ID"            prefWidth="50"/>
+            <TableColumn fx:id="utilisateurCol"      text="Utilisateur"   prefWidth="180"/>
+            <TableColumn fx:id="actionCol"           text="Action"        prefWidth="110"/>
+            <TableColumn fx:id="tableCol"            text="Table"         prefWidth="150"/>
+            <TableColumn fx:id="idEnregistrementCol" text="ID enreg."     prefWidth="80"/>
+            <TableColumn fx:id="detailsCol"          text="Détails"       prefWidth="240"/>
+            <TableColumn fx:id="dateCol"             text="Date"          prefWidth="155"/>
+        </columns>
+        <placeholder>
+            <Label text="Aucune action enregistrée."
+                   style="-fx-text-fill: #888; -fx-font-size: 14px;"/>
+        </placeholder>
+    </TableView>
 
 </VBox>

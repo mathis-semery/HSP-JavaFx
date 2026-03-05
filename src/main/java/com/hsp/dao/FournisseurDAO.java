@@ -98,4 +98,19 @@ public class FournisseurDAO {
                 dateCreation
         );
     }
+
+    public Fournisseur findByNom(String nom) {
+        String sql = "SELECT * FROM fournisseur WHERE nom = ?";
+        try (Connection cnx = Database.getConnexion();
+             PreparedStatement stmt = cnx.prepareStatement(sql)) {
+            stmt.setString(1, nom);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return mapResultSet(rs);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 }

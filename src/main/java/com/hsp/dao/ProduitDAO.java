@@ -95,4 +95,19 @@ public class ProduitDAO {
                 dateCreation
         );
     }
+
+    public Produit findByLibelle(String libelle) {
+        String sql = "SELECT * FROM produit WHERE libelle = ?";
+        try (Connection cnx = Database.getConnexion();
+             PreparedStatement stmt = cnx.prepareStatement(sql)) {
+            stmt.setString(1, libelle);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return mapResultSet(rs);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 }

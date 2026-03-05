@@ -1,9 +1,11 @@
 package com.hsp.controller.demande;
 
 import com.hsp.dao.DemandeProduitDAO;
+import com.hsp.dao.HistoriqueDAO;
 import com.hsp.dao.ProduitDAO;
 import com.hsp.dao.UtilisateurDAO;
 import com.hsp.model.DemandeProduit;
+import com.hsp.model.Historique;
 import com.hsp.model.Produit;
 import com.hsp.model.Utilisateur;
 import javafx.beans.property.SimpleStringProperty;
@@ -19,6 +21,7 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import java.net.URL;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
@@ -33,7 +36,6 @@ public class DemandeListController implements Initializable {
     @FXML private TableColumn<DemandeProduit, String> dateDemandecol;
     @FXML private TableColumn<DemandeProduit, String> statutCol;
     @FXML private TableColumn<DemandeProduit, String> motifRefusCol;
-
     @FXML private TextField recherche;
     @FXML private ComboBox<String> filtreStatut;
     @FXML private Button ajouter;
@@ -43,13 +45,17 @@ public class DemandeListController implements Initializable {
     private DemandeProduitDAO demandeDAO;
     private ProduitDAO produitDAO;
     private UtilisateurDAO utilisateurDAO;
+    private HistoriqueDAO historiqueDAO;   // ← AJOUT
     private ObservableList<DemandeProduit> demandes;
+
+    private int idUtilisateurConnecte = 1;   // ← AJOUT
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         demandeDAO     = new DemandeProduitDAO();
         produitDAO     = new ProduitDAO();
         utilisateurDAO = new UtilisateurDAO();
+        historiqueDAO  = new HistoriqueDAO();   // ← AJOUT
         demandes       = FXCollections.observableArrayList();
 
         configurerColonnes();
@@ -60,11 +66,12 @@ public class DemandeListController implements Initializable {
         supprimer.disableProperty().bind(table.getSelectionModel().selectedItemProperty().isNull());
 
         table.setOnMouseClicked(event -> {
-            if (event.getClickCount() == 2 && table.getSelectionModel().getSelectedItem() != null) {
+            if (event.getClickCount() == 2 && table.getSelectionModel().getSelectedItem() != null)
                 modifierDemande();
-            }
         });
     }
+
+    public void setIdUtilisateurConnecte(int id) { this.idUtilisateurConnecte = id; }   // ← AJOUT
 
     private void configurerColonnes() {
         idCol.setCellValueFactory(cellData ->
@@ -73,17 +80,15 @@ public class DemandeListController implements Initializable {
         medecinCol.setCellValueFactory(cellData -> {
             int idMedecin = cellData.getValue().getId_medecin();
             Utilisateur medecin = utilisateurDAO.findById(idMedecin);
-            String texte = medecin != null
+            return new SimpleStringProperty(medecin != null
                     ? "Dr. " + medecin.getNom() + " " + medecin.getPrenom()
-                    : "Médecin #" + idMedecin;
-            return new SimpleStringProperty(texte);
+                    : "Médecin #" + idMedecin);
         });
 
         produitCol.setCellValueFactory(cellData -> {
             int idProduit = cellData.getValue().getId_produit();
             Produit produit = produitDAO.findById(idProduit);
-            return new SimpleStringProperty(
-                    produit != null ? produit.getLibelle() : "Produit #" + idProduit);
+            return new SimpleStringProperty(produit != null ? produit.getLibelle() : "Produit #" + idProduit);
         });
 
         quantiteCol.setCellValueFactory(cellData ->
@@ -97,45 +102,30 @@ public class DemandeListController implements Initializable {
                 new SimpleStringProperty(cellData.getValue().getStatut() != null
                         ? cellData.getValue().getStatut() : ""));
 
-        // Colorisation du statut
         statutCol.setCellFactory(col -> new TableCell<>() {
-            @Override
-            protected void updateItem(String item, boolean empty) {
+            @Override protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
-                if (empty || item == null) {
-                    setText(null);
-                    setStyle("");
-                } else {
-                    setText(item);
-                    switch (item) {
-                        case "Validée":
-                            setStyle("-fx-text-fill: #155724; -fx-font-weight: bold;");
-                            break;
-                        case "Refusée":
-                            setStyle("-fx-text-fill: #721c24; -fx-font-weight: bold;");
-                            break;
-                        case "En attente":
-                            setStyle("-fx-text-fill: #856404; -fx-font-weight: bold;");
-                            break;
-                        default:
-                            setStyle("");
-                    }
+                if (empty || item == null) { setText(null); setStyle(""); return; }
+                setText(item);
+                switch (item) {
+                    case "Validée":    setStyle("-fx-text-fill: #155724; -fx-font-weight: bold;"); break;
+                    case "Refusée":    setStyle("-fx-text-fill: #721c24; -fx-font-weight: bold;"); break;
+                    case "En attente": setStyle("-fx-text-fill: #856404; -fx-font-weight: bold;"); break;
+                    default:           setStyle("");
                 }
             }
         });
 
-        motifRefusCol.setCellValueFactory(cellData -> {
-            String motif = cellData.getValue().getMotif_refus();
-            return new SimpleStringProperty(motif != null ? motif : "");
-        });
+        motifRefusCol.setCellValueFactory(cellData ->
+                new SimpleStringProperty(cellData.getValue().getMotif_refus() != null
+                        ? cellData.getValue().getMotif_refus() : ""));
 
         table.setItems(demandes);
     }
 
     private void configurerFiltre() {
         if (filtreStatut != null) {
-            filtreStatut.setItems(FXCollections.observableArrayList(
-                    "Tous", "En attente", "Validée", "Refusée"));
+            filtreStatut.setItems(FXCollections.observableArrayList("Tous", "En attente", "Validée", "Refusée"));
             filtreStatut.setValue("Tous");
             filtreStatut.setOnAction(event -> filtrerDemandes());
         }
@@ -153,42 +143,28 @@ public class DemandeListController implements Initializable {
         List<DemandeProduit> toutes = demandeDAO.findAll();
         demandes.clear();
 
-        if (texte.isEmpty()) {
-            demandes.addAll(toutes);
-        } else {
-            for (DemandeProduit d : toutes) {
-                boolean correspond = false;
+        if (texte.isEmpty()) { demandes.addAll(toutes); appliquerFiltre(); return; }
 
-                if (String.valueOf(d.getId_demande()).contains(texte))  correspond = true;
-                if (String.valueOf(d.getQuantite()).contains(texte))    correspond = true;
-                if (d.getDate_demande() != null && d.getDate_demande().toLowerCase().contains(texte)) correspond = true;
-                if (d.getStatut() != null && d.getStatut().toLowerCase().contains(texte))             correspond = true;
-
-                Produit produit = produitDAO.findById(d.getId_produit());
-                if (produit != null && produit.getLibelle().toLowerCase().contains(texte)) correspond = true;
-
-                Utilisateur medecin = utilisateurDAO.findById(d.getId_medecin());
-                if (medecin != null) {
-                    String nomComplet = (medecin.getNom() + " " + medecin.getPrenom()).toLowerCase();
-                    if (nomComplet.contains(texte)) correspond = true;
-                }
-
-                if (correspond) demandes.add(d);
-            }
+        for (DemandeProduit d : toutes) {
+            boolean correspond = false;
+            if (String.valueOf(d.getId_demande()).contains(texte))                               correspond = true;
+            if (String.valueOf(d.getQuantite()).contains(texte))                                 correspond = true;
+            if (d.getDate_demande() != null && d.getDate_demande().toLowerCase().contains(texte)) correspond = true;
+            if (d.getStatut() != null && d.getStatut().toLowerCase().contains(texte))           correspond = true;
+            Produit produit = produitDAO.findById(d.getId_produit());
+            if (produit != null && produit.getLibelle().toLowerCase().contains(texte))           correspond = true;
+            Utilisateur medecin = utilisateurDAO.findById(d.getId_medecin());
+            if (medecin != null && (medecin.getNom() + " " + medecin.getPrenom()).toLowerCase().contains(texte)) correspond = true;
+            if (correspond) demandes.add(d);
         }
-
         appliquerFiltre();
     }
 
-    @FXML
-    private void filtrerDemandes() {
-        rechercher();
-    }
+    @FXML private void filtrerDemandes() { rechercher(); }
 
     private void appliquerFiltre() {
         if (filtreStatut == null || "Tous".equals(filtreStatut.getValue())) return;
-        String valeur = filtreStatut.getValue();
-        demandes.removeIf(d -> !valeur.equals(d.getStatut()));
+        demandes.removeIf(d -> !filtreStatut.getValue().equals(d.getStatut()));
     }
 
     @FXML
@@ -196,16 +172,14 @@ public class DemandeListController implements Initializable {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/stock/DemandeForm.fxml"));
             Parent root = loader.load();
-
             DemandeFormController controller = loader.getController();
             controller.setMode(DemandeFormController.Mode.CREATION);
-
+            controller.setIdGestionnaire(idUtilisateurConnecte);   // ← AJOUT
             Stage stage = new Stage();
             stage.setTitle("Nouvelle demande");
             stage.setScene(new Scene(root));
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.showAndWait();
-
             chargerDemandes();
         } catch (Exception e) {
             afficherErreur("Erreur lors de l'ouverture du formulaire", e.getMessage());
@@ -216,21 +190,18 @@ public class DemandeListController implements Initializable {
     private void modifierDemande() {
         DemandeProduit selection = table.getSelectionModel().getSelectedItem();
         if (selection == null) return;
-
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/stock/DemandeForm.fxml"));
             Parent root = loader.load();
-
             DemandeFormController controller = loader.getController();
             controller.setMode(DemandeFormController.Mode.MODIFICATION);
             controller.setDemande(selection);
-
+            controller.setIdGestionnaire(idUtilisateurConnecte);   // ← AJOUT
             Stage stage = new Stage();
             stage.setTitle("Modifier la demande");
             stage.setScene(new Scene(root));
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.showAndWait();
-
             chargerDemandes();
         } catch (Exception e) {
             afficherErreur("Erreur lors de l'ouverture du formulaire", e.getMessage());
@@ -251,6 +222,8 @@ public class DemandeListController implements Initializable {
         if (resultat.isPresent() && resultat.get() == ButtonType.OK) {
             boolean succes = demandeDAO.delete(selection.getId_demande());
             if (succes) {
+                enregistrerHistorique("SUPPRESSION", "demande_produit", selection.getId_demande(),   // ← AJOUT
+                        "Suppression de la demande #" + selection.getId_demande());
                 chargerDemandes();
                 afficherInfo("Succès", "La demande a été supprimée.");
             } else {
@@ -266,19 +239,23 @@ public class DemandeListController implements Initializable {
         chargerDemandes();
     }
 
+    // ← AJOUT
+    private void enregistrerHistorique(String action, String table, int idEntite, String details) {
+        try {
+            historiqueDAO.insert(new Historique(
+                    0, idUtilisateurConnecte, action, table, idEntite, LocalDateTime.now(), details));
+        } catch (Exception e) {
+            System.err.println("⚠️ Historique non enregistré : " + e.getMessage());
+        }
+    }
+
     private void afficherErreur(String titre, String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle(titre);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
+        alert.setTitle(titre); alert.setHeaderText(null); alert.setContentText(message); alert.showAndWait();
     }
 
     private void afficherInfo(String titre, String message) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle(titre);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
+        alert.setTitle(titre); alert.setHeaderText(null); alert.setContentText(message); alert.showAndWait();
     }
 }

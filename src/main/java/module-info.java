@@ -17,6 +17,7 @@ module com.hsp.hsp_urgences {
     opens com.hsp.controller.reappro to javafx.fxml;
     opens com.hsp.controller.demande to javafx.fxml;
     opens com.hsp.controller.produit_fournisseur to javafx.fxml;
+    opens com.hsp.controller.historique to javafx.fxml;
 
 
     // Si vous avez d'autres contrôleurs, ajoutez-les ici

@@ -118,6 +118,19 @@ public class HistoriqueDAO {
         }
         return false;
     }
+    public boolean enregistrer(int idUtilisateur, String action,
+                               String tableConcernee, int idEnregistrement, String details) {
+        Historique h = new Historique(
+                0,
+                idUtilisateur,
+                action,
+                tableConcernee,
+                idEnregistrement,
+                LocalDateTime.now(),
+                details
+        );
+        return insert(h);
+    }
 
     private Historique mapResultSet(ResultSet rs) throws SQLException {
         LocalDateTime dateAction = rs.getTimestamp("date_action") != null ? rs.getTimestamp("date_action").toLocalDateTime() : null;
