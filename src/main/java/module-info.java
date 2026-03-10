@@ -18,11 +18,12 @@ module com.hsp.hsp_urgences {
     opens com.hsp.controller.demande to javafx.fxml;
     opens com.hsp.controller.produit_fournisseur to javafx.fxml;
     opens com.hsp.controller.historique to javafx.fxml;
-
-
-    // Si vous avez d'autres contrôleurs, ajoutez-les ici
-    // opens com.hsp.controller.auth to javafx.fxml;
-    // opens com.hsp.controller.admin to javafx.fxml;
+    opens com.hsp.controller.patient to javafx.fxml;
+    opens com.hsp.controller.dossier to javafx.fxml;
+    opens com.hsp.controller.hospitalisation to javafx.fxml;
+    opens com.hsp.controller.ordonnance to javafx.fxml;
+    opens com.hsp.controller.chambre to javafx.fxml;
+    opens com.hsp.controller.utilisateur to javafx.fxml;
 
     // Exporter le package principal (si nécessaire)
     exports com.hsp;
