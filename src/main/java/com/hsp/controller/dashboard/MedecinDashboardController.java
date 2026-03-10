@@ -122,12 +122,13 @@ public class MedecinDashboardController implements Initializable {
         if (urgentPatientsTable == null) return;
         urgentPatientsTable.getColumns().clear();
 
+        // data[0] = id_dossier (clé cachée), data[1..6] = données affichées
         String[] cols = {"Patient", "Heure d'arrivée", "Gravité", "Symptômes", "Statut", "Action"};
         for (int i = 0; i < cols.length; i++) {
-            final int idx = i;
+            final int dataIdx = i + 1; // décalage de 1 pour ignorer l'id caché en data[0]
             TableColumn<ObservableList<String>, String> col = new TableColumn<>(cols[i]);
             col.setCellValueFactory(data ->
-                    new SimpleStringProperty(data.getValue().get(idx)));
+                    new SimpleStringProperty(data.getValue().get(dataIdx)));
 
             if (i == 5) { // Colonne Action
                 col.setCellFactory(tc -> new TableCell<>() {
@@ -190,12 +191,13 @@ public class MedecinDashboardController implements Initializable {
         if (activeHospitalizationsTable == null) return;
         activeHospitalizationsTable.getColumns().clear();
 
+        // data[0] = id_hospitalisation (clé cachée), data[1..6] = données affichées
         String[] cols = {"Patient", "Chambre", "Date début", "Diagnostic", "Durée (j)", "Action"};
         for (int i = 0; i < cols.length; i++) {
-            final int idx = i;
+            final int dataIdx = i + 1; // décalage de 1 pour ignorer l'id caché en data[0]
             TableColumn<ObservableList<String>, String> col = new TableColumn<>(cols[i]);
             col.setCellValueFactory(data ->
-                    new SimpleStringProperty(data.getValue().get(idx)));
+                    new SimpleStringProperty(data.getValue().get(dataIdx)));
 
             if (i == 5) {
                 col.setCellFactory(tc -> new TableCell<>() {
@@ -693,8 +695,7 @@ public class MedecinDashboardController implements Initializable {
         if (chambreComboBox == null) return;
         chambreComboBox.getItems().clear();
 
-        // Utilise la vue vue_chambres_disponibles
-        String query = "SELECT numero FROM vue_chambres_disponibles";
+        String query = "SELECT numero FROM chambre WHERE disponible = TRUE ORDER BY numero";
         try (Connection conn = getConnection();
              Statement st = conn.createStatement();
              ResultSet rs = st.executeQuery(query)) {
