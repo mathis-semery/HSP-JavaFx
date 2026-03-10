@@ -292,14 +292,6 @@ public class SecretaireDashboardController implements Initializable {
             showAlert(Alert.AlertType.WARNING, "Attention", "Le numéro de sécurité sociale est obligatoire");
             return;
         }
-        if (dateNaissancePicker.getValue() == null) {
-            showAlert(Alert.AlertType.WARNING, "Attention", "La date de naissance est obligatoire");
-            return;
-        }
-        if (sexeComboBox.getValue() == null) {
-            showAlert(Alert.AlertType.WARNING, "Attention", "Le sexe est obligatoire");
-            return;
-        }
         if (niveauGraviteComboBox != null && niveauGraviteComboBox.getValue() == null) {
             showAlert(Alert.AlertType.WARNING, "Attention", "Le niveau de gravité est obligatoire");
             return;
@@ -330,11 +322,10 @@ public class SecretaireDashboardController implements Initializable {
 
             // Créer le dossier de prise en charge
             try (PreparedStatement pstmt = conn.prepareStatement(
-                    "INSERT INTO dossier (id_patient, id_secretaire, date_arrivee, symptomes, niveau_gravite, statut) VALUES (?, ?, NOW(), ?, ?, 'Attente')")) {
+                    "INSERT INTO dossier (id_patient, date_arrivee, symptomes, niveau_gravite, statut) VALUES (?, NOW(), ?, ?, 'Attente')")) {
                 pstmt.setInt(1, patientId);
-                pstmt.setInt(2, secretaireId);
-                pstmt.setString(3, motifTextArea.getText().trim());
-                pstmt.setInt(4, gravite);
+                pstmt.setString(2, motifTextArea.getText().trim());
+                pstmt.setInt(3, gravite);
                 pstmt.executeUpdate();
             }
 
