@@ -10,6 +10,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import org.mindrot.jbcrypt.BCrypt;
 import java.sql.*;
 import java.io.IOException;
 
@@ -78,42 +79,41 @@ public class LoginController {
         ResultSet rs = null;
 
         try {
-            // Connexion à la base de données
             conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
 
-            // Requête pour récupérer l'utilisateur avec vérification directe du mot de passe
-            String query = "SELECT id_utilisateur, nom, prenom, role FROM utilisateur WHERE email = ? AND mot_de_passe = ?";
+            // On récupère l'utilisateur par email uniquement, puis on vérifie le MDP côté Java
+            String query = "SELECT id_utilisateur, nom, prenom, role, mot_de_passe FROM utilisateur WHERE email = ?";
             stmt = conn.prepareStatement(query);
             stmt.setString(1, email);
-            stmt.setString(2, password);
             rs = stmt.executeQuery();
 
             if (rs.next()) {
-                // Connexion réussie
+                String storedPassword = rs.getString("mot_de_passe");
+
+                if (!verifyPassword(password, storedPassword)) {
+                    showAlert("Erreur", "Email ou mot de passe incorrect", Alert.AlertType.ERROR);
+                    System.out.println("Mot de passe incorrect pour : " + email);
+                    return;
+                }
+
                 int userId = rs.getInt("id_utilisateur");
                 String nom = rs.getString("nom");
                 String prenom = rs.getString("prenom");
                 String role = rs.getString("role");
 
                 System.out.println("Connexion réussie pour : " + prenom + " " + nom + " (" + role + ")");
-
-                // Enregistrer dans l'historique
                 enregistrerHistorique(conn, userId, "Connexion", "utilisateur", userId, "Connexion réussie");
-
-                // Rediriger vers le tableau de bord approprié selon le rôle
                 redirectToDashboard(role, userId, prenom + " " + nom);
 
             } else {
-                // Utilisateur non trouvé ou mot de passe incorrect
                 showAlert("Erreur", "Email ou mot de passe incorrect", Alert.AlertType.ERROR);
-                System.out.println("Échec de connexion pour : " + email);
+                System.out.println("Utilisateur introuvable : " + email);
             }
 
         } catch (SQLException e) {
             showAlert("Erreur", "Erreur de connexion à la base de données : " + e.getMessage(), Alert.AlertType.ERROR);
             e.printStackTrace();
         } finally {
-            // Fermeture des ressources
             try {
                 if (rs != null) rs.close();
                 if (stmt != null) stmt.close();
@@ -121,6 +121,19 @@ public class LoginController {
             } catch (SQLException e) {
                 e.printStackTrace();
             }
+        }
+    }
+
+    /**
+     * Vérifie le mot de passe : BCrypt en priorité, fallback texte clair pour les comptes de dev.
+     */
+    private boolean verifyPassword(String inputPassword, String storedHash) {
+        if (storedHash == null || storedHash.isEmpty()) return false;
+        try {
+            return BCrypt.checkpw(inputPassword, storedHash);
+        } catch (Exception e) {
+            // Le hash n'est pas BCrypt (compte dev) : comparaison directe
+            return inputPassword.equals(storedHash);
         }
     }
 
