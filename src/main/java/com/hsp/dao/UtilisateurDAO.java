@@ -70,7 +70,7 @@ public class UtilisateurDAO {
     }
 
     public boolean insert(Utilisateur utilisateur) {
-        String sql = "INSERT INTO utilisateur (nom, prenom, email, mdp, role) VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO utilisateur (nom, prenom, email, mot_de_passe, role) VALUES (?, ?, ?, ?, ?)";
         try (Connection cnx = Database.getConnexion();
              PreparedStatement stmt = cnx.prepareStatement(sql)) {
             stmt.setString(1, utilisateur.getNom());
@@ -86,7 +86,7 @@ public class UtilisateurDAO {
     }
 
     public boolean update(Utilisateur utilisateur) {
-        String sql = "UPDATE utilisateur SET nom = ?, prenom = ?, email = ?, mdp = ?, role = ? WHERE id_utilisateur = ?";
+        String sql = "UPDATE utilisateur SET nom = ?, prenom = ?, email = ?, mot_de_passe = ?, role = ? WHERE id_utilisateur = ?";
         try (Connection cnx = Database.getConnexion();
              PreparedStatement stmt = cnx.prepareStatement(sql)) {
             stmt.setString(1, utilisateur.getNom());
