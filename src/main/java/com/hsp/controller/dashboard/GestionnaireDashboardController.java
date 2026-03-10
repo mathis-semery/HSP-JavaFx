@@ -173,7 +173,7 @@ public class GestionnaireDashboardController implements Initializable {
             // Demandes en attente
             try (Statement st = conn.createStatement();
                  ResultSet rs = st.executeQuery(
-                         "SELECT COUNT(*) FROM demande_produit WHERE statut IN ('Attente','en_attente')")) {
+                         "SELECT COUNT(*) FROM demande_produit WHERE statut = 'Attente'")) {
                 if (rs.next() && pendingDemandesLabel != null)
                     pendingDemandesLabel.setText(String.valueOf(rs.getInt(1)));
             }
@@ -340,7 +340,7 @@ public class GestionnaireDashboardController implements Initializable {
 
         int demandeId = Integer.parseInt(selected.get(0));
         String statut = selected.get(3);
-        if (!"Attente".equals(statut) && !"en_attente".equals(statut)) {
+        if (!"Attente".equals(statut)) {
             showAlert(Alert.AlertType.WARNING, "Attention", "Seules les demandes en attente peuvent être validées.");
             return;
         }
@@ -385,7 +385,7 @@ public class GestionnaireDashboardController implements Initializable {
 
         int demandeId = Integer.parseInt(selected.get(0));
         String statut = selected.get(3);
-        if (!"Attente".equals(statut) && !"en_attente".equals(statut)) {
+        if (!"Attente".equals(statut)) {
             showAlert(Alert.AlertType.WARNING, "Attention", "Seules les demandes en attente peuvent être refusées.");
             return;
         }
