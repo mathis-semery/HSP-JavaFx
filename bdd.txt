@@ -10,7 +10,7 @@ CREATE TABLE utilisateur (
     prenom VARCHAR(50) NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
     mot_de_passe VARCHAR(255) NOT NULL,
-    role ENUM('Secretaire', 'Medecin', 'Gestionnaire') NOT NULL,
+    role ENUM('Secretaire', 'Medecin', 'Gestionnaire', 'Admin') NOT NULL,
     date_creation DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
