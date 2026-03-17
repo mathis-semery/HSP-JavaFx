@@ -1,5 +1,6 @@
 package com.hsp.controller.login;
 
+import com.hsp.controller.dashboard.AdminDashboardController;
 import com.hsp.controller.dashboard.GestionnaireDashboardController;
 import com.hsp.controller.dashboard.MedecinDashboardController;
 import com.hsp.controller.dashboard.SecretaireDashboardController;
@@ -158,8 +159,11 @@ public class LoginController {
             String fxmlFile = "";
             String windowTitle = "";
 
-            // Choisir le tableau de bord selon le rôle
             switch (role) {
+                case "Admin":
+                    fxmlFile = "/view/dashboard/DashboardAdmin.fxml";
+                    windowTitle = "Tableau de bord - Administrateur";
+                    break;
                 case "Secretaire":
                     fxmlFile = "/view/dashboard/DashboardSecretaire.fxml";
                     windowTitle = "Tableau de bord - Secrétaire";
@@ -173,16 +177,18 @@ public class LoginController {
                     windowTitle = "Tableau de bord - Gestionnaire";
                     break;
                 default:
-                    showAlert("Erreur", "Rôle utilisateur non reconnu", Alert.AlertType.ERROR);
+                    showAlert("Erreur", "Rôle utilisateur non reconnu: " + role, Alert.AlertType.ERROR);
                     return;
             }
 
-            // Charger la nouvelle vue
             FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlFile));
             Parent root = loader.load();
 
-            // Passer les informations de l'utilisateur au contrôleur du dashboard
-            if (role.equals("Medecin")) {
+            // Passer les infos selon le rôle
+            if (role.equals("Administrateur")) {
+                AdminDashboardController controller = loader.getController();
+                controller.setAdminInfo(userId, userName);
+            } else if (role.equals("Medecin")) {
                 MedecinDashboardController controller = loader.getController();
                 controller.setMedecinInfo(userId, "Dr. " + userName);
             } else if (role.equals("Secretaire")) {
@@ -193,12 +199,11 @@ public class LoginController {
                 controller.setGestionnaireInfo(userId, userName);
             }
 
-            // Obtenir la fenêtre actuelle et la remplacer
             Stage stage = (Stage) loginButton.getScene().getWindow();
             Scene scene = new Scene(root, 1400, 900);
             stage.setScene(scene);
             stage.setTitle(windowTitle);
-            stage.setMaximized(true); // Maximiser la fenêtre
+            stage.setMaximized(true);
             stage.show();
 
             showAlert("Succès", "Connexion réussie ! Bienvenue.", Alert.AlertType.INFORMATION);
