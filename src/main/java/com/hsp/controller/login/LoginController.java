@@ -185,7 +185,7 @@ public class LoginController {
             Parent root = loader.load();
 
             // Passer les infos selon le rôle
-            if (role.equals("Administrateur")) {
+            if (role.equals("Admin")) {
                 AdminDashboardController controller = loader.getController();
                 controller.setAdminInfo(userId, userName);
             } else if (role.equals("Medecin")) {

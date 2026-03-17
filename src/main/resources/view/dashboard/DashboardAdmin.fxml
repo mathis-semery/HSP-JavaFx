@@ -164,11 +164,11 @@
 
                 <TableView fx:id="logsTable" prefHeight="500">
                     <columns>
-                        <TableColumn text="Date/Heure" prefWidth="150"/>
-                        <TableColumn text="Utilisateur" prefWidth="150"/>
-                        <TableColumn text="Action" prefWidth="200"/>
-                        <TableColumn text="Table" prefWidth="150"/>
-                        <TableColumn text="Détails" prefWidth="300"/>
+                        <TableColumn fx:id="logDateCol" text="Date/Heure" prefWidth="160"/>
+                        <TableColumn fx:id="logUtilisateurCol" text="Utilisateur" prefWidth="160"/>
+                        <TableColumn fx:id="logActionCol" text="Action" prefWidth="180"/>
+                        <TableColumn fx:id="logTableCol" text="Table" prefWidth="140"/>
+                        <TableColumn fx:id="logDetailsCol" text="Détails" prefWidth="320"/>
                     </columns>
                 </TableView>
             </VBox>
@@ -188,7 +188,7 @@
                     </VBox>
 
                     <VBox style="-fx-background-color: #f3e8ff; -fx-padding: 25; -fx-background-radius: 12;" spacing="10" prefWidth="350">
-                        <Label text="⏱️ Durée moyenne" style="-fx-text-fill: #6b21a8; -fx-font-weight: bold;"/>
+                        <Label text="✅ Dossiers résolus" style="-fx-text-fill: #6b21a8; -fx-font-weight: bold;"/>
                         <Label fx:id="statsConsultationsMoyenneLabel" text="0" style="-fx-font-size: 36px; -fx-font-weight: bold; -fx-text-fill: #7c3aed;"/>
                     </VBox>
 
