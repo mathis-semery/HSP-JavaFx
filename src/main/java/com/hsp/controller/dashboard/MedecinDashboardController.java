@@ -13,6 +13,9 @@ import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
+import com.hsp.controller.demande.DemandeFormController;
+import javafx.stage.Modality;
+
 import java.io.IOException;
 import java.net.URL;
 import java.sql.*;
@@ -687,6 +690,38 @@ public class MedecinDashboardController implements Initializable {
             System.err.println("Erreur loadMyRequests : " + e.getMessage());
         }
         myRequestsTable.setItems(data);
+    }
+
+    // ============= NOUVELLE DEMANDE PRODUIT =============
+
+    @FXML
+    private void onNewProductRequest() {
+        if (currentMedecinId < 0) {
+            showAlert(Alert.AlertType.WARNING, "Attention", "Impossible d'identifier le médecin connecté.");
+            return;
+        }
+        try {
+            FXMLLoader loader = new FXMLLoader(
+                    getClass().getResource("/view/stock/DemandeForm.fxml"));
+            Parent root = loader.load();
+
+            DemandeFormController controller = loader.getController();
+            controller.setMode(DemandeFormController.Mode.CREATION);
+            controller.setMedecinMode(currentMedecinId);
+
+            Stage dialog = new Stage();
+            dialog.setTitle("Nouvelle demande de produit");
+            dialog.setScene(new javafx.scene.Scene(root));
+            dialog.initModality(Modality.APPLICATION_MODAL);
+            dialog.initOwner(userNameLabel.getScene().getWindow());
+            dialog.showAndWait();
+
+            // Rafraîchir après fermeture du formulaire
+            loadMyRequests();
+            loadDashboardData();
+        } catch (IOException e) {
+            showAlert(Alert.AlertType.ERROR, "Erreur", "Impossible d'ouvrir le formulaire de demande.");
+        }
     }
 
     // ============= CHAMBRES DISPONIBLES =============

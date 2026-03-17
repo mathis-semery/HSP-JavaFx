@@ -71,17 +71,18 @@ public class DemandeProduitDAO {
         return demandes;
     }
 
+    // La table demande_produit n'a pas de colonnes id_produit ni quantite
+    // (elles sont dans ligne_demande). On n'insère que les colonnes existantes.
     public boolean insert(DemandeProduit demande) {
-        String sql = "INSERT INTO demande_produit (id_medecin, id_produit, id_gestionnaire, quantite, date_demande, statut, motif_refus) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO demande_produit (id_medecin, id_gestionnaire, date_demande, statut, motif_refus) VALUES (?, ?, ?, ?, ?)";
         try (Connection cnx = Database.getConnexion();
              PreparedStatement stmt = cnx.prepareStatement(sql)) {
             stmt.setInt(1, demande.getId_medecin());
-            stmt.setInt(2, demande.getId_produit());
-            stmt.setInt(3, demande.getId_gestionnaire());
-            stmt.setDouble(4, demande.getQuantite());
-            stmt.setString(5, demande.getDate_demande());
-            stmt.setString(6, demande.getStatut());
-            stmt.setString(7, demande.getMotif_refus());
+            if (demande.getId_gestionnaire() > 0) stmt.setInt(2, demande.getId_gestionnaire());
+            else stmt.setNull(2, Types.INTEGER);
+            stmt.setString(3, demande.getDate_demande());
+            stmt.setString(4, demande.getStatut());
+            stmt.setString(5, demande.getMotif_refus());
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -89,18 +90,38 @@ public class DemandeProduitDAO {
         return false;
     }
 
+    /** Insère une demande et retourne l'id généré (-1 en cas d'échec). */
+    public int insertAndGetId(DemandeProduit demande) {
+        String sql = "INSERT INTO demande_produit (id_medecin, id_gestionnaire, date_demande, statut, motif_refus) VALUES (?, ?, ?, ?, ?)";
+        try (Connection cnx = Database.getConnexion();
+             PreparedStatement stmt = cnx.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            stmt.setInt(1, demande.getId_medecin());
+            if (demande.getId_gestionnaire() > 0) stmt.setInt(2, demande.getId_gestionnaire());
+            else stmt.setNull(2, Types.INTEGER);
+            stmt.setString(3, demande.getDate_demande());
+            stmt.setString(4, demande.getStatut());
+            stmt.setString(5, demande.getMotif_refus());
+            if (stmt.executeUpdate() > 0) {
+                ResultSet keys = stmt.getGeneratedKeys();
+                if (keys.next()) return keys.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return -1;
+    }
+
     public boolean update(DemandeProduit demande) {
-        String sql = "UPDATE demande_produit SET id_medecin = ?, id_produit = ?, id_gestionnaire = ?, quantite = ?, date_demande = ?, statut = ?, motif_refus = ? WHERE id_demande = ?";
+        String sql = "UPDATE demande_produit SET id_medecin = ?, id_gestionnaire = ?, date_demande = ?, statut = ?, motif_refus = ? WHERE id_demande = ?";
         try (Connection cnx = Database.getConnexion();
              PreparedStatement stmt = cnx.prepareStatement(sql)) {
             stmt.setInt(1, demande.getId_medecin());
-            stmt.setInt(2, demande.getId_produit());
-            stmt.setInt(3, demande.getId_gestionnaire());
-            stmt.setDouble(4, demande.getQuantite());
-            stmt.setString(5, demande.getDate_demande());
-            stmt.setString(6, demande.getStatut());
-            stmt.setString(7, demande.getMotif_refus());
-            stmt.setInt(8, demande.getId_demande());
+            if (demande.getId_gestionnaire() > 0) stmt.setInt(2, demande.getId_gestionnaire());
+            else stmt.setNull(2, Types.INTEGER);
+            stmt.setString(3, demande.getDate_demande());
+            stmt.setString(4, demande.getStatut());
+            stmt.setString(5, demande.getMotif_refus());
+            stmt.setInt(6, demande.getId_demande());
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -121,12 +142,13 @@ public class DemandeProduitDAO {
     }
 
     private DemandeProduit mapResultSet(ResultSet rs) throws SQLException {
+        // id_produit et quantite ne sont pas dans demande_produit (elles sont dans ligne_demande)
         return new DemandeProduit(
                 rs.getInt("id_demande"),
                 rs.getInt("id_medecin"),
-                rs.getInt("id_produit"),
+                0,
                 rs.getInt("id_gestionnaire"),
-                rs.getDouble("quantite"),
+                0,
                 rs.getString("date_demande"),
                 rs.getString("statut"),
                 rs.getString("motif_refus")
