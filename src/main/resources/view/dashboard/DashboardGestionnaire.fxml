@@ -28,6 +28,8 @@
                     style="-fx-background-color: #374151; -fx-text-fill: white; -fx-padding: 12;"/>
             <Button text="🏢 Fournisseurs" onAction="#showFournisseurs" prefWidth="220"
                     style="-fx-background-color: #374151; -fx-text-fill: white; -fx-padding: 12;"/>
+            <Button text="🔄 Réapprovisionnement" onAction="#showReappro" prefWidth="220"
+                    style="-fx-background-color: #374151; -fx-text-fill: white; -fx-padding: 12;"/>
             <Region VBox.vgrow="ALWAYS"/>
             <VBox style="-fx-background-color: #374151; -fx-padding: 15; -fx-background-radius: 8;">
                 <Label text="Stock faible" style="-fx-text-fill: #9ca3af; -fx-font-size: 11px;"/>
@@ -121,6 +123,27 @@
                         <TableColumn text="Produits" prefWidth="200"/>
                     </columns>
                 </TableView>
+            </VBox>
+
+            <VBox fx:id="reapproView" spacing="20" visible="false">
+                <Label text="Réapprovisionnements" style="-fx-font-size: 28px; -fx-font-weight: bold;"/>
+                <TableView fx:id="reapproTable" prefHeight="400">
+                    <columns>
+                        <TableColumn text="Produit" prefWidth="180"/>
+                        <TableColumn text="Fournisseur" prefWidth="150"/>
+                        <TableColumn text="Quantité" prefWidth="80"/>
+                        <TableColumn text="Date commande" prefWidth="130"/>
+                        <TableColumn text="Date réception" prefWidth="130"/>
+                    </columns>
+                </TableView>
+                <HBox spacing="15">
+                    <Button text="➕ Nouveau" onAction="#onAddReappro"
+                            style="-fx-background-color: #10b981; -fx-text-fill: white; -fx-padding: 10 20;"/>
+                    <Button text="✅ Confirmer réception" onAction="#onConfirmReception"
+                            style="-fx-background-color: #3b82f6; -fx-text-fill: white; -fx-padding: 10 20;"/>
+                    <Button text="🗑 Supprimer" onAction="#onDeleteReappro"
+                            style="-fx-background-color: #ef4444; -fx-text-fill: white; -fx-padding: 10 20;"/>
+                </HBox>
             </VBox>
         </StackPane>
     </center>

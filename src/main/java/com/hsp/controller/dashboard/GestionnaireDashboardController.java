@@ -1,5 +1,6 @@
 package com.hsp.controller.dashboard;
 
+import com.hsp.controller.reappro.ReapproFormController;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -10,6 +11,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -26,6 +28,8 @@ public class GestionnaireDashboardController implements Initializable {
     @FXML private VBox stockView;
     @FXML private VBox demandesView;
     @FXML private VBox fournisseursView;
+    @FXML private VBox reapproView;
+    @FXML private TableView<ObservableList<String>> reapproTable;
     @FXML private Label totalProductsLabel;
     @FXML private Label lowStockLabel;
     @FXML private Label pendingDemandesLabel;
@@ -56,6 +60,7 @@ public class GestionnaireDashboardController implements Initializable {
         setupStockProductsTable();
         setupDemandesTable();
         setupFournisseursTable();
+        setupReapproTable();
         showDashboard();
     }
 
@@ -145,7 +150,7 @@ public class GestionnaireDashboardController implements Initializable {
     }
 
     private void hideAllViews() {
-        VBox[] views = {dashboardView, stockView, demandesView, fournisseursView};
+        VBox[] views = {dashboardView, stockView, demandesView, fournisseursView, reapproView};
         for (VBox v : views) {
             if (v != null) { v.setVisible(false); v.setManaged(false); }
         }
@@ -427,6 +432,168 @@ public class GestionnaireDashboardController implements Initializable {
         } catch (SQLException e) {
             showAlert(Alert.AlertType.ERROR, "Erreur BD", e.getMessage());
         }
+    }
+
+    // ============= RÉAPPROVISIONNEMENT =============
+
+    @FXML
+    private void showReappro() {
+        hideAllViews();
+        if (reapproView != null) { reapproView.setVisible(true); reapproView.setManaged(true); }
+        loadReappros();
+    }
+
+    @SuppressWarnings("unchecked")
+    private void setupReapproTable() {
+        if (reapproTable == null) return;
+        reapproTable.getColumns().clear();
+        // data[0] = id_reappro (caché), data[1..5] = colonnes affichées
+        String[] cols = {"Produit", "Fournisseur", "Quantité", "Date commande", "Date réception"};
+        for (int i = 0; i < cols.length; i++) {
+            final int dataIdx = i + 1;
+            TableColumn<ObservableList<String>, String> col = new TableColumn<>(cols[i]);
+            col.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().get(dataIdx)));
+            reapproTable.getColumns().add(col);
+        }
+    }
+
+    private void loadReappros() {
+        if (reapproTable == null) return;
+        String query = """
+                SELECT r.id_reappro, p.libelle, f.nom, r.quantite,
+                       r.date_commande, r.date_reception
+                FROM reapprovisionnement r
+                JOIN produit p ON r.id_produit = p.id_produit
+                JOIN fournisseur f ON r.id_fournisseur = f.id_fournisseur
+                ORDER BY r.date_commande DESC
+                """;
+        ObservableList<ObservableList<String>> data = FXCollections.observableArrayList();
+        try (Connection conn = getConnection();
+             Statement st = conn.createStatement();
+             ResultSet rs = st.executeQuery(query)) {
+            while (rs.next()) {
+                ObservableList<String> row = FXCollections.observableArrayList();
+                row.add(String.valueOf(rs.getInt("id_reappro")));                                          // 0 – id caché
+                row.add(rs.getString("libelle") != null ? rs.getString("libelle") : "—");                 // 1
+                row.add(rs.getString("nom") != null ? rs.getString("nom") : "—");                         // 2
+                row.add(String.valueOf(rs.getInt("quantite")));                                            // 3
+                row.add(rs.getDate("date_commande") != null ? rs.getDate("date_commande").toString() : "—"); // 4
+                row.add(rs.getDate("date_reception") != null ? rs.getDate("date_reception").toString() : "En attente"); // 5
+                data.add(row);
+            }
+        } catch (SQLException e) {
+            System.err.println("Erreur loadReappros : " + e.getMessage());
+        }
+        reapproTable.setItems(data);
+    }
+
+    @FXML
+    private void onAddReappro() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/stock/ReapproForm.fxml"));
+            Parent root = loader.load();
+            ReapproFormController controller = loader.getController();
+            controller.setMode(ReapproFormController.Mode.CREATION);
+            controller.setIdGestionnaire(currentGestionnaireId > 0 ? currentGestionnaireId : 1);
+            Stage stage = new Stage();
+            stage.setTitle("Nouveau réapprovisionnement");
+            stage.setScene(new Scene(root));
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.showAndWait();
+            loadReappros();
+        } catch (IOException e) {
+            showAlert(Alert.AlertType.ERROR, "Erreur", "Impossible d'ouvrir le formulaire : " + e.getMessage());
+        }
+    }
+
+    @FXML
+    private void onConfirmReception() {
+        if (reapproTable == null) return;
+        ObservableList<String> selected = reapproTable.getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            showAlert(Alert.AlertType.WARNING, "Attention", "Veuillez sélectionner un réapprovisionnement.");
+            return;
+        }
+        if (!"En attente".equals(selected.get(5))) {
+            showAlert(Alert.AlertType.WARNING, "Attention", "Ce réapprovisionnement a déjà été réceptionné.");
+            return;
+        }
+        int reapproId = Integer.parseInt(selected.get(0));
+        int gestionnaireId = currentGestionnaireId > 0 ? currentGestionnaireId : 1;
+        try (Connection conn = getConnection()) {
+            conn.setAutoCommit(false);
+
+            // Récupérer id_produit et quantite
+            int idProduit = 0, quantite = 0;
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "SELECT id_produit, quantite FROM reapprovisionnement WHERE id_reappro = ?")) {
+                ps.setInt(1, reapproId);
+                ResultSet rs = ps.executeQuery();
+                if (rs.next()) {
+                    idProduit = rs.getInt("id_produit");
+                    quantite  = rs.getInt("quantite");
+                }
+            }
+
+            // Enregistrer la date de réception
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "UPDATE reapprovisionnement SET date_reception = CURDATE() WHERE id_reappro = ?")) {
+                ps.setInt(1, reapproId);
+                ps.executeUpdate();
+            }
+
+            // Mettre à jour le stock
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "UPDATE produit SET quantite_stock = quantite_stock + ? WHERE id_produit = ?")) {
+                ps.setInt(1, quantite);
+                ps.setInt(2, idProduit);
+                ps.executeUpdate();
+            }
+
+            // Historique
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "INSERT INTO historique (id_utilisateur, action, table_concernee, id_enregistrement, details) VALUES (?, 'Reception', 'reapprovisionnement', ?, ?)")) {
+                ps.setInt(1, gestionnaireId);
+                ps.setInt(2, reapproId);
+                ps.setString(3, "Réception réappro #" + reapproId + " — stock +" + quantite);
+                ps.executeUpdate();
+            }
+
+            conn.commit();
+            showAlert(Alert.AlertType.INFORMATION, "Succès", "Réception confirmée. Stock mis à jour (+" + quantite + " unités).");
+            loadReappros();
+            loadDashboardData();
+        } catch (SQLException e) {
+            showAlert(Alert.AlertType.ERROR, "Erreur BDD", e.getMessage());
+        }
+    }
+
+    @FXML
+    private void onDeleteReappro() {
+        if (reapproTable == null) return;
+        ObservableList<String> selected = reapproTable.getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            showAlert(Alert.AlertType.WARNING, "Attention", "Veuillez sélectionner un réapprovisionnement.");
+            return;
+        }
+        int reapproId = Integer.parseInt(selected.get(0));
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Suppression");
+        confirm.setHeaderText("Supprimer le réapprovisionnement #" + reapproId + " ?");
+        confirm.setContentText("Cette action est irréversible.");
+        confirm.showAndWait().ifPresent(resp -> {
+            if (resp != ButtonType.OK) return;
+            try (Connection conn = getConnection();
+                 PreparedStatement ps = conn.prepareStatement(
+                         "DELETE FROM reapprovisionnement WHERE id_reappro = ?")) {
+                ps.setInt(1, reapproId);
+                ps.executeUpdate();
+                showAlert(Alert.AlertType.INFORMATION, "Supprimé", "Réapprovisionnement supprimé.");
+                loadReappros();
+            } catch (SQLException e) {
+                showAlert(Alert.AlertType.ERROR, "Erreur BDD", e.getMessage());
+            }
+        });
     }
 
     // ============= DÉCONNEXION =============
