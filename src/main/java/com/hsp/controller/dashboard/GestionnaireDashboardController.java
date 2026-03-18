@@ -1,6 +1,12 @@
 package com.hsp.controller.dashboard;
 
+import com.hsp.controller.fournisseur.FournisseurFormController;
+import com.hsp.controller.produit.ProduitFormController;
 import com.hsp.controller.reappro.ReapproFormController;
+import com.hsp.dao.FournisseurDAO;
+import com.hsp.dao.ProduitDAO;
+import com.hsp.model.Fournisseur;
+import com.hsp.model.Produit;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -83,11 +89,12 @@ public class GestionnaireDashboardController implements Initializable {
     private void setupStockProductsTable() {
         if (stockProductsTable == null) return;
         stockProductsTable.getColumns().clear();
-        String[] cols = {"Produit", "Quantité", "Dangerosité"};
+        // data[0] = id_produit (caché), data[1..4] = données affichées
+        String[] cols = {"Produit", "Description", "Quantité", "Dangerosité"};
         for (int i = 0; i < cols.length; i++) {
-            final int idx = i;
+            final int dataIdx = i + 1;
             TableColumn<ObservableList<String>, String> col = new TableColumn<>(cols[i]);
-            col.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().get(idx)));
+            col.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().get(dataIdx)));
             stockProductsTable.getColumns().add(col);
         }
     }
@@ -96,7 +103,8 @@ public class GestionnaireDashboardController implements Initializable {
     private void setupDemandesTable() {
         if (demandesTable == null) return;
         demandesTable.getColumns().clear();
-        String[] cols = {"N°", "Médecin", "Date", "Statut"};
+        // data[0]=id, [1]=médecin, [2]=produit(s), [3]=qté, [4]=date, [5]=statut
+        String[] cols = {"N°", "Médecin", "Produit(s)", "Qté", "Date", "Statut"};
         for (int i = 0; i < cols.length; i++) {
             final int idx = i;
             TableColumn<ObservableList<String>, String> col = new TableColumn<>(cols[i]);
@@ -109,11 +117,12 @@ public class GestionnaireDashboardController implements Initializable {
     private void setupFournisseursTable() {
         if (fournisseursTable == null) return;
         fournisseursTable.getColumns().clear();
-        String[] cols = {"Nom", "Email", "Téléphone"};
+        // data[0] = id_fournisseur (caché), data[1..4] = données affichées
+        String[] cols = {"Nom", "Contact", "Email", "Téléphone"};
         for (int i = 0; i < cols.length; i++) {
-            final int idx = i;
+            final int dataIdx = i + 1;
             TableColumn<ObservableList<String>, String> col = new TableColumn<>(cols[i]);
-            col.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().get(idx)));
+            col.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().get(dataIdx)));
             fournisseursTable.getColumns().add(col);
         }
     }
@@ -149,6 +158,13 @@ public class GestionnaireDashboardController implements Initializable {
         loadFournisseurs();
     }
 
+    @FXML
+    private void showReappro() {
+        hideAllViews();
+        if (reapproView != null) { reapproView.setVisible(true); reapproView.setManaged(true); }
+        loadReappros();
+    }
+
     private void hideAllViews() {
         VBox[] views = {dashboardView, stockView, demandesView, fournisseursView, reapproView};
         for (VBox v : views) {
@@ -160,13 +176,11 @@ public class GestionnaireDashboardController implements Initializable {
 
     private void loadDashboardData() {
         try (Connection conn = getConnection()) {
-            // Total produits
             try (Statement st = conn.createStatement();
                  ResultSet rs = st.executeQuery("SELECT COUNT(*) FROM produit")) {
                 if (rs.next() && totalProductsLabel != null)
                     totalProductsLabel.setText(String.valueOf(rs.getInt(1)));
             }
-            // Stock faible (≤ 10)
             try (Statement st = conn.createStatement();
                  ResultSet rs = st.executeQuery("SELECT COUNT(*) FROM produit WHERE quantite_stock <= 10")) {
                 if (rs.next()) {
@@ -175,10 +189,8 @@ public class GestionnaireDashboardController implements Initializable {
                     if (lowStockCountLabel != null) lowStockCountLabel.setText(String.valueOf(n));
                 }
             }
-            // Demandes en attente
             try (Statement st = conn.createStatement();
-                 ResultSet rs = st.executeQuery(
-                         "SELECT COUNT(*) FROM demande_produit WHERE statut = 'Attente'")) {
+                 ResultSet rs = st.executeQuery("SELECT COUNT(*) FROM demande_produit WHERE statut = 'Attente'")) {
                 if (rs.next() && pendingDemandesLabel != null)
                     pendingDemandesLabel.setText(String.valueOf(rs.getInt(1)));
             }
@@ -209,16 +221,18 @@ public class GestionnaireDashboardController implements Initializable {
 
     private void loadStockProducts() {
         if (stockProductsTable == null) return;
-        String query = "SELECT libelle, quantite_stock, niveau_dangerosite FROM produit ORDER BY libelle";
+        String query = "SELECT id_produit, libelle, description, quantite_stock, niveau_dangerosite FROM produit ORDER BY libelle";
         ObservableList<ObservableList<String>> data = FXCollections.observableArrayList();
         try (Connection conn = getConnection();
              Statement st = conn.createStatement();
              ResultSet rs = st.executeQuery(query)) {
             while (rs.next()) {
                 ObservableList<String> row = FXCollections.observableArrayList();
-                row.add(rs.getString("libelle") != null ? rs.getString("libelle") : "—");
-                row.add(String.valueOf(rs.getInt("quantite_stock")));
-                row.add(String.valueOf(rs.getInt("niveau_dangerosite")));
+                row.add(String.valueOf(rs.getInt("id_produit")));                          // 0 – caché
+                row.add(rs.getString("libelle") != null ? rs.getString("libelle") : "—"); // 1
+                row.add(rs.getString("description") != null ? rs.getString("description") : "—"); // 2
+                row.add(String.valueOf(rs.getInt("quantite_stock")));                      // 3
+                row.add(String.valueOf(rs.getInt("niveau_dangerosite")));                  // 4
                 data.add(row);
             }
         } catch (SQLException e) {
@@ -230,9 +244,17 @@ public class GestionnaireDashboardController implements Initializable {
     private void loadDemandes() {
         if (demandesTable == null) return;
         String query = """
-                SELECT dp.id_demande, u.nom, u.prenom, dp.date_demande, dp.statut
+                SELECT dp.id_demande,
+                       u.nom, u.prenom,
+                       GROUP_CONCAT(p.libelle ORDER BY p.libelle SEPARATOR ', ') AS produits,
+                       COALESCE(SUM(ld.quantite_demandee), 0) AS total_qte,
+                       dp.date_demande,
+                       dp.statut
                 FROM demande_produit dp
                 JOIN utilisateur u ON dp.id_medecin = u.id_utilisateur
+                LEFT JOIN ligne_demande ld ON dp.id_demande = ld.id_demande
+                LEFT JOIN produit p ON ld.id_produit = p.id_produit
+                GROUP BY dp.id_demande, u.nom, u.prenom, dp.date_demande, dp.statut
                 ORDER BY dp.date_demande DESC
                 """;
         ObservableList<ObservableList<String>> data = FXCollections.observableArrayList();
@@ -241,10 +263,12 @@ public class GestionnaireDashboardController implements Initializable {
              ResultSet rs = st.executeQuery(query)) {
             while (rs.next()) {
                 ObservableList<String> row = FXCollections.observableArrayList();
-                row.add(String.valueOf(rs.getInt("id_demande")));
-                row.add("Dr. " + rs.getString("nom") + " " + rs.getString("prenom"));
-                row.add(rs.getString("date_demande") != null ? rs.getString("date_demande") : "—");
-                row.add(rs.getString("statut") != null ? rs.getString("statut") : "—");
+                row.add(String.valueOf(rs.getInt("id_demande")));                                    // 0
+                row.add("Dr. " + rs.getString("nom") + " " + rs.getString("prenom"));               // 1
+                row.add(rs.getString("produits") != null ? rs.getString("produits") : "—");         // 2
+                row.add(String.valueOf(rs.getInt("total_qte")));                                     // 3
+                row.add(rs.getString("date_demande") != null ? rs.getString("date_demande") : "—"); // 4
+                row.add(rs.getString("statut") != null ? rs.getString("statut") : "—");             // 5
                 data.add(row);
             }
         } catch (SQLException e) {
@@ -255,16 +279,18 @@ public class GestionnaireDashboardController implements Initializable {
 
     private void loadFournisseurs() {
         if (fournisseursTable == null) return;
-        String query = "SELECT nom, email, telephone FROM fournisseur ORDER BY nom";
+        String query = "SELECT id_fournisseur, nom, contact, email, telephone FROM fournisseur ORDER BY nom";
         ObservableList<ObservableList<String>> data = FXCollections.observableArrayList();
         try (Connection conn = getConnection();
              Statement st = conn.createStatement();
              ResultSet rs = st.executeQuery(query)) {
             while (rs.next()) {
                 ObservableList<String> row = FXCollections.observableArrayList();
-                row.add(rs.getString("nom") != null ? rs.getString("nom") : "—");
-                row.add(rs.getString("email") != null ? rs.getString("email") : "—");
-                row.add(rs.getString("telephone") != null ? rs.getString("telephone") : "—");
+                row.add(String.valueOf(rs.getInt("id_fournisseur")));                          // 0 – caché
+                row.add(rs.getString("nom") != null ? rs.getString("nom") : "—");             // 1
+                row.add(rs.getString("contact") != null ? rs.getString("contact") : "—");     // 2
+                row.add(rs.getString("email") != null ? rs.getString("email") : "—");         // 3
+                row.add(rs.getString("telephone") != null ? rs.getString("telephone") : "—"); // 4
                 data.add(row);
             }
         } catch (SQLException e) {
@@ -320,16 +346,93 @@ public class GestionnaireDashboardController implements Initializable {
             showAlert(Alert.AlertType.INFORMATION, "Succès", "Produit ajouté au stock !");
             productNameField.clear();
             quantityField.clear();
+            if (seuilField != null) seuilField.clear();
             if (descriptionProduitField != null) descriptionProduitField.clear();
             dangerositeProduitComboBox.setValue(null);
             loadStockProducts();
             loadDashboardData();
+            loadProductsDashboard();
 
         } catch (NumberFormatException e) {
             showAlert(Alert.AlertType.ERROR, "Erreur", "La quantité doit être un nombre entier.");
         } catch (SQLException e) {
             showAlert(Alert.AlertType.ERROR, "Erreur BD", e.getMessage());
         }
+    }
+
+    @FXML
+    private void onEditProduct() {
+        if (stockProductsTable == null) return;
+        ObservableList<String> selected = stockProductsTable.getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            showAlert(Alert.AlertType.WARNING, "Attention", "Veuillez sélectionner un produit dans la liste.");
+            return;
+        }
+        int produitId = Integer.parseInt(selected.get(0));
+        Produit produit = new ProduitDAO().findById(produitId);
+        if (produit == null) {
+            showAlert(Alert.AlertType.ERROR, "Erreur", "Produit introuvable.");
+            return;
+        }
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/stock/ProduitForm.fxml"));
+            Parent root = loader.load();
+            ProduitFormController controller = loader.getController();
+            controller.setMode(ProduitFormController.Mode.MODIFICATION);
+            controller.setProduit(produit);
+            controller.setIdUtilisateurConnecte(currentGestionnaireId > 0 ? currentGestionnaireId : 1);
+            Stage stage = new Stage();
+            stage.setTitle("Modifier le produit");
+            stage.setScene(new Scene(root));
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.showAndWait();
+            loadStockProducts();
+            loadDashboardData();
+            loadProductsDashboard();
+        } catch (IOException e) {
+            showAlert(Alert.AlertType.ERROR, "Erreur", "Impossible d'ouvrir le formulaire : " + e.getMessage());
+        }
+    }
+
+    @FXML
+    private void onDeleteProduct() {
+        if (stockProductsTable == null) return;
+        ObservableList<String> selected = stockProductsTable.getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            showAlert(Alert.AlertType.WARNING, "Attention", "Veuillez sélectionner un produit dans la liste.");
+            return;
+        }
+        int produitId = Integer.parseInt(selected.get(0));
+        String libelle = selected.get(1);
+
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Suppression");
+        confirm.setHeaderText("Supprimer le produit \"" + libelle + "\" ?");
+        confirm.setContentText("Cette action est irréversible.");
+        confirm.showAndWait().ifPresent(resp -> {
+            if (resp != ButtonType.OK) return;
+            boolean succes = new ProduitDAO().delete(produitId);
+            if (succes) {
+                int gestionnaireId = currentGestionnaireId > 0 ? currentGestionnaireId : 1;
+                try (Connection conn = getConnection();
+                     PreparedStatement ps = conn.prepareStatement(
+                             "INSERT INTO historique (id_utilisateur, action, table_concernee, id_enregistrement, details) VALUES (?, 'Suppression', 'produit', ?, ?)")) {
+                    ps.setInt(1, gestionnaireId);
+                    ps.setInt(2, produitId);
+                    ps.setString(3, "Suppression produit: " + libelle);
+                    ps.executeUpdate();
+                } catch (SQLException e) {
+                    System.err.println("Erreur historique : " + e.getMessage());
+                }
+                showAlert(Alert.AlertType.INFORMATION, "Supprimé", "Produit \"" + libelle + "\" supprimé.");
+                loadStockProducts();
+                loadDashboardData();
+                loadProductsDashboard();
+            } else {
+                showAlert(Alert.AlertType.ERROR, "Erreur",
+                        "Impossible de supprimer ce produit (référencé dans des demandes ou réapprovisionnements).");
+            }
+        });
     }
 
     // ============= GESTION DEMANDES =============
@@ -342,9 +445,8 @@ public class GestionnaireDashboardController implements Initializable {
             showAlert(Alert.AlertType.WARNING, "Attention", "Veuillez sélectionner une demande.");
             return;
         }
-
         int demandeId = Integer.parseInt(selected.get(0));
-        String statut = selected.get(3);
+        String statut = selected.get(5); // index 5 = statut
         if (!"Attente".equals(statut)) {
             showAlert(Alert.AlertType.WARNING, "Attention", "Seules les demandes en attente peuvent être validées.");
             return;
@@ -354,26 +456,22 @@ public class GestionnaireDashboardController implements Initializable {
 
         try (Connection conn = getConnection()) {
             conn.setAutoCommit(false);
-
             try (PreparedStatement pstmt = conn.prepareStatement(
                     "UPDATE demande_produit SET statut = 'Validee', id_gestionnaire = ? WHERE id_demande = ?")) {
                 pstmt.setInt(1, gestionnaireId);
                 pstmt.setInt(2, demandeId);
                 pstmt.executeUpdate();
             }
-
             try (PreparedStatement pstmt = conn.prepareStatement(
                     "INSERT INTO historique (id_utilisateur, action, table_concernee, id_enregistrement, details) VALUES (?, 'Validation', 'demande_produit', ?, 'Demande validée')")) {
                 pstmt.setInt(1, gestionnaireId);
                 pstmt.setInt(2, demandeId);
                 pstmt.executeUpdate();
             }
-
             conn.commit();
             showAlert(Alert.AlertType.INFORMATION, "Succès", "Demande #" + demandeId + " validée !");
             loadDemandes();
             loadDashboardData();
-
         } catch (SQLException e) {
             showAlert(Alert.AlertType.ERROR, "Erreur BD", e.getMessage());
         }
@@ -387,9 +485,8 @@ public class GestionnaireDashboardController implements Initializable {
             showAlert(Alert.AlertType.WARNING, "Attention", "Veuillez sélectionner une demande.");
             return;
         }
-
         int demandeId = Integer.parseInt(selected.get(0));
-        String statut = selected.get(3);
+        String statut = selected.get(5); // index 5 = statut
         if (!"Attente".equals(statut)) {
             showAlert(Alert.AlertType.WARNING, "Attention", "Seules les demandes en attente peuvent être refusées.");
             return;
@@ -407,7 +504,6 @@ public class GestionnaireDashboardController implements Initializable {
 
         try (Connection conn = getConnection()) {
             conn.setAutoCommit(false);
-
             try (PreparedStatement pstmt = conn.prepareStatement(
                     "UPDATE demande_produit SET statut = 'Refusee', id_gestionnaire = ?, motif_refus = ? WHERE id_demande = ?")) {
                 pstmt.setInt(1, gestionnaireId);
@@ -415,7 +511,6 @@ public class GestionnaireDashboardController implements Initializable {
                 pstmt.setInt(3, demandeId);
                 pstmt.executeUpdate();
             }
-
             try (PreparedStatement pstmt = conn.prepareStatement(
                     "INSERT INTO historique (id_utilisateur, action, table_concernee, id_enregistrement, details) VALUES (?, 'Refus', 'demande_produit', ?, ?)")) {
                 pstmt.setInt(1, gestionnaireId);
@@ -423,25 +518,108 @@ public class GestionnaireDashboardController implements Initializable {
                 pstmt.setString(3, "Motif: " + motif);
                 pstmt.executeUpdate();
             }
-
             conn.commit();
             showAlert(Alert.AlertType.INFORMATION, "Refusée", "Demande #" + demandeId + " refusée.");
             loadDemandes();
             loadDashboardData();
-
         } catch (SQLException e) {
             showAlert(Alert.AlertType.ERROR, "Erreur BD", e.getMessage());
         }
     }
 
-    // ============= RÉAPPROVISIONNEMENT =============
+    // ============= GESTION FOURNISSEURS =============
 
     @FXML
-    private void showReappro() {
-        hideAllViews();
-        if (reapproView != null) { reapproView.setVisible(true); reapproView.setManaged(true); }
-        loadReappros();
+    private void onAddFournisseur() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/stock/FournisseurForm.fxml"));
+            Parent root = loader.load();
+            FournisseurFormController controller = loader.getController();
+            controller.setMode(FournisseurFormController.Mode.CREATION);
+            controller.setIdUtilisateurConnecte(currentGestionnaireId > 0 ? currentGestionnaireId : 1);
+            Stage stage = new Stage();
+            stage.setTitle("Nouveau fournisseur");
+            stage.setScene(new Scene(root));
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.showAndWait();
+            loadFournisseurs();
+        } catch (IOException e) {
+            showAlert(Alert.AlertType.ERROR, "Erreur", "Impossible d'ouvrir le formulaire : " + e.getMessage());
+        }
     }
+
+    @FXML
+    private void onEditFournisseur() {
+        if (fournisseursTable == null) return;
+        ObservableList<String> selected = fournisseursTable.getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            showAlert(Alert.AlertType.WARNING, "Attention", "Veuillez sélectionner un fournisseur dans la liste.");
+            return;
+        }
+        int fournisseurId = Integer.parseInt(selected.get(0));
+        Fournisseur fournisseur = new FournisseurDAO().findById(fournisseurId);
+        if (fournisseur == null) {
+            showAlert(Alert.AlertType.ERROR, "Erreur", "Fournisseur introuvable.");
+            return;
+        }
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/stock/FournisseurForm.fxml"));
+            Parent root = loader.load();
+            FournisseurFormController controller = loader.getController();
+            controller.setMode(FournisseurFormController.Mode.MODIFICATION);
+            controller.setFournisseur(fournisseur);
+            controller.setIdUtilisateurConnecte(currentGestionnaireId > 0 ? currentGestionnaireId : 1);
+            Stage stage = new Stage();
+            stage.setTitle("Modifier le fournisseur");
+            stage.setScene(new Scene(root));
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.showAndWait();
+            loadFournisseurs();
+        } catch (IOException e) {
+            showAlert(Alert.AlertType.ERROR, "Erreur", "Impossible d'ouvrir le formulaire : " + e.getMessage());
+        }
+    }
+
+    @FXML
+    private void onDeleteFournisseur() {
+        if (fournisseursTable == null) return;
+        ObservableList<String> selected = fournisseursTable.getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            showAlert(Alert.AlertType.WARNING, "Attention", "Veuillez sélectionner un fournisseur dans la liste.");
+            return;
+        }
+        int fournisseurId = Integer.parseInt(selected.get(0));
+        String nom = selected.get(1);
+
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Suppression");
+        confirm.setHeaderText("Supprimer le fournisseur \"" + nom + "\" ?");
+        confirm.setContentText("Cette action est irréversible.");
+        confirm.showAndWait().ifPresent(resp -> {
+            if (resp != ButtonType.OK) return;
+            boolean succes = new FournisseurDAO().delete(fournisseurId);
+            if (succes) {
+                int gestionnaireId = currentGestionnaireId > 0 ? currentGestionnaireId : 1;
+                try (Connection conn = getConnection();
+                     PreparedStatement ps = conn.prepareStatement(
+                             "INSERT INTO historique (id_utilisateur, action, table_concernee, id_enregistrement, details) VALUES (?, 'Suppression', 'fournisseur', ?, ?)")) {
+                    ps.setInt(1, gestionnaireId);
+                    ps.setInt(2, fournisseurId);
+                    ps.setString(3, "Suppression fournisseur: " + nom);
+                    ps.executeUpdate();
+                } catch (SQLException e) {
+                    System.err.println("Erreur historique : " + e.getMessage());
+                }
+                showAlert(Alert.AlertType.INFORMATION, "Supprimé", "Fournisseur \"" + nom + "\" supprimé.");
+                loadFournisseurs();
+            } else {
+                showAlert(Alert.AlertType.ERROR, "Erreur",
+                        "Impossible de supprimer ce fournisseur (lié à des produits ou réapprovisionnements).");
+            }
+        });
+    }
+
+    // ============= RÉAPPROVISIONNEMENT =============
 
     @SuppressWarnings("unchecked")
     private void setupReapproTable() {
@@ -473,12 +651,12 @@ public class GestionnaireDashboardController implements Initializable {
              ResultSet rs = st.executeQuery(query)) {
             while (rs.next()) {
                 ObservableList<String> row = FXCollections.observableArrayList();
-                row.add(String.valueOf(rs.getInt("id_reappro")));                                          // 0 – id caché
-                row.add(rs.getString("libelle") != null ? rs.getString("libelle") : "—");                 // 1
-                row.add(rs.getString("nom") != null ? rs.getString("nom") : "—");                         // 2
-                row.add(String.valueOf(rs.getInt("quantite")));                                            // 3
-                row.add(rs.getDate("date_commande") != null ? rs.getDate("date_commande").toString() : "—"); // 4
-                row.add(rs.getDate("date_reception") != null ? rs.getDate("date_reception").toString() : "En attente"); // 5
+                row.add(String.valueOf(rs.getInt("id_reappro")));
+                row.add(rs.getString("libelle") != null ? rs.getString("libelle") : "—");
+                row.add(rs.getString("nom") != null ? rs.getString("nom") : "—");
+                row.add(String.valueOf(rs.getInt("quantite")));
+                row.add(rs.getDate("date_commande") != null ? rs.getDate("date_commande").toString() : "—");
+                row.add(rs.getDate("date_reception") != null ? rs.getDate("date_reception").toString() : "En attente");
                 data.add(row);
             }
         } catch (SQLException e) {
@@ -520,10 +698,10 @@ public class GestionnaireDashboardController implements Initializable {
         }
         int reapproId = Integer.parseInt(selected.get(0));
         int gestionnaireId = currentGestionnaireId > 0 ? currentGestionnaireId : 1;
+
         try (Connection conn = getConnection()) {
             conn.setAutoCommit(false);
 
-            // Récupérer id_produit et quantite
             int idProduit = 0, quantite = 0;
             try (PreparedStatement ps = conn.prepareStatement(
                     "SELECT id_produit, quantite FROM reapprovisionnement WHERE id_reappro = ?")) {
@@ -534,23 +712,17 @@ public class GestionnaireDashboardController implements Initializable {
                     quantite  = rs.getInt("quantite");
                 }
             }
-
-            // Enregistrer la date de réception
             try (PreparedStatement ps = conn.prepareStatement(
                     "UPDATE reapprovisionnement SET date_reception = CURDATE() WHERE id_reappro = ?")) {
                 ps.setInt(1, reapproId);
                 ps.executeUpdate();
             }
-
-            // Mettre à jour le stock
             try (PreparedStatement ps = conn.prepareStatement(
                     "UPDATE produit SET quantite_stock = quantite_stock + ? WHERE id_produit = ?")) {
                 ps.setInt(1, quantite);
                 ps.setInt(2, idProduit);
                 ps.executeUpdate();
             }
-
-            // Historique
             try (PreparedStatement ps = conn.prepareStatement(
                     "INSERT INTO historique (id_utilisateur, action, table_concernee, id_enregistrement, details) VALUES (?, 'Reception', 'reapprovisionnement', ?, ?)")) {
                 ps.setInt(1, gestionnaireId);
@@ -558,7 +730,6 @@ public class GestionnaireDashboardController implements Initializable {
                 ps.setString(3, "Réception réappro #" + reapproId + " — stock +" + quantite);
                 ps.executeUpdate();
             }
-
             conn.commit();
             showAlert(Alert.AlertType.INFORMATION, "Succès", "Réception confirmée. Stock mis à jour (+" + quantite + " unités).");
             loadReappros();
