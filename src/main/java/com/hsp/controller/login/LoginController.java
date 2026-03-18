@@ -125,17 +125,9 @@ public class LoginController {
         }
     }
 
-    /**
-     * Vérifie le mot de passe : BCrypt en priorité, fallback texte clair pour les comptes de dev.
-     */
     private boolean verifyPassword(String inputPassword, String storedHash) {
         if (storedHash == null || storedHash.isEmpty()) return false;
-        try {
-            return BCrypt.checkpw(inputPassword, storedHash);
-        } catch (Exception e) {
-            // Le hash n'est pas BCrypt (compte dev) : comparaison directe
-            return inputPassword.equals(storedHash);
-        }
+        return BCrypt.checkpw(inputPassword, storedHash);
     }
 
     private void enregistrerHistorique(Connection conn, int userId, String action, String table, int recordId, String details) {
@@ -185,7 +177,7 @@ public class LoginController {
             Parent root = loader.load();
 
             // Passer les infos selon le rôle
-            if (role.equals("Administrateur")) {
+            if (role.equals("Admin")) {
                 AdminDashboardController controller = loader.getController();
                 controller.setAdminInfo(userId, userName);
             } else if (role.equals("Medecin")) {
