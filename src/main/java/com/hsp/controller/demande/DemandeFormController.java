@@ -1,5 +1,6 @@
 package com.hsp.controller.demande;
 
+import com.hsp.config.Database;
 import com.hsp.dao.DemandeProduitDAO;
 import com.hsp.dao.HistoriqueDAO;
 import com.hsp.dao.ProduitDAO;
@@ -11,10 +12,14 @@ import com.hsp.model.Utilisateur;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
 
 import java.net.URL;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -28,10 +33,13 @@ public class DemandeFormController implements Initializable {
     }
 
     @FXML private Label titre;
+    @FXML private VBox medecinSection;
     @FXML private ComboBox<Utilisateur> medecinField;
     @FXML private ComboBox<Produit> produitField;
     @FXML private TextField quantiteField;
+    @FXML private VBox statutSection;
     @FXML private ComboBox<String> statutField;
+    @FXML private VBox motifSection;
     @FXML private Label motifRefusLabel;
     @FXML private TextArea motifRefusField;
     @FXML private Button valider;
@@ -42,9 +50,11 @@ public class DemandeFormController implements Initializable {
     private DemandeProduitDAO demandeDAO;
     private ProduitDAO produitDAO;
     private UtilisateurDAO utilisateurDAO;
-    private HistoriqueDAO historiqueDAO;   // ← AJOUT
+    private HistoriqueDAO historiqueDAO;
 
     private int idGestionnaire = 1;
+    private boolean medecinMode = false;
+    private int currentMedecinId = -1;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -109,6 +119,18 @@ public class DemandeFormController implements Initializable {
         this.idGestionnaire = idGestionnaire;
     }
 
+    /**
+     * Active le mode médecin : cache la sélection médecin, le statut et le motif de refus.
+     * Le médecin connecté sera automatiquement associé à la demande avec statut "Attente".
+     */
+    public void setMedecinMode(int medecinId) {
+        this.medecinMode = true;
+        this.currentMedecinId = medecinId;
+        if (medecinSection != null) { medecinSection.setVisible(false); medecinSection.setManaged(false); }
+        if (statutSection != null)  { statutSection.setVisible(false);  statutSection.setManaged(false); }
+        if (motifSection != null)   { motifSection.setVisible(false);   motifSection.setManaged(false); }
+    }
+
     private void remplirFormulaire() {
         if (demande == null) return;
 
@@ -132,32 +154,46 @@ public class DemandeFormController implements Initializable {
     private void valider() {
         if (!validerFormulaire()) return;
 
-        Utilisateur medecin = medecinField.getValue();
-        Produit produit     = produitField.getValue();
-        double quantite     = Double.parseDouble(quantiteField.getText().trim());
-        String statut       = statutField.getValue();
-        String motifRefus   = motifRefusField != null ? motifRefusField.getText().trim() : "";
-        String dateDemande  = LocalDate.now().toString();
-
-        boolean succes;
+        Produit produit    = produitField.getValue();
+        double quantite    = Double.parseDouble(quantiteField.getText().trim());
+        String dateDemande = LocalDate.now().toString();
+        boolean succes = false;
 
         if (mode == Mode.CREATION) {
-            DemandeProduit nouvelle = new DemandeProduit(
-                    0, medecin.getId(), produit.getId_produit(),
-                    idGestionnaire, quantite, dateDemande, statut, motifRefus);
-            succes = demandeDAO.insert(nouvelle);
-
-            if (succes) {
-                // Action selon statut choisi à la création
-                String action = actionDepuisStatut(statut);
-                String details = "Demande — médecin : Dr. " + medecin.getNom() + " " + medecin.getPrenom()
-                        + " | produit : " + produit.getLibelle()
-                        + " | qté : " + quantite + " | statut : " + statut;
-                if ("Refusée".equals(statut) && !motifRefus.isEmpty())
-                    details += " | motif : " + motifRefus;
-                enregistrerHistorique(action, "demande_produit", 0, details);
+            if (medecinMode) {
+                // ── Mode médecin : statut auto "Attente", pas de gestionnaire ──
+                DemandeProduit nouvelle = new DemandeProduit(
+                        0, currentMedecinId, produit.getId_produit(),
+                        0, quantite, dateDemande, "Attente", "");
+                int idDemande = demandeDAO.insertAndGetId(nouvelle);
+                succes = idDemande > 0;
+                if (succes) {
+                    insererLigneDemande(idDemande, produit.getId_produit(), (int) quantite);
+                    enregistrerHistorique("CREATION", "demande_produit", idDemande,
+                            "Demande médecin | produit : " + produit.getLibelle() + " | qté : " + (int) quantite);
+                }
+            } else {
+                Utilisateur medecin = medecinField.getValue();
+                String statut     = statutField.getValue();
+                String motifRefus = motifRefusField != null ? motifRefusField.getText().trim() : "";
+                DemandeProduit nouvelle = new DemandeProduit(
+                        0, medecin.getId(), produit.getId_produit(),
+                        idGestionnaire, quantite, dateDemande, statut, motifRefus);
+                succes = demandeDAO.insert(nouvelle);
+                if (succes) {
+                    String action = actionDepuisStatut(statut);
+                    String details = "Demande — médecin : Dr. " + medecin.getNom() + " " + medecin.getPrenom()
+                            + " | produit : " + produit.getLibelle()
+                            + " | qté : " + quantite + " | statut : " + statut;
+                    if ("Refusée".equals(statut) && !motifRefus.isEmpty())
+                        details += " | motif : " + motifRefus;
+                    enregistrerHistorique(action, "demande_produit", 0, details);
+                }
             }
         } else {
+            Utilisateur medecin = medecinField.getValue();
+            String statut     = statutField.getValue();
+            String motifRefus = motifRefusField != null ? motifRefusField.getText().trim() : "";
             String ancienStatut = demande.getStatut();
             demande.setId_medecin(medecin.getId());
             demande.setId_produit(produit.getId_produit());
@@ -166,7 +202,6 @@ public class DemandeFormController implements Initializable {
             demande.setStatut(statut);
             demande.setMotif_refus(motifRefus);
             succes = demandeDAO.update(demande);
-
             if (succes) {
                 String action = actionDepuisStatut(statut);
                 String details = "Demande #" + demande.getId_demande()
@@ -182,6 +217,20 @@ public class DemandeFormController implements Initializable {
         else afficherErreur("Erreur", "Impossible d'enregistrer la demande.");
     }
 
+    private void insererLigneDemande(int idDemande, int idProduit, int quantite) {
+        String sql = "INSERT INTO ligne_demande (id_demande, id_produit, quantite_demandee, statut) VALUES (?, ?, ?, ?)";
+        try (Connection cnx = Database.getConnexion();
+             PreparedStatement ps = cnx.prepareStatement(sql)) {
+            ps.setInt(1, idDemande);
+            ps.setInt(2, idProduit);
+            ps.setInt(3, quantite);
+            ps.setString(4, "Attente");
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            System.err.println("Erreur insertion ligne_demande : " + e.getMessage());
+        }
+    }
+
     /** Traduit le statut en action d'historique */
     private String actionDepuisStatut(String statut) {
         switch (statut) {
@@ -193,8 +242,10 @@ public class DemandeFormController implements Initializable {
 
     private boolean validerFormulaire() {
         StringBuilder erreurs = new StringBuilder();
-        if (medecinField == null || medecinField.getValue() == null) erreurs.append("- Le médecin est obligatoire\n");
-        if (produitField == null || produitField.getValue() == null) erreurs.append("- Le produit est obligatoire\n");
+        if (!medecinMode && (medecinField == null || medecinField.getValue() == null))
+            erreurs.append("- Le médecin est obligatoire\n");
+        if (produitField == null || produitField.getValue() == null)
+            erreurs.append("- Le produit est obligatoire\n");
         if (quantiteField == null || quantiteField.getText().trim().isEmpty()) {
             erreurs.append("- La quantité est obligatoire\n");
         } else {
@@ -203,10 +254,13 @@ public class DemandeFormController implements Initializable {
                 if (q <= 0) erreurs.append("- La quantité doit être supérieure à 0\n");
             } catch (NumberFormatException e) { erreurs.append("- La quantité doit être un nombre valide\n"); }
         }
-        if (statutField == null || statutField.getValue() == null) erreurs.append("- Le statut est obligatoire\n");
-        if ("Refusée".equals(statutField != null ? statutField.getValue() : null)) {
-            if (motifRefusField == null || motifRefusField.getText().trim().isEmpty())
-                erreurs.append("- Le motif de refus est obligatoire pour une demande refusée\n");
+        if (!medecinMode) {
+            if (statutField == null || statutField.getValue() == null)
+                erreurs.append("- Le statut est obligatoire\n");
+            if ("Refusée".equals(statutField != null ? statutField.getValue() : null)) {
+                if (motifRefusField == null || motifRefusField.getText().trim().isEmpty())
+                    erreurs.append("- Le motif de refus est obligatoire pour une demande refusée\n");
+            }
         }
         if (erreurs.length() > 0) { afficherErreur("Erreurs de validation", erreurs.toString()); return false; }
         return true;

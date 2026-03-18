@@ -21,7 +21,7 @@
     <Separator/>
 
     <!-- Médecin -->
-    <VBox spacing="4">
+    <VBox fx:id="medecinSection" spacing="4">
         <Label text="Médecin *"
                style="-fx-font-weight: bold; -fx-text-fill: #555;"/>
         <ComboBox fx:id="medecinField" maxWidth="Infinity"
@@ -44,14 +44,14 @@
     </VBox>
 
     <!-- Statut -->
-    <VBox spacing="4">
+    <VBox fx:id="statutSection" spacing="4">
         <Label text="Statut *"
                style="-fx-font-weight: bold; -fx-text-fill: #555;"/>
         <ComboBox fx:id="statutField" maxWidth="Infinity"/>
     </VBox>
 
     <!-- Motif de refus (visible uniquement si statut = Refusée) -->
-    <VBox spacing="4">
+    <VBox fx:id="motifSection" spacing="4">
         <Label fx:id="motifRefusLabel"
                text="Motif de refus *"
                style="-fx-font-weight: bold; -fx-text-fill: #e53935;"/>

@@ -1,7 +1,60 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
 
-<?import javafx.scene.layout.VBox?>
+<VBox xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.hsp.controller.utilisateur.UtilisateurFormController"
+      spacing="20" style="-fx-background-color: white; -fx-padding: 30;">
 
-<VBox xmlns:fx="http://javafx.com/fxml">
+    <Label fx:id="titre" text="Nouvel utilisateur"
+           style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #1f2937;"/>
 
+    <Separator/>
+
+    <GridPane hgap="20" vgap="15">
+        <Label text="Nom *" GridPane.columnIndex="0" GridPane.rowIndex="0"
+               style="-fx-font-weight: bold; -fx-text-fill: #374151;"/>
+        <TextField fx:id="nomField" promptText="Nom de famille"
+                   GridPane.columnIndex="1" GridPane.rowIndex="0" prefWidth="280"
+                   style="-fx-border-color: #d1d5db; -fx-border-radius: 6; -fx-padding: 8;"/>
+
+        <Label text="Prénom *" GridPane.columnIndex="0" GridPane.rowIndex="1"
+               style="-fx-font-weight: bold; -fx-text-fill: #374151;"/>
+        <TextField fx:id="prenomField" promptText="Prénom"
+                   GridPane.columnIndex="1" GridPane.rowIndex="1" prefWidth="280"
+                   style="-fx-border-color: #d1d5db; -fx-border-radius: 6; -fx-padding: 8;"/>
+
+        <Label text="Email *" GridPane.columnIndex="0" GridPane.rowIndex="2"
+               style="-fx-font-weight: bold; -fx-text-fill: #374151;"/>
+        <TextField fx:id="emailField" promptText="adresse@hopital.fr"
+                   GridPane.columnIndex="1" GridPane.rowIndex="2" prefWidth="280"
+                   style="-fx-border-color: #d1d5db; -fx-border-radius: 6; -fx-padding: 8;"/>
+
+        <Label text="Mot de passe *" GridPane.columnIndex="0" GridPane.rowIndex="3"
+               style="-fx-font-weight: bold; -fx-text-fill: #374151;"/>
+        <PasswordField fx:id="mdpField" promptText="Laisser vide pour ne pas modifier"
+                       GridPane.columnIndex="1" GridPane.rowIndex="3" prefWidth="280"
+                       style="-fx-border-color: #d1d5db; -fx-border-radius: 6; -fx-padding: 8;"/>
+
+        <Label text="Rôle *" GridPane.columnIndex="0" GridPane.rowIndex="4"
+               style="-fx-font-weight: bold; -fx-text-fill: #374151;"/>
+        <ComboBox fx:id="roleField" promptText="Sélectionner un rôle"
+                  GridPane.columnIndex="1" GridPane.rowIndex="4" prefWidth="280"/>
+    </GridPane>
+
+    <Label text="* Champs obligatoires" style="-fx-text-fill: #9ca3af; -fx-font-size: 11px;"/>
+
+    <Region VBox.vgrow="ALWAYS"/>
+
+    <HBox spacing="15" alignment="CENTER_RIGHT">
+        <Button fx:id="annuler" text="Annuler" onAction="#annuler"
+                style="-fx-background-color: #e5e7eb; -fx-text-fill: #374151; -fx-padding: 10 25; -fx-font-weight: bold; -fx-cursor: hand;"/>
+        <Button fx:id="valider" text="Enregistrer" onAction="#valider"
+                style="-fx-background-color: #dc2626; -fx-text-fill: white; -fx-padding: 10 25; -fx-font-weight: bold; -fx-cursor: hand;"/>
+    </HBox>
+
+    <VBox.margin>
+        <Insets/>
+    </VBox.margin>
 </VBox>

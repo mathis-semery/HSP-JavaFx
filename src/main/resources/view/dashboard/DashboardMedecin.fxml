@@ -453,12 +453,20 @@
                   style="-fx-padding: 32 30 30 30;"
                   visible="false" managed="false">
 
-                <VBox spacing="3">
-                    <Label text="Demandes de produits"
-                           style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #0D1B2A;"/>
-                    <Label text="Suivi de vos demandes pharmaceutiques"
-                           style="-fx-font-size: 12px; -fx-text-fill: #7F93A8;"/>
-                </VBox>
+                <HBox alignment="CENTER_LEFT">
+                    <VBox spacing="3">
+                        <Label text="Demandes de produits"
+                               style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #0D1B2A;"/>
+                        <Label text="Suivi de vos demandes pharmaceutiques"
+                               style="-fx-font-size: 12px; -fx-text-fill: #7F93A8;"/>
+                    </VBox>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Button text="➕  Nouvelle demande" onAction="#onNewProductRequest"
+                            style="-fx-background-color: #7B2FBE; -fx-text-fill: white;
+                                   -fx-font-size: 12px; -fx-font-weight: bold;
+                                   -fx-padding: 10 20 10 20; -fx-background-radius: 9;
+                                   -fx-cursor: hand; -fx-border-width: 0;"/>
+                </HBox>
 
                 <VBox VBox.vgrow="ALWAYS" spacing="0"
                       style="-fx-background-color: white; -fx-background-radius: 14;
@@ -476,11 +484,11 @@
                                       -fx-table-cell-border-color: #F0F3F8;">
                         <columns>
                             <TableColumn text="N° Demande" prefWidth="110"/>
-                            <TableColumn text="Patient" prefWidth="160"/>
-                            <TableColumn text="Produit" prefWidth="180"/>
-                            <TableColumn text="Quantité" prefWidth="90"/>
-                            <TableColumn text="Date" prefWidth="130"/>
-                            <TableColumn text="Statut" prefWidth="130"/>
+                            <TableColumn text="Produit" prefWidth="200"/>
+                            <TableColumn text="Qté demandée" prefWidth="110"/>
+                            <TableColumn text="Date" prefWidth="150"/>
+                            <TableColumn text="Statut demande" prefWidth="140"/>
+                            <TableColumn text="Statut ligne" prefWidth="130"/>
                         </columns>
                         <placeholder>
                             <VBox alignment="CENTER" spacing="8" style="-fx-padding: 40 0 40 0;">
