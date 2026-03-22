@@ -44,6 +44,7 @@ public class SecretaireDashboardController implements Initializable {
     @FXML private TextField emailPatientField;
     @FXML private ComboBox<Integer> niveauGraviteComboBox;
     @FXML private Button btnModifierPatient;
+    @FXML private Button btnSupprimerPatient;   // ← AJOUT
 
     @FXML private VBox      editPatientView;
     @FXML private TextField editNomField;
@@ -76,10 +77,17 @@ public class SecretaireDashboardController implements Initializable {
         setupAllPatientsTable();
         setupWaitingTriageTable();
 
+        // Boutons actifs seulement quand une ligne est sélectionnée
         if (allPatientsTable != null && btnModifierPatient != null) {
             btnModifierPatient.disableProperty().bind(
                     allPatientsTable.getSelectionModel().selectedItemProperty().isNull());
         }
+        if (allPatientsTable != null && btnSupprimerPatient != null) {   // ← AJOUT
+            btnSupprimerPatient.disableProperty().bind(
+                    allPatientsTable.getSelectionModel().selectedItemProperty().isNull());
+        }
+
+        // Double-clic → modifier
         if (allPatientsTable != null) {
             allPatientsTable.setOnMouseClicked(event -> {
                 if (event.getClickCount() == 2
@@ -279,7 +287,6 @@ public class SecretaireDashboardController implements Initializable {
         try (Connection conn = getConnection()) {
             conn.setAutoCommit(false);
 
-            // 1. INSERT patient
             int patientId;
             try (PreparedStatement pstmt = conn.prepareStatement(
                     "INSERT INTO patient (nom, prenom, num_secu, email, telephone, adresse) VALUES (?, ?, ?, ?, ?, ?)",
@@ -295,18 +302,16 @@ public class SecretaireDashboardController implements Initializable {
                 patientId = rs.next() ? rs.getInt(1) : 0;
             }
 
-            // 2. INSERT dossier — ← CORRECTION : id_secretaire ajouté
             try (PreparedStatement pstmt = conn.prepareStatement(
                     "INSERT INTO dossier (id_patient, id_secretaire, date_arrivee, symptomes, niveau_gravite, statut) " +
                             "VALUES (?, ?, NOW(), ?, ?, 'Attente')")) {
                 pstmt.setInt(1, patientId);
-                pstmt.setInt(2, secretaireId);   // ← id_secretaire fourni
+                pstmt.setInt(2, secretaireId);
                 pstmt.setString(3, motifTextArea.getText().trim());
                 pstmt.setInt(4, gravite);
                 pstmt.executeUpdate();
             }
 
-            // 3. INSERT historique
             try (PreparedStatement pstmt = conn.prepareStatement(
                     "INSERT INTO historique (id_utilisateur, action, table_concernee, id_enregistrement, details) VALUES (?, 'Creation', 'patient', ?, ?)")) {
                 pstmt.setInt(1, secretaireId);
@@ -340,12 +345,12 @@ public class SecretaireDashboardController implements Initializable {
             ps.setInt(1, selectedPatientId);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
-                editNomField.setText(     rs.getString("nom")       != null ? rs.getString("nom")       : "");
-                editPrenomField.setText(  rs.getString("prenom")    != null ? rs.getString("prenom")    : "");
+                editNomField.setText(     rs.getString("nom")      != null ? rs.getString("nom")      : "");
+                editPrenomField.setText(  rs.getString("prenom")   != null ? rs.getString("prenom")   : "");
                 editTelField.setText(     rs.getString("telephone") != null ? rs.getString("telephone") : "");
-                editEmailField.setText(   rs.getString("email")     != null ? rs.getString("email")     : "");
-                editAdresseField.setText( rs.getString("adresse")   != null ? rs.getString("adresse")   : "");
-                editNumSecuField.setText( rs.getString("num_secu")  != null ? rs.getString("num_secu")  : "");
+                editEmailField.setText(   rs.getString("email")    != null ? rs.getString("email")    : "");
+                editAdresseField.setText( rs.getString("adresse")  != null ? rs.getString("adresse")  : "");
+                editNumSecuField.setText( rs.getString("num_secu") != null ? rs.getString("num_secu") : "");
             }
         } catch (SQLException e) {
             showAlert(Alert.AlertType.ERROR, "Erreur", "Impossible de charger la fiche : " + e.getMessage());
@@ -390,6 +395,64 @@ public class SecretaireDashboardController implements Initializable {
         } catch (SQLException e) {
             showAlert(Alert.AlertType.ERROR, "Erreur", "Erreur lors de la mise à jour : " + e.getMessage());
         }
+    }
+
+    // ============= SUPPRESSION PATIENT ← AJOUT =============
+
+    @FXML
+    private void onSupprimerPatient() {
+        ObservableList<String> selection = allPatientsTable.getSelectionModel().getSelectedItem();
+        if (selection == null) return;
+
+        String nom      = selection.get(0);
+        String prenom   = selection.get(1);
+        int    idPatient = Integer.parseInt(selection.get(5));
+
+        Alert confirmation = new Alert(Alert.AlertType.CONFIRMATION);
+        confirmation.setTitle("Confirmation de suppression");
+        confirmation.setHeaderText("Supprimer le patient " + prenom + " " + nom + " ?");
+        confirmation.setContentText("Cette action supprimera aussi tous les dossiers associés. Elle est irréversible.");
+
+        confirmation.showAndWait().ifPresent(response -> {
+            if (response != ButtonType.OK) return;
+
+            try (Connection conn = getConnection()) {
+                conn.setAutoCommit(false);
+
+                // 1. Supprimer les dossiers liés (contrainte FK)
+                try (PreparedStatement ps = conn.prepareStatement(
+                        "DELETE FROM dossier WHERE id_patient = ?")) {
+                    ps.setInt(1, idPatient);
+                    ps.executeUpdate();
+                }
+
+                // 2. Supprimer le patient
+                try (PreparedStatement ps = conn.prepareStatement(
+                        "DELETE FROM patient WHERE id_patient = ?")) {
+                    ps.setInt(1, idPatient);
+                    ps.executeUpdate();
+                }
+
+                // 3. Historique
+                try (PreparedStatement ps = conn.prepareStatement(
+                        "INSERT INTO historique (id_utilisateur, action, table_concernee, id_enregistrement, details) " +
+                                "VALUES (?, 'Suppression', 'patient', ?, ?)")) {
+                    ps.setInt(1, currentSecretaireId > 0 ? currentSecretaireId : 1);
+                    ps.setInt(2, idPatient);
+                    ps.setString(3, "Suppression du patient : " + prenom + " " + nom);
+                    ps.executeUpdate();
+                }
+
+                conn.commit();
+                showAlert(Alert.AlertType.INFORMATION, "Succès",
+                        "Le patient " + prenom + " " + nom + " a été supprimé.");
+                loadAllPatients();
+
+            } catch (SQLException e) {
+                showAlert(Alert.AlertType.ERROR, "Erreur",
+                        "Erreur lors de la suppression : " + e.getMessage());
+            }
+        });
     }
 
     // ============= DIVERS =============
