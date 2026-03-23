@@ -1,5 +1,6 @@
 package com.hsp;
 
+import com.hsp.cli.ConsoleUserManager;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -17,6 +18,13 @@ public class MainApplication extends Application {
     }
 
     public static void main(String[] args) {
+        for (String arg : args) {
+            if ("--add-user".equalsIgnoreCase(arg)) {
+                new ConsoleUserManager().run();
+                return;
+            }
+        }
+
         launch(args);
     }
 }
