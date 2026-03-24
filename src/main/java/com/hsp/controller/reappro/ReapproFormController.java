@@ -1,12 +1,15 @@
 package com.hsp.controller.reappro;
 
+import com.hsp.config.Database;
 import com.hsp.dao.FournisseurDAO;
 import com.hsp.dao.HistoriqueDAO;
 import com.hsp.dao.ProduitDAO;
+import com.hsp.dao.ProduitFournisseurDAO;
 import com.hsp.dao.ReapprovisionnementDAO;
 import com.hsp.model.Fournisseur;
 import com.hsp.model.Historique;
 import com.hsp.model.Produit;
+import com.hsp.model.ProduitFournisseur;
 import com.hsp.model.Reapprovisionnement;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -15,6 +18,7 @@ import javafx.stage.Stage;
 import javafx.util.StringConverter;
 
 import java.net.URL;
+import java.sql.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -41,19 +45,34 @@ public class ReapproFormController implements Initializable {
     private ReapprovisionnementDAO reapproDAO;
     private ProduitDAO produitDAO;
     private FournisseurDAO fournisseurDAO;
-    private HistoriqueDAO historiqueDAO;   // ← AJOUT
+    private ProduitFournisseurDAO produitFournisseurDAO;
+    private HistoriqueDAO historiqueDAO;
 
     private int idGestionnaire = 1;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        reapproDAO     = new ReapprovisionnementDAO();
-        produitDAO     = new ProduitDAO();
-        fournisseurDAO = new FournisseurDAO();
-        historiqueDAO  = new HistoriqueDAO();   // ← AJOUT
+        reapproDAO            = new ReapprovisionnementDAO();
+        produitDAO            = new ProduitDAO();
+        fournisseurDAO        = new FournisseurDAO();
+        produitFournisseurDAO = new ProduitFournisseurDAO();
+        historiqueDAO         = new HistoriqueDAO();
 
         chargerProduits();
-        chargerFournisseurs();
+
+        // Quand un produit est sélectionné, filtrer les fournisseurs qui le proposent
+        if (produitField != null) {
+            produitField.getSelectionModel().selectedItemProperty().addListener((obs, old, newVal) -> {
+                if (newVal != null) {
+                    chargerFournisseursPourProduit(newVal.getId_produit());
+                } else {
+                    if (fournisseurField != null) {
+                        fournisseurField.getItems().clear();
+                        fournisseurField.setValue(null);
+                    }
+                }
+            });
+        }
 
         if (dateCommandeField != null) {
             dateCommandeField.setValue(LocalDate.now());
@@ -62,7 +81,10 @@ public class ReapproFormController implements Initializable {
 
     private void chargerProduits() {
         if (produitField == null) return;
-        List<Produit> produits = produitDAO.findAll();
+        // Afficher uniquement les produits qui ont au moins un fournisseur
+        List<Produit> produits = produitDAO.findAll().stream()
+                .filter(p -> !produitFournisseurDAO.findByProduitId(p.getId_produit()).isEmpty())
+                .collect(java.util.stream.Collectors.toList());
         produitField.getItems().addAll(produits);
         produitField.setConverter(new StringConverter<Produit>() {
             @Override public String toString(Produit produit) { return produit != null ? produit.getLibelle() : ""; }
@@ -70,12 +92,28 @@ public class ReapproFormController implements Initializable {
         });
     }
 
-    private void chargerFournisseurs() {
+    private void chargerFournisseursPourProduit(int idProduit) {
         if (fournisseurField == null) return;
-        List<Fournisseur> fournisseurs = fournisseurDAO.findAll();
-        fournisseurField.getItems().addAll(fournisseurs);
+        fournisseurField.getItems().clear();
+        fournisseurField.setValue(null);
+
+        List<ProduitFournisseur> associations = produitFournisseurDAO.findByProduitId(idProduit);
+        for (ProduitFournisseur pf : associations) {
+            Fournisseur f = fournisseurDAO.findById(pf.getId_fournisseur());
+            if (f != null) fournisseurField.getItems().add(f);
+        }
+
         fournisseurField.setConverter(new StringConverter<Fournisseur>() {
-            @Override public String toString(Fournisseur f) { return f != null ? f.getNom() : ""; }
+            @Override public String toString(Fournisseur f) {
+                if (f == null) return "";
+                // Afficher le prix proposé par ce fournisseur
+                Produit p = produitField.getValue();
+                if (p != null) {
+                    ProduitFournisseur pf = produitFournisseurDAO.findById(p.getId_produit(), f.getId_fournisseur());
+                    if (pf != null) return f.getNom() + "  —  " + String.format("%.2f", pf.getPrix()) + " €/u";
+                }
+                return f.getNom();
+            }
             @Override public Fournisseur fromString(String s) { return null; }
         });
     }
@@ -122,38 +160,81 @@ public class ReapproFormController implements Initializable {
         LocalDate dateCommande  = dateCommandeField.getValue();
         LocalDate dateReception = dateReceptionField != null ? dateReceptionField.getValue() : null;
 
-        boolean succes;
+        // La table reapprovisionnement n'a pas id_produit/id_fournisseur/quantite —
+        // ces infos sont dans ligne_reapprovisionnement.
+        try (Connection conn = Database.getConnexion()) {
+            conn.setAutoCommit(false);
 
-        if (mode == Mode.CREATION) {
-            Reapprovisionnement nouveau = new Reapprovisionnement(
-                    0, produit.getId_produit(), fournisseur.getId_fournisseur(),
-                    idGestionnaire, quantite, dateCommande, dateReception);
-            succes = reapproDAO.insert(nouveau);
+            int idReappro;
 
-            if (succes) {
-                enregistrerHistorique("CREATION", "reapprovisionnement", 0,
-                        "Réappro. produit : " + produit.getLibelle()
-                                + " | fournisseur : " + fournisseur.getNom()
-                                + " | qté : " + quantite);
+            if (mode == Mode.CREATION) {
+                // 1. Créer l'en-tête de réappro
+                try (PreparedStatement ps = conn.prepareStatement(
+                        "INSERT INTO reapprovisionnement (id_gestionnaire, date_commande, date_reception) VALUES (?, ?, ?)",
+                        Statement.RETURN_GENERATED_KEYS)) {
+                    ps.setInt(1, idGestionnaire);
+                    ps.setDate(2, Date.valueOf(dateCommande));
+                    ps.setDate(3, dateReception != null ? Date.valueOf(dateReception) : null);
+                    ps.executeUpdate();
+                    ResultSet rs = ps.getGeneratedKeys();
+                    idReappro = rs.next() ? rs.getInt(1) : 0;
+                }
+
+                if (idReappro <= 0) {
+                    conn.rollback();
+                    afficherErreur("Erreur", "Impossible de créer le réapprovisionnement.");
+                    return;
+                }
+
+                // 2. Créer la ligne de réappro
+                try (PreparedStatement ps = conn.prepareStatement(
+                        "INSERT INTO ligne_reapprovisionnement (id_reappro, id_produit, id_fournisseur, quantite_commandee) VALUES (?, ?, ?, ?)")) {
+                    ps.setInt(1, idReappro);
+                    ps.setInt(2, produit.getId_produit());
+                    ps.setInt(3, fournisseur.getId_fournisseur());
+                    ps.setInt(4, quantite);
+                    ps.executeUpdate();
+                }
+
+                // 3. Historique
+                try (PreparedStatement ps = conn.prepareStatement(
+                        "INSERT INTO historique (id_utilisateur, action, table_concernee, id_enregistrement, details) VALUES (?, 'CREATION', 'reapprovisionnement', ?, ?)")) {
+                    ps.setInt(1, idGestionnaire);
+                    ps.setInt(2, idReappro);
+                    ps.setString(3, "Réappro. produit : " + produit.getLibelle()
+                            + " | fournisseur : " + fournisseur.getNom()
+                            + " | qté : " + quantite);
+                    ps.executeUpdate();
+                }
+
+            } else {
+                // Mode modification : mettre à jour l'en-tête
+                idReappro = reappro.getId_reappro();
+                try (PreparedStatement ps = conn.prepareStatement(
+                        "UPDATE reapprovisionnement SET date_commande=?, date_reception=? WHERE id_reappro=?")) {
+                    ps.setDate(1, Date.valueOf(dateCommande));
+                    ps.setDate(2, dateReception != null ? Date.valueOf(dateReception) : null);
+                    ps.setInt(3, idReappro);
+                    ps.executeUpdate();
+                }
+
+                // Mettre à jour la ligne
+                try (PreparedStatement ps = conn.prepareStatement(
+                        "UPDATE ligne_reapprovisionnement SET id_produit=?, id_fournisseur=?, quantite_commandee=? WHERE id_reappro=?")) {
+                    ps.setInt(1, produit.getId_produit());
+                    ps.setInt(2, fournisseur.getId_fournisseur());
+                    ps.setInt(3, quantite);
+                    ps.setInt(4, idReappro);
+                    ps.executeUpdate();
+                }
             }
-        } else {
-            reappro.setId_produit(produit.getId_produit());
-            reappro.setId_fournisseur(fournisseur.getId_fournisseur());
-            reappro.setQuantite(quantite);
-            reappro.setDate_commande(dateCommande);
-            reappro.setDate_reception(dateReception);
-            succes = reapproDAO.update(reappro);
 
-            if (succes) {
-                enregistrerHistorique("MODIFICATION", "reapprovisionnement", reappro.getId_reappro(),
-                        "Modification réappro. #" + reappro.getId_reappro()
-                                + " | produit : " + produit.getLibelle()
-                                + " | qté : " + quantite);
-            }
+            conn.commit();
+            fermer();
+
+        } catch (SQLException e) {
+            afficherErreur("Erreur BD", e.getMessage());
         }
-
-        if (succes) fermer();
-        else afficherErreur("Erreur", "Impossible d'enregistrer le réapprovisionnement.");
     }
 
     private boolean validerFormulaire() {
