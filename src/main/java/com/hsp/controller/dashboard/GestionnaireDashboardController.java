@@ -456,6 +456,42 @@ public class GestionnaireDashboardController implements Initializable {
 
         try (Connection conn = getConnection()) {
             conn.setAutoCommit(false);
+
+            // Vérifier le stock disponible pour chaque ligne avant de valider
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "SELECT ld.id_produit, ld.quantite_demandee, p.libelle, p.quantite_stock " +
+                    "FROM ligne_demande ld JOIN produit p ON ld.id_produit = p.id_produit " +
+                    "WHERE ld.id_demande = ?")) {
+                ps.setInt(1, demandeId);
+                ResultSet rs = ps.executeQuery();
+                while (rs.next()) {
+                    int dispo = rs.getInt("quantite_stock");
+                    int demande = rs.getInt("quantite_demandee");
+                    if (dispo < demande) {
+                        conn.rollback();
+                        showAlert(Alert.AlertType.ERROR, "Stock insuffisant",
+                                "Stock insuffisant pour \"" + rs.getString("libelle") + "\" : "
+                                + dispo + " disponible(s), " + demande + " demandé(s).");
+                        return;
+                    }
+                }
+            }
+
+            // Déduire le stock pour chaque ligne
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "SELECT id_produit, quantite_demandee FROM ligne_demande WHERE id_demande = ?")) {
+                ps.setInt(1, demandeId);
+                ResultSet rs = ps.executeQuery();
+                while (rs.next()) {
+                    try (PreparedStatement psUpdate = conn.prepareStatement(
+                            "UPDATE produit SET quantite_stock = quantite_stock - ? WHERE id_produit = ?")) {
+                        psUpdate.setInt(1, rs.getInt("quantite_demandee"));
+                        psUpdate.setInt(2, rs.getInt("id_produit"));
+                        psUpdate.executeUpdate();
+                    }
+                }
+            }
+
             try (PreparedStatement pstmt = conn.prepareStatement(
                     "UPDATE demande_produit SET statut = 'Validee', id_gestionnaire = ? WHERE id_demande = ?")) {
                 pstmt.setInt(1, gestionnaireId);
