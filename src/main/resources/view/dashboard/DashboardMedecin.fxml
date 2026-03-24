@@ -34,6 +34,8 @@
                     style="-fx-background-color: #374151; -fx-text-fill: white; -fx-padding: 12; -fx-cursor: hand;"/>
             <Button text="📋 Historique" onAction="#showHistory" prefWidth="220"
                     style="-fx-background-color: #374151; -fx-text-fill: white; -fx-padding: 12; -fx-cursor: hand;"/>
+            <Button text="📄 Mes ordonnances" onAction="#showOrdonnances" prefWidth="220"
+                    style="-fx-background-color: #374151; -fx-text-fill: white; -fx-padding: 12; -fx-cursor: hand;"/>
 
             <Region VBox.vgrow="ALWAYS"/>
 
@@ -258,6 +260,31 @@
                     <HBox spacing="10" alignment="CENTER_LEFT" style="-fx-padding: 10 0 0 0;">
                         <Label text="📊" style="-fx-font-size: 16px;"/>
                         <Label fx:id="historiqueCountLabel" text="0 entrée(s)" style="-fx-text-fill: #6b7280; -fx-font-weight: bold;"/>
+                    </HBox>
+                </VBox>
+
+                <!-- ========================================== -->
+                <!-- ORDONNANCES VIEW -->
+                <!-- ========================================== -->
+                <VBox fx:id="ordonnancesView" spacing="20" visible="false">
+                    <HBox alignment="CENTER_LEFT" spacing="20">
+                        <Label text="Mes ordonnances prescrites" style="-fx-font-size: 28px; -fx-font-weight: bold;"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Button text="🔄 Actualiser" onAction="#onRefreshOrdonnances"
+                                style="-fx-background-color: #10b981; -fx-text-fill: white; -fx-padding: 10 20; -fx-cursor: hand;"/>
+                    </HBox>
+                    <TableView fx:id="ordonnancesTable" prefHeight="600"
+                               style="-fx-background-color: white; -fx-border-color: #e5e7eb; -fx-border-width: 1;">
+                        <placeholder>
+                            <VBox alignment="CENTER" spacing="10" style="-fx-padding: 50;">
+                                <Label text="📄" style="-fx-font-size: 48px;"/>
+                                <Label text="Aucune ordonnance prescrite" style="-fx-text-fill: #9ca3af; -fx-font-size: 16px;"/>
+                            </VBox>
+                        </placeholder>
+                    </TableView>
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <Label text="📊" style="-fx-font-size: 16px;"/>
+                        <Label fx:id="ordonnancesCountLabel" text="0 ordonnance(s)" style="-fx-text-fill: #6b7280; -fx-font-weight: bold;"/>
                     </HBox>
                 </VBox>
 

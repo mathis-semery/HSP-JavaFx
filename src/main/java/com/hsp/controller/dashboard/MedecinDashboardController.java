@@ -9,6 +9,9 @@ import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.geometry.Insets;
+import javafx.scene.Node;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
@@ -34,6 +37,7 @@ public class MedecinDashboardController implements Initializable {
     @FXML private VBox productRequestsView;
     @FXML private VBox treatmentView;
     @FXML private VBox historiqueView;
+    @FXML private VBox ordonnancesView;
 
     // Dashboard KPI
     @FXML private Label todayPatientsLabel;
@@ -48,6 +52,8 @@ public class MedecinDashboardController implements Initializable {
     @FXML private TableView<ObservableList<String>> activeHospitalizationsTable;
     @FXML private TableView<ObservableList<String>> completedHospitalizationsTable;
     @FXML private TableView<ObservableList<String>> myRequestsTable;
+    @FXML private TableView<ObservableList<String>> ordonnancesTable;
+    @FXML private Label ordonnancesCountLabel;
 
     // Vue traitement
     @FXML private Label patientNameLabel;
@@ -126,6 +132,7 @@ public class MedecinDashboardController implements Initializable {
         setupCompletedHospitalizationsTable();
         setupMyRequestsTable();
         setupHistoriqueTable();
+        setupOrdonnancesTable();
 
         // Masquer hospitalizationDetails par défaut
         if (hospitalizationDetails != null) {
@@ -143,32 +150,13 @@ public class MedecinDashboardController implements Initializable {
         if (urgentPatientsTable == null) return;
         urgentPatientsTable.getColumns().clear();
 
-        // data[0] = id_dossier (clé cachée), data[1..6] = données affichées
-        String[] cols = {"Patient", "Heure d'arrivée", "Gravité", "Symptômes", "Statut", "Action"};
+        // data[0] = id_dossier (clé cachée), data[1..5] = données affichées (lecture seule)
+        String[] cols = {"Patient", "Heure d'arrivée", "Gravité", "Symptômes", "Statut"};
         for (int i = 0; i < cols.length; i++) {
             final int dataIdx = i + 1;
             TableColumn<ObservableList<String>, String> col = new TableColumn<>(cols[i]);
             col.setCellValueFactory(data ->
                     new SimpleStringProperty(data.getValue().get(dataIdx)));
-
-            if (i == 5) {
-                col.setCellFactory(tc -> new TableCell<>() {
-                    private final Button btn = new Button("Traiter");
-                    {
-                        btn.setStyle("-fx-background-color: #1565C0; -fx-text-fill: white; " +
-                                "-fx-font-size: 11px; -fx-padding: 4 10 4 10; " +
-                                "-fx-background-radius: 6; -fx-cursor: hand;");
-                        btn.setOnAction(e -> {
-                            ObservableList<String> row = getTableView().getItems().get(getIndex());
-                            openTreatmentView(row);
-                        });
-                    }
-                    @Override protected void updateItem(String item, boolean empty) {
-                        super.updateItem(item, empty);
-                        setGraphic(empty ? null : btn);
-                    }
-                });
-            }
             urgentPatientsTable.getColumns().add(col);
         }
     }
@@ -272,6 +260,68 @@ public class MedecinDashboardController implements Initializable {
         }
     }
 
+    @SuppressWarnings("unchecked")
+    private void setupOrdonnancesTable() {
+        if (ordonnancesTable == null) return;
+        ordonnancesTable.getColumns().clear();
+
+        String[] cols = {"Date", "Patient", "Médicaments", "Posologie", "Durée", "Statut", "Notes"};
+        int[] widths   = {130,    160,        200,           180,         100,     80,        180};
+        for (int i = 0; i < cols.length; i++) {
+            final int idx = i;
+            TableColumn<ObservableList<String>, String> col = new TableColumn<>(cols[i]);
+            col.setPrefWidth(widths[i]);
+            col.setCellValueFactory(data ->
+                    new SimpleStringProperty(data.getValue().get(idx)));
+            ordonnancesTable.getColumns().add(col);
+        }
+    }
+
+    private void loadOrdonnances() {
+        if (ordonnancesTable == null || currentMedecinId < 0) return;
+
+        String query = """
+                SELECT o.date_ordonnance,
+                       CONCAT(p.nom, ' ', p.prenom) AS patient,
+                       o.medicaments,
+                       o.posologie,
+                       o.duree_traitement,
+                       o.statut,
+                       o.notes
+                FROM ordonnance o
+                JOIN dossier d  ON o.id_dossier  = d.id_dossier
+                JOIN patient p  ON d.id_patient  = p.id_patient
+                WHERE o.id_medecin = ?
+                ORDER BY o.date_ordonnance DESC
+                """;
+
+        ObservableList<ObservableList<String>> data = FXCollections.observableArrayList();
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(query)) {
+
+            ps.setInt(1, currentMedecinId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                ObservableList<String> r = FXCollections.observableArrayList();
+                r.add(rs.getString("date_ordonnance") != null ? rs.getString("date_ordonnance") : "—");
+                r.add(rs.getString("patient"));
+                r.add(truncate(rs.getString("medicaments"), 60));
+                r.add(truncate(rs.getString("posologie"), 50));
+                r.add(rs.getString("duree_traitement") != null ? rs.getString("duree_traitement") : "—");
+                r.add(rs.getString("statut") != null ? rs.getString("statut") : "—");
+                r.add(truncate(rs.getString("notes"), 50));
+                data.add(r);
+            }
+        } catch (SQLException e) {
+            System.err.println("Erreur loadOrdonnances : " + e.getMessage());
+        }
+        ordonnancesTable.setItems(data);
+        if (ordonnancesCountLabel != null) {
+            int n = data.size();
+            ordonnancesCountLabel.setText(n + " ordonnance" + (n > 1 ? "s" : ""));
+        }
+    }
+
     private void setupHistoriqueTable() {
         if (historiqueTable == null) return;
         // Colonnes déclarées dans le FXML via fx:id — on branche uniquement les cellValueFactory
@@ -324,9 +374,21 @@ public class MedecinDashboardController implements Initializable {
         loadHistorique(null, null);
     }
 
+    @FXML
+    private void showOrdonnances() {
+        hideAllViews();
+        if (ordonnancesView != null) { ordonnancesView.setVisible(true); ordonnancesView.setManaged(true); }
+        loadOrdonnances();
+    }
+
+    @FXML
+    private void onRefreshOrdonnances() {
+        loadOrdonnances();
+    }
+
     private void hideAllViews() {
         VBox[] views = {dashboardView, waitingPatientsView, hospitalizationsView,
-                productRequestsView, treatmentView, historiqueView};
+                productRequestsView, treatmentView, historiqueView, ordonnancesView};
         for (VBox v : views) {
             if (v != null) { v.setVisible(false); v.setManaged(false); }
         }
@@ -619,41 +681,112 @@ public class MedecinDashboardController implements Initializable {
         showWaitingPatients();
     }
 
-    /** Clôture une hospitalisation (date_fin = NOW, chambre libérée, dossier Terminé) */
+    /**
+     * Clôture une hospitalisation après avoir saisi l'ordonnance de sortie.
+     * L'ordonnance est persistée en base AVANT la clôture (médicaments obligatoires).
+     */
     private void cloturerHospitalisation(ObservableList<String> row) {
         int hospId = Integer.parseInt(row.get(0));
 
-        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
-        confirm.setTitle("Clôturer l'hospitalisation");
-        confirm.setHeaderText("Confirmer la sortie du patient ?");
-        confirm.showAndWait().ifPresent(resp -> {
+        // ── Récupérer chambreId / dossierId avant d'ouvrir le dialog ──
+        int[] ids = fetchHospitalisationIds(hospId);
+        if (ids == null) {
+            showAlert(Alert.AlertType.ERROR, "Erreur", "Hospitalisation introuvable en base.");
+            return;
+        }
+        final int chambreId = ids[0];
+        final int dossierId = ids[1];
+
+        // ── Dialog ordonnance de sortie ──
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Ordonnance de sortie");
+        dialog.setHeaderText("Remplissez l'ordonnance avant de clôturer l'hospitalisation\n"
+                + "(Les médicaments sont obligatoires)");
+
+        TextArea medicamentsArea = new TextArea();
+        medicamentsArea.setPromptText("Médicaments prescrits (obligatoire)...");
+        medicamentsArea.setPrefRowCount(3);
+        medicamentsArea.setWrapText(true);
+
+        TextArea posologieArea = new TextArea();
+        posologieArea.setPromptText("Posologie et instructions...");
+        posologieArea.setPrefRowCount(2);
+        posologieArea.setWrapText(true);
+
+        TextField dureeField = new TextField();
+        dureeField.setPromptText("Ex : 7 jours");
+
+        TextArea notesArea = new TextArea();
+        notesArea.setPromptText("Notes complémentaires (optionnel)...");
+        notesArea.setPrefRowCount(2);
+        notesArea.setWrapText(true);
+
+        GridPane grid = new GridPane();
+        grid.setHgap(12);
+        grid.setVgap(12);
+        grid.setPadding(new Insets(20));
+        grid.setPrefWidth(500);
+        grid.add(new Label("Médicaments *"), 0, 0);
+        grid.add(medicamentsArea, 1, 0);
+        grid.add(new Label("Posologie"), 0, 1);
+        grid.add(posologieArea, 1, 1);
+        grid.add(new Label("Durée traitement"), 0, 2);
+        grid.add(dureeField, 1, 2);
+        grid.add(new Label("Notes"), 0, 3);
+        grid.add(notesArea, 1, 3);
+
+        dialog.getDialogPane().setContent(grid);
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+
+        // Désactiver OK tant que médicaments est vide
+        Node okButton = dialog.getDialogPane().lookupButton(ButtonType.OK);
+        okButton.setDisable(true);
+        medicamentsArea.textProperty().addListener((obs, old, val) ->
+                okButton.setDisable(val.trim().isEmpty()));
+
+        dialog.showAndWait().ifPresent(resp -> {
             if (resp != ButtonType.OK) return;
+
+            String medicaments = medicamentsArea.getText().trim();
+            String posologie   = posologieArea.getText().trim();
+            String duree       = dureeField.getText().trim();
+            String notes       = notesArea.getText().trim();
+
             try (Connection conn = getConnection()) {
                 conn.setAutoCommit(false);
 
-                int chambreId = 0, dossierId = 0;
-                try (PreparedStatement ps = conn.prepareStatement(
-                        "SELECT id_chambre, id_dossier FROM hospitalisation WHERE id_hospitalisation = ?")) {
-                    ps.setInt(1, hospId);
-                    ResultSet rs = ps.executeQuery();
-                    if (rs.next()) {
-                        chambreId = rs.getInt("id_chambre");
-                        dossierId = rs.getInt("id_dossier");
-                    }
+                // 1. Persister l'ordonnance de sortie
+                String sqlOrd = """
+                        INSERT INTO ordonnance
+                            (id_dossier, id_medecin, date_ordonnance,
+                             medicaments, posologie, duree_traitement, notes, statut)
+                        VALUES (?, ?, NOW(), ?, ?, ?, ?, 'active')
+                        """;
+                try (PreparedStatement ps = conn.prepareStatement(sqlOrd)) {
+                    ps.setInt(1, dossierId);
+                    ps.setInt(2, currentMedecinId);
+                    ps.setString(3, medicaments);
+                    ps.setString(4, posologie.isEmpty() ? null : posologie);
+                    ps.setString(5, duree.isEmpty() ? null : duree);
+                    ps.setString(6, notes.isEmpty() ? null : notes);
+                    ps.executeUpdate();
                 }
 
+                // 2. Clôturer l'hospitalisation
                 try (PreparedStatement ps = conn.prepareStatement(
                         "UPDATE hospitalisation SET date_fin = NOW() WHERE id_hospitalisation = ?")) {
                     ps.setInt(1, hospId);
                     ps.executeUpdate();
                 }
 
+                // 3. Libérer la chambre
                 try (PreparedStatement ps = conn.prepareStatement(
                         "UPDATE chambre SET disponible = TRUE WHERE id_chambre = ?")) {
                     ps.setInt(1, chambreId);
                     ps.executeUpdate();
                 }
 
+                // 4. Mettre à jour le statut du dossier
                 try (PreparedStatement ps = conn.prepareStatement(
                         "UPDATE dossier SET statut = 'Termine' WHERE id_dossier = ?")) {
                     ps.setInt(1, dossierId);
@@ -661,10 +794,11 @@ public class MedecinDashboardController implements Initializable {
                 }
 
                 enregistrerHistorique(conn, "Cloture hospitalisation",
-                        "hospitalisation", hospId, "Sortie patient");
+                        "hospitalisation", hospId, "Sortie patient avec ordonnance de sortie");
 
                 conn.commit();
-                showAlert(Alert.AlertType.INFORMATION, "Succès", "Hospitalisation clôturée, chambre libérée.");
+                showAlert(Alert.AlertType.INFORMATION, "Succès",
+                        "Hospitalisation clôturée et ordonnance de sortie enregistrée.");
                 loadActiveHospitalizations();
                 loadCompletedHospitalizations();
                 loadDashboardData();
@@ -673,6 +807,22 @@ public class MedecinDashboardController implements Initializable {
                 showAlert(Alert.AlertType.ERROR, "Erreur BDD", e.getMessage());
             }
         });
+    }
+
+    /** Retourne {chambreId, dossierId} pour une hospitalisation donnée, ou null si introuvable. */
+    private int[] fetchHospitalisationIds(int hospId) {
+        String sql = "SELECT id_chambre, id_dossier FROM hospitalisation WHERE id_hospitalisation = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, hospId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return new int[]{rs.getInt("id_chambre"), rs.getInt("id_dossier")};
+            }
+        } catch (SQLException e) {
+            System.err.println("Erreur fetchHospitalisationIds : " + e.getMessage());
+        }
+        return null;
     }
 
     // ============= DEMANDES PRODUITS =============
