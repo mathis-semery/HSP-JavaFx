@@ -15,6 +15,7 @@ import javafx.stage.Stage;
 import java.io.IOException;
 import java.net.URL;
 import java.sql.*;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ResourceBundle;
 
@@ -44,7 +45,7 @@ public class SecretaireDashboardController implements Initializable {
     @FXML private TextField emailPatientField;
     @FXML private ComboBox<Integer> niveauGraviteComboBox;
     @FXML private Button btnModifierPatient;
-    @FXML private Button btnSupprimerPatient;   // ← AJOUT
+    @FXML private Button btnSupprimerPatient;
 
     @FXML private VBox      editPatientView;
     @FXML private TextField editNomField;
@@ -53,6 +54,24 @@ public class SecretaireDashboardController implements Initializable {
     @FXML private TextField editEmailField;
     @FXML private TextField editAdresseField;
     @FXML private TextField editNumSecuField;
+
+    // ============= RENDEZ-VOUS =============
+    @FXML private VBox      rendezVousView;
+    @FXML private VBox      rdvFormView;
+    @FXML private TextField rdvSearchField;
+    @FXML private TableView<ObservableList<String>> rdvTable;
+    @FXML private Button    btnModifierRdv;
+    @FXML private Button    btnAnnulerRdv;
+
+    @FXML private Label     rdvFormTitle;
+    @FXML private ComboBox<String> rdvPatientCombo;
+    @FXML private ComboBox<String> rdvMedecinCombo;
+    @FXML private DatePicker       rdvDatePicker;
+    @FXML private TextField        rdvHeureField;
+    @FXML private ComboBox<String> rdvStatutCombo;
+    @FXML private TextArea         rdvMotifArea;
+
+    private int selectedRdvId = -1;
 
     private static final String DB_URL      = "jdbc:mysql://localhost:3306/hsp_urgences";
     private static final String DB_USER     = "root";
@@ -76,18 +95,25 @@ public class SecretaireDashboardController implements Initializable {
         setupRecentPatientsTable();
         setupAllPatientsTable();
         setupWaitingTriageTable();
+        setupRdvTable();
 
-        // Boutons actifs seulement quand une ligne est sélectionnée
         if (allPatientsTable != null && btnModifierPatient != null) {
             btnModifierPatient.disableProperty().bind(
                     allPatientsTable.getSelectionModel().selectedItemProperty().isNull());
         }
-        if (allPatientsTable != null && btnSupprimerPatient != null) {   // ← AJOUT
+        if (allPatientsTable != null && btnSupprimerPatient != null) {
             btnSupprimerPatient.disableProperty().bind(
                     allPatientsTable.getSelectionModel().selectedItemProperty().isNull());
         }
+        if (rdvTable != null && btnModifierRdv != null) {
+            btnModifierRdv.disableProperty().bind(
+                    rdvTable.getSelectionModel().selectedItemProperty().isNull());
+        }
+        if (rdvTable != null && btnAnnulerRdv != null) {
+            btnAnnulerRdv.disableProperty().bind(
+                    rdvTable.getSelectionModel().selectedItemProperty().isNull());
+        }
 
-        // Double-clic → modifier
         if (allPatientsTable != null) {
             allPatientsTable.setOnMouseClicked(event -> {
                 if (event.getClickCount() == 2
@@ -100,6 +126,7 @@ public class SecretaireDashboardController implements Initializable {
     }
 
     // ============= SETUP COLONNES =============
+
 
     @SuppressWarnings("unchecked")
     private void setupRecentPatientsTable() {
@@ -140,6 +167,19 @@ public class SecretaireDashboardController implements Initializable {
         }
     }
 
+    @SuppressWarnings("unchecked")
+    private void setupRdvTable() {
+        if (rdvTable == null) return;
+        rdvTable.getColumns().clear();
+        String[] cols = {"Patient", "Médecin", "Date RDV", "Motif", "Statut"};
+        for (int i = 0; i < cols.length; i++) {
+            final int idx = i;
+            TableColumn<ObservableList<String>, String> col = new TableColumn<>(cols[i]);
+            col.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().get(idx)));
+            rdvTable.getColumns().add(col);
+        }
+    }
+
     // ============= NAVIGATION =============
 
     @FXML public void showDashboard() {
@@ -155,9 +195,20 @@ public class SecretaireDashboardController implements Initializable {
     @FXML public void showTriage() {
         hideAllViews(); show(triageView); loadWaitingTriage();
     }
+    @FXML public void showRendezVous() {
+        hideAllViews(); show(rendezVousView); loadAllRdv();
+    }
+    @FXML public void showNouveauRdv() {
+        selectedRdvId = -1;
+        if (rdvFormTitle != null) rdvFormTitle.setText("Nouveau rendez-vous");
+        clearRdvForm();
+        loadRdvFormCombos();
+        hideAllViews(); show(rdvFormView);
+    }
 
     private void hideAllViews() {
-        for (VBox v : new VBox[]{dashboardView, registrationView, patientListView, triageView, editPatientView}) {
+        for (VBox v : new VBox[]{dashboardView, registrationView, patientListView, triageView,
+                editPatientView, rendezVousView, rdvFormView}) {
             if (v != null) { v.setVisible(false); v.setManaged(false); }
         }
     }
@@ -268,6 +319,254 @@ public class SecretaireDashboardController implements Initializable {
             }
         } catch (SQLException e) { System.err.println("Erreur loadWaitingTriage : " + e.getMessage()); }
         waitingTriageTable.setItems(data);
+    }
+
+    // ============= RENDEZ-VOUS =============
+
+    private void loadAllRdv() {
+        if (rdvTable == null) return;
+        String recherche = rdvSearchField != null ? rdvSearchField.getText().trim() : "";
+        boolean filtre = !recherche.isEmpty();
+        String sql = filtre
+                ? """
+                  SELECT r.id_rdv, p.nom AS p_nom, p.prenom AS p_prenom,
+                         u.nom AS m_nom, u.prenom AS m_prenom,
+                         r.date_rdv, r.motif, r.statut
+                  FROM rendez_vous r
+                  JOIN patient p ON r.id_patient = p.id_patient
+                  JOIN utilisateur u ON r.id_medecin = u.id_utilisateur
+                  WHERE LOWER(p.nom) LIKE ? OR LOWER(p.prenom) LIKE ?
+                     OR LOWER(u.nom) LIKE ? OR LOWER(u.prenom) LIKE ?
+                  ORDER BY r.date_rdv DESC
+                  """
+                : """
+                  SELECT r.id_rdv, p.nom AS p_nom, p.prenom AS p_prenom,
+                         u.nom AS m_nom, u.prenom AS m_prenom,
+                         r.date_rdv, r.motif, r.statut
+                  FROM rendez_vous r
+                  JOIN patient p ON r.id_patient = p.id_patient
+                  JOIN utilisateur u ON r.id_medecin = u.id_utilisateur
+                  ORDER BY r.date_rdv DESC
+                  """;
+        ObservableList<ObservableList<String>> data = FXCollections.observableArrayList();
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            if (filtre) {
+                String like = "%" + recherche.toLowerCase() + "%";
+                ps.setString(1, like); ps.setString(2, like);
+                ps.setString(3, like); ps.setString(4, like);
+            }
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                ObservableList<String> row = FXCollections.observableArrayList();
+                row.add(rs.getString("p_nom") + " " + rs.getString("p_prenom"));
+                row.add(rs.getString("m_nom") + " " + rs.getString("m_prenom"));
+                row.add(formatTimestamp(rs.getTimestamp("date_rdv")));
+                row.add(truncate(rs.getString("motif"), 50));
+                row.add(rs.getString("statut") != null ? rs.getString("statut") : "—");
+                row.add(String.valueOf(rs.getInt("id_rdv"))); // index 5 caché
+                data.add(row);
+            }
+        } catch (SQLException e) { System.err.println("Erreur loadAllRdv : " + e.getMessage()); }
+        rdvTable.setItems(data);
+    }
+
+    private void loadRdvFormCombos() {
+        if (rdvPatientCombo != null) {
+            rdvPatientCombo.getItems().clear();
+            String sql = "SELECT id_patient, nom, prenom FROM patient ORDER BY nom, prenom";
+            try (Connection conn = getConnection(); Statement st = conn.createStatement();
+                 ResultSet rs = st.executeQuery(sql)) {
+                while (rs.next()) {
+                    rdvPatientCombo.getItems().add(
+                            rs.getInt("id_patient") + " - " + rs.getString("nom") + " " + rs.getString("prenom"));
+                }
+            } catch (SQLException e) { System.err.println("Erreur combo patient : " + e.getMessage()); }
+        }
+        if (rdvMedecinCombo != null) {
+            rdvMedecinCombo.getItems().clear();
+            String sql = "SELECT id_utilisateur, nom, prenom FROM utilisateur WHERE role='Medecin' ORDER BY nom, prenom";
+            try (Connection conn = getConnection(); Statement st = conn.createStatement();
+                 ResultSet rs = st.executeQuery(sql)) {
+                while (rs.next()) {
+                    rdvMedecinCombo.getItems().add(
+                            rs.getInt("id_utilisateur") + " - " + rs.getString("nom") + " " + rs.getString("prenom"));
+                }
+            } catch (SQLException e) { System.err.println("Erreur combo médecin : " + e.getMessage()); }
+        }
+        if (rdvStatutCombo != null) {
+            rdvStatutCombo.getItems().setAll("Planifie", "Annule", "Effectue");
+            rdvStatutCombo.setValue("Planifie");
+        }
+    }
+
+    @FXML private void onRefreshRdv() { loadAllRdv(); }
+
+    @FXML
+    private void onSaveRdv() {
+        if (rdvPatientCombo == null || rdvPatientCombo.getValue() == null) {
+            showAlert(Alert.AlertType.WARNING, "Attention", "Veuillez sélectionner un patient."); return;
+        }
+        if (rdvMedecinCombo == null || rdvMedecinCombo.getValue() == null) {
+            showAlert(Alert.AlertType.WARNING, "Attention", "Veuillez sélectionner un médecin."); return;
+        }
+        if (rdvDatePicker == null || rdvDatePicker.getValue() == null) {
+            showAlert(Alert.AlertType.WARNING, "Attention", "Veuillez choisir une date."); return;
+        }
+        String heure = rdvHeureField != null ? rdvHeureField.getText().trim() : "00:00";
+        if (!heure.matches("\\d{2}:\\d{2}")) {
+            showAlert(Alert.AlertType.WARNING, "Attention", "Format heure invalide (HH:mm attendu)."); return;
+        }
+
+        int idPatient  = Integer.parseInt(rdvPatientCombo.getValue().split(" - ")[0]);
+        int idMedecin  = Integer.parseInt(rdvMedecinCombo.getValue().split(" - ")[0]);
+        int idSecretaire = currentSecretaireId > 0 ? currentSecretaireId : 1;
+        String dateRdv = rdvDatePicker.getValue().toString() + " " + heure + ":00";
+        String motif   = rdvMotifArea != null ? rdvMotifArea.getText().trim() : "";
+        String statut  = rdvStatutCombo != null && rdvStatutCombo.getValue() != null
+                         ? rdvStatutCombo.getValue() : "Planifie";
+
+        try (Connection conn = getConnection()) {
+            // Vérification conflit médecin
+            String conflictMedecinSql = "SELECT COUNT(*) FROM rendez_vous WHERE id_medecin = ? AND date_rdv = ? AND statut != 'Annule'" +
+                    (selectedRdvId >= 0 ? " AND id_rdv != " + selectedRdvId : "");
+            try (PreparedStatement psCheck = conn.prepareStatement(conflictMedecinSql)) {
+                psCheck.setInt(1, idMedecin);
+                psCheck.setString(2, dateRdv);
+                ResultSet rs = psCheck.executeQuery();
+                if (rs.next() && rs.getInt(1) > 0) {
+                    showAlert(Alert.AlertType.WARNING, "Conflit", "Ce médecin a déjà un rendez-vous à cette date et heure.");
+                    return;
+                }
+            }
+            // Vérification conflit patient
+            String conflictPatientSql = "SELECT COUNT(*) FROM rendez_vous WHERE id_patient = ? AND date_rdv = ? AND statut != 'Annule'" +
+                    (selectedRdvId >= 0 ? " AND id_rdv != " + selectedRdvId : "");
+            try (PreparedStatement psCheck = conn.prepareStatement(conflictPatientSql)) {
+                psCheck.setInt(1, idPatient);
+                psCheck.setString(2, dateRdv);
+                ResultSet rs = psCheck.executeQuery();
+                if (rs.next() && rs.getInt(1) > 0) {
+                    showAlert(Alert.AlertType.WARNING, "Conflit", "Ce patient a déjà un rendez-vous à cette date et heure.");
+                    return;
+                }
+            }
+
+            if (selectedRdvId < 0) {
+                // INSERT
+                try (PreparedStatement ps = conn.prepareStatement(
+                        "INSERT INTO rendez_vous (id_patient, id_medecin, id_secretaire, date_rdv, motif, statut) VALUES (?,?,?,?,?,?)")) {
+                    ps.setInt(1, idPatient); ps.setInt(2, idMedecin); ps.setInt(3, idSecretaire);
+                    ps.setString(4, dateRdv); ps.setString(5, motif); ps.setString(6, statut);
+                    ps.executeUpdate();
+                }
+                logHistorique(conn, idSecretaire, "Creation", "rendez_vous", 0,
+                        "Nouveau RDV pour patient " + idPatient + " avec médecin " + idMedecin);
+                showAlert(Alert.AlertType.INFORMATION, "Succès", "Rendez-vous créé avec succès !");
+            } else {
+                // UPDATE
+                try (PreparedStatement ps = conn.prepareStatement(
+                        "UPDATE rendez_vous SET id_patient=?, id_medecin=?, id_secretaire=?, date_rdv=?, motif=?, statut=? WHERE id_rdv=?")) {
+                    ps.setInt(1, idPatient); ps.setInt(2, idMedecin); ps.setInt(3, idSecretaire);
+                    ps.setString(4, dateRdv); ps.setString(5, motif); ps.setString(6, statut);
+                    ps.setInt(7, selectedRdvId);
+                    ps.executeUpdate();
+                }
+                logHistorique(conn, idSecretaire, "Modification", "rendez_vous", selectedRdvId,
+                        "Modification RDV id=" + selectedRdvId);
+                showAlert(Alert.AlertType.INFORMATION, "Succès", "Rendez-vous mis à jour !");
+            }
+        } catch (SQLException e) {
+            showAlert(Alert.AlertType.ERROR, "Erreur", "Erreur : " + e.getMessage()); return;
+        }
+        selectedRdvId = -1;
+        showRendezVous();
+    }
+
+    @FXML
+    private void onModifierRdv() {
+        ObservableList<String> sel = rdvTable.getSelectionModel().getSelectedItem();
+        if (sel == null) return;
+        selectedRdvId = Integer.parseInt(sel.get(5));
+        if (rdvFormTitle != null) rdvFormTitle.setText("Modifier le rendez-vous");
+        clearRdvForm();
+        loadRdvFormCombos();
+
+        String sql = """
+                SELECT r.id_patient, r.id_medecin, r.date_rdv, r.motif, r.statut,
+                       p.nom AS p_nom, p.prenom AS p_prenom,
+                       u.nom AS m_nom, u.prenom AS m_prenom
+                FROM rendez_vous r
+                JOIN patient p ON r.id_patient = p.id_patient
+                JOIN utilisateur u ON r.id_medecin = u.id_utilisateur
+                WHERE r.id_rdv = ?
+                """;
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, selectedRdvId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                String patientEntry = rs.getInt("id_patient") + " - " + rs.getString("p_nom") + " " + rs.getString("p_prenom");
+                String medecinEntry = rs.getInt("id_medecin") + " - " + rs.getString("m_nom") + " " + rs.getString("m_prenom");
+                if (rdvPatientCombo != null) rdvPatientCombo.setValue(patientEntry);
+                if (rdvMedecinCombo != null) rdvMedecinCombo.setValue(medecinEntry);
+                Timestamp ts = rs.getTimestamp("date_rdv");
+                if (ts != null) {
+                    if (rdvDatePicker != null) rdvDatePicker.setValue(ts.toLocalDateTime().toLocalDate());
+                    if (rdvHeureField != null) rdvHeureField.setText(
+                            String.format("%02d:%02d", ts.toLocalDateTime().getHour(), ts.toLocalDateTime().getMinute()));
+                }
+                if (rdvMotifArea  != null) rdvMotifArea.setText(rs.getString("motif") != null ? rs.getString("motif") : "");
+                if (rdvStatutCombo != null) rdvStatutCombo.setValue(rs.getString("statut"));
+            }
+        } catch (SQLException e) {
+            showAlert(Alert.AlertType.ERROR, "Erreur", "Impossible de charger le RDV : " + e.getMessage()); return;
+        }
+        hideAllViews(); show(rdvFormView);
+    }
+
+    @FXML
+    private void onAnnulerRdv() {
+        ObservableList<String> sel = rdvTable.getSelectionModel().getSelectedItem();
+        if (sel == null) return;
+        int idRdv = Integer.parseInt(sel.get(5));
+        String patient = sel.get(0);
+
+        Alert confirmation = new Alert(Alert.AlertType.CONFIRMATION);
+        confirmation.setTitle("Annuler le rendez-vous");
+        confirmation.setHeaderText("Annuler le RDV de " + patient + " ?");
+        confirmation.setContentText("Le statut passera à 'Annule'. Cette action est réversible via modification.");
+        confirmation.showAndWait().ifPresent(response -> {
+            if (response != ButtonType.OK) return;
+            try (Connection conn = getConnection();
+                 PreparedStatement ps = conn.prepareStatement(
+                         "UPDATE rendez_vous SET statut='Annule' WHERE id_rdv=?")) {
+                ps.setInt(1, idRdv);
+                ps.executeUpdate();
+                logHistorique(conn, currentSecretaireId > 0 ? currentSecretaireId : 1,
+                        "Modification", "rendez_vous", idRdv, "Annulation RDV id=" + idRdv + " patient=" + patient);
+                showAlert(Alert.AlertType.INFORMATION, "Succès", "Le rendez-vous a été annulé.");
+                loadAllRdv();
+            } catch (SQLException e) {
+                showAlert(Alert.AlertType.ERROR, "Erreur", "Erreur : " + e.getMessage());
+            }
+        });
+    }
+
+    private void clearRdvForm() {
+        if (rdvPatientCombo != null) rdvPatientCombo.setValue(null);
+        if (rdvMedecinCombo != null) rdvMedecinCombo.setValue(null);
+        if (rdvDatePicker   != null) rdvDatePicker.setValue(LocalDate.now());
+        if (rdvHeureField   != null) rdvHeureField.setText("09:00");
+        if (rdvMotifArea    != null) rdvMotifArea.clear();
+        if (rdvStatutCombo  != null) rdvStatutCombo.setValue("Planifie");
+    }
+
+    private void logHistorique(Connection conn, int userId, String action, String table, int idEnreg, String details) {
+        try (PreparedStatement ps = conn.prepareStatement(
+                "INSERT INTO historique (id_utilisateur, action, table_concernee, id_enregistrement, details) VALUES (?,?,?,?,?)")) {
+            ps.setInt(1, userId); ps.setString(2, action); ps.setString(3, table);
+            ps.setInt(4, idEnreg); ps.setString(5, details);
+            ps.executeUpdate();
+        } catch (SQLException e) { System.err.println("Erreur historique : " + e.getMessage()); }
     }
 
     // ============= CRÉATION PATIENT =============

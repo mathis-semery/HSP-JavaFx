@@ -133,7 +133,10 @@ public class HistoriqueListController implements Initializable {
 
         if (filtreTable != null) {
             filtreTable.setItems(FXCollections.observableArrayList(
-                    "Toutes", "produit", "fournisseur", "demande_produit",
+                    "Toutes",
+                    "utilisateur", "patient", "dossier",
+                    "hospitalisation", "ordonnance",
+                    "produit", "fournisseur", "demande_produit",
                     "reapprovisionnement", "produit_fournisseur"));
             filtreTable.setValue("Toutes");
             filtreTable.setOnAction(event -> appliquerFiltres());

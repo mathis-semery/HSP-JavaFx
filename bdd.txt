@@ -37,6 +37,18 @@ CREATE TABLE patient (
     date_creation DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+-- AJOUT DE LA TABLE RENDEZ-VOUS (Indépendante du dossier)
+CREATE TABLE rendez_vous (
+    id_rdv INT PRIMARY KEY AUTO_INCREMENT,
+    id_patient INT NOT NULL,
+    id_medecin INT NOT NULL,
+    id_secretaire INT NOT NULL,
+    date_rdv DATETIME NOT NULL,
+    motif TEXT,
+    statut ENUM('Planifie', 'Annule', 'Effectue') DEFAULT 'Planifie',
+    date_creation DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 CREATE TABLE dossier (
     id_dossier INT PRIMARY KEY AUTO_INCREMENT,
     id_patient INT NOT NULL,
@@ -146,6 +158,18 @@ ALTER TABLE historique
         FOREIGN KEY (id_utilisateur) REFERENCES utilisateur(id_utilisateur)
         ON DELETE SET NULL ON UPDATE CASCADE;
 
+-- CONTRAINTES RENDEZ-VOUS
+ALTER TABLE rendez_vous
+    ADD CONSTRAINT fk_rdv_patient
+        FOREIGN KEY (id_patient) REFERENCES patient(id_patient)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    ADD CONSTRAINT fk_rdv_medecin
+        FOREIGN KEY (id_medecin) REFERENCES utilisateur(id_utilisateur)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    ADD CONSTRAINT fk_rdv_secretaire
+        FOREIGN KEY (id_secretaire) REFERENCES utilisateur(id_utilisateur)
+        ON DELETE RESTRICT ON UPDATE CASCADE;
+
 ALTER TABLE dossier
     ADD CONSTRAINT fk_dossier_patient
         FOREIGN KEY (id_patient) REFERENCES patient(id_patient)
@@ -230,6 +254,10 @@ CREATE INDEX idx_ordonnance_dossier ON ordonnance(id_dossier);
 CREATE INDEX idx_ordonnance_medecin ON ordonnance(id_medecin);
 CREATE INDEX idx_ordonnance_statut ON ordonnance(statut);
 
+-- INDEX RENDEZ-VOUS
+CREATE INDEX idx_rdv_medecin ON rendez_vous(id_medecin);
+CREATE INDEX idx_rdv_date ON rendez_vous(date_rdv);
+
 INSERT INTO utilisateur (nom, prenom, email, mot_de_passe, role) VALUES
 ('Dupont', 'Marie', 'marie.dupont@hopital.fr', '$2a$10$xJwL5v5Jz5U5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z', 'Secretaire'),
 ('Martin', 'Jean', 'jean.martin@hopital.fr', '$2a$10$xJwL5v5Jz5U5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z', 'Medecin'),
@@ -299,27 +327,6 @@ INSERT INTO ligne_reapprovisionnement (id_reappro, id_fournisseur, id_produit, q
 (1, 1, 4, 200, 8.00),
 (2, 2, 3, 300, 4.00),
 (2, 3, 2, 100, 14.50);
-
-CREATE TABLE rendez_vous (
-    id_rdv INT PRIMARY KEY AUTO_INCREMENT,
-    id_patient INT NOT NULL,
-    id_medecin INT NOT NULL,
-    date_rdv DATETIME NOT NULL,
-    motif TEXT,
-    statut ENUM('Planifie', 'Confirme', 'Annule', 'Effectue') DEFAULT 'Planifie',
-    date_creation DATETIME DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
-ALTER TABLE rendez_vous
-    ADD CONSTRAINT fk_rdv_patient
-        FOREIGN KEY (id_patient) REFERENCES patient(id_patient)
-        ON DELETE CASCADE ON UPDATE CASCADE,
-    ADD CONSTRAINT fk_rdv_medecin
-        FOREIGN KEY (id_medecin) REFERENCES utilisateur(id_utilisateur)
-        ON DELETE CASCADE ON UPDATE CASCADE;
-
-CREATE INDEX idx_rdv_medecin ON rendez_vous(id_medecin);
-CREATE INDEX idx_rdv_date ON rendez_vous(date_rdv);
 
 CREATE VIEW vue_patients_attente AS
 SELECT
