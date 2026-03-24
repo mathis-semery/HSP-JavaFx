@@ -9,10 +9,10 @@
 
     <top>
         <HBox style="-fx-background-color: #dc2626; -fx-padding: 20;" alignment="CENTER_LEFT" spacing="20">
-            <Label text="👑 HSP - ADMINISTRATEUR" style="-fx-text-fill: white; -fx-font-size: 22px; -fx-font-weight: bold;"/>
+            <Label text="&#x1f451; HSP - ADMINISTRATEUR" style="-fx-text-fill: white; -fx-font-size: 22px; -fx-font-weight: bold;"/>
             <Region HBox.hgrow="ALWAYS"/>
             <Label fx:id="userNameLabel" text="[Admin]" style="-fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;"/>
-            <Button text="🔒 Déconnexion" onAction="#onLogout"
+            <Button text="&#x1f512; D&#xe9;connexion" onAction="#onLogout"
                     style="-fx-background-color: white; -fx-text-fill: #dc2626; -fx-font-weight: bold; -fx-padding: 10 20;"/>
         </HBox>
     </top>
@@ -22,15 +22,30 @@
             <Label text="ADMINISTRATION" style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px;"/>
             <Separator/>
 
-            <Button text="📊 Tableau de bord" onAction="#showDashboard" prefWidth="220"
+            <Button text="&#x1f4ca; Tableau de bord" onAction="#showDashboard" prefWidth="220"
                     style="-fx-background-color: #dc2626; -fx-text-fill: white; -fx-padding: 12;"/>
-            <Button text="👥 Utilisateurs" onAction="#showUsers" prefWidth="220"
+            <Button text="&#x1f465; Utilisateurs" onAction="#showUsers" prefWidth="220"
                     style="-fx-background-color: #374151; -fx-text-fill: white; -fx-padding: 12;"/>
-            <Button text="⚙️ Système" onAction="#showSystem" prefWidth="220"
+            <Button text="&#x1f3e5; Patients" onAction="#showPatients" prefWidth="220"
                     style="-fx-background-color: #374151; -fx-text-fill: white; -fx-padding: 12;"/>
-            <Button text="📋 Logs" onAction="#showLogs" prefWidth="220"
+            <Button text="&#x1f6cf; Hospitalisations" onAction="#showHospitalisations" prefWidth="220"
                     style="-fx-background-color: #374151; -fx-text-fill: white; -fx-padding: 12;"/>
-            <Button text="📈 Statistiques" onAction="#showStats" prefWidth="220"
+            <Button text="&#x1f4cb; Ordonnances" onAction="#showOrdonnances" prefWidth="220"
+                    style="-fx-background-color: #374151; -fx-text-fill: white; -fx-padding: 12;"/>
+            <Button text="&#x1f4e6; Produits" onAction="#showProduits" prefWidth="220"
+                    style="-fx-background-color: #374151; -fx-text-fill: white; -fx-padding: 12;"/>
+            <Button text="&#x1f69a; Fournisseurs" onAction="#showFournisseurs" prefWidth="220"
+                    style="-fx-background-color: #374151; -fx-text-fill: white; -fx-padding: 12;"/>
+            <Button text="&#x1f4e9; Demandes" onAction="#showDemandes" prefWidth="220"
+                    style="-fx-background-color: #374151; -fx-text-fill: white; -fx-padding: 12;"/>
+
+            <Separator/>
+
+            <Button text="&#x2699;&#xfe0f; Syst&#xe8;me" onAction="#showSystem" prefWidth="220"
+                    style="-fx-background-color: #374151; -fx-text-fill: white; -fx-padding: 12;"/>
+            <Button text="&#x1f4cb; Logs" onAction="#showLogs" prefWidth="220"
+                    style="-fx-background-color: #374151; -fx-text-fill: white; -fx-padding: 12;"/>
+            <Button text="&#x1f4c8; Statistiques" onAction="#showStats" prefWidth="220"
                     style="-fx-background-color: #374151; -fx-text-fill: white; -fx-padding: 12;"/>
 
             <Region VBox.vgrow="ALWAYS"/>
@@ -46,75 +61,204 @@
         <StackPane fx:id="contentPane" style="-fx-background-color: white;">
             <padding><Insets top="30" right="30" bottom="30" left="30"/></padding>
 
-            <!-- Dashboard View -->
             <VBox fx:id="dashboardView" spacing="25">
                 <Label text="Tableau de bord administrateur" style="-fx-font-size: 28px; -fx-font-weight: bold;"/>
 
                 <HBox spacing="20">
-                    <VBox style="-fx-background-color: #fee2e2; -fx-padding: 25; -fx-background-radius: 12;" spacing="10" prefWidth="300">
-                        <Label text="👥 Utilisateurs" style="-fx-text-fill: #b91c1c; -fx-font-weight: bold;"/>
-                        <Label fx:id="totalUtilisateursLabel" text="0" style="-fx-font-size: 40px; -fx-font-weight: bold; -fx-text-fill: #dc2626;"/>
+                    <VBox style="-fx-background-color: #fee2e2; -fx-padding: 25; -fx-background-radius: 12;" spacing="10" prefWidth="250" HBox.hgrow="ALWAYS">
+                        <Label text="&#x1f465; Utilisateurs" style="-fx-text-fill: #b91c1c; -fx-font-weight: bold;"/>
+                        <Label fx:id="totalUtilisateursLabel" text="0" style="-fx-font-size: 36px; -fx-font-weight: bold; -fx-text-fill: #dc2626;"/>
                     </VBox>
 
-                    <VBox style="-fx-background-color: #dbeafe; -fx-padding: 25; -fx-background-radius: 12;" spacing="10" prefWidth="300">
-                        <Label text="🏥 Patients" style="-fx-text-fill: #1e40af; -fx-font-weight: bold;"/>
-                        <Label fx:id="totalPatientsLabel" text="0" style="-fx-font-size: 40px; -fx-font-weight: bold; -fx-text-fill: #2563eb;"/>
+                    <VBox style="-fx-background-color: #dbeafe; -fx-padding: 25; -fx-background-radius: 12;" spacing="10" prefWidth="250" HBox.hgrow="ALWAYS">
+                        <Label text="&#x1f3e5; Patients" style="-fx-text-fill: #1e40af; -fx-font-weight: bold;"/>
+                        <Label fx:id="totalPatientsLabel" text="0" style="-fx-font-size: 36px; -fx-font-weight: bold; -fx-text-fill: #2563eb;"/>
                     </VBox>
 
-                    <VBox style="-fx-background-color: #f3e8ff; -fx-padding: 25; -fx-background-radius: 12;" spacing="10" prefWidth="300">
-                        <Label text="🛏️ Hospitalisations" style="-fx-text-fill: #6b21a8; -fx-font-weight: bold;"/>
-                        <Label fx:id="totalHospitalisationsLabel" text="0" style="-fx-font-size: 40px; -fx-font-weight: bold; -fx-text-fill: #7c3aed;"/>
+                    <VBox style="-fx-background-color: #f3e8ff; -fx-padding: 25; -fx-background-radius: 12;" spacing="10" prefWidth="250" HBox.hgrow="ALWAYS">
+                        <Label text="&#x1f6cf; Hospitalisations" style="-fx-text-fill: #6b21a8; -fx-font-weight: bold;"/>
+                        <Label fx:id="totalHospitalisationsLabel" text="0" style="-fx-font-size: 36px; -fx-font-weight: bold; -fx-text-fill: #7c3aed;"/>
                     </VBox>
 
-                    <VBox style="-fx-background-color: #d1fae5; -fx-padding: 25; -fx-background-radius: 12;" spacing="10" prefWidth="250">
-                        <Label text="⚡ Système" style="-fx-text-fill: #065f46; -fx-font-weight: bold;"/>
+                    <VBox style="-fx-background-color: #d1fae5; -fx-padding: 25; -fx-background-radius: 12;" spacing="10" prefWidth="250" HBox.hgrow="ALWAYS">
+                        <Label text="&#x26a1; Syst&#xe8;me" style="-fx-text-fill: #065f46; -fx-font-weight: bold;"/>
                         <Label fx:id="systemStatusLabel" text="OK" style="-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #059669;"/>
+                    </VBox>
+                </HBox>
+
+                <HBox spacing="20">
+                    <VBox style="-fx-background-color: #fef3c7; -fx-padding: 25; -fx-background-radius: 12;" spacing="10" prefWidth="250" HBox.hgrow="ALWAYS">
+                        <Label text="&#x1f4e6; Produits" style="-fx-text-fill: #b45309; -fx-font-weight: bold;"/>
+                        <Label fx:id="totalProduitsLabel" text="0" style="-fx-font-size: 36px; -fx-font-weight: bold; -fx-text-fill: #d97706;"/>
+                    </VBox>
+
+                    <VBox style="-fx-background-color: #e0e7ff; -fx-padding: 25; -fx-background-radius: 12;" spacing="10" prefWidth="250" HBox.hgrow="ALWAYS">
+                        <Label text="&#x1f69a; Fournisseurs" style="-fx-text-fill: #3730a3; -fx-font-weight: bold;"/>
+                        <Label fx:id="totalFournisseursLabel" text="0" style="-fx-font-size: 36px; -fx-font-weight: bold; -fx-text-fill: #4f46e5;"/>
+                    </VBox>
+
+                    <VBox style="-fx-background-color: #fce7f3; -fx-padding: 25; -fx-background-radius: 12;" spacing="10" prefWidth="250" HBox.hgrow="ALWAYS">
+                        <Label text="&#x1f4e9; Demandes en attente" style="-fx-text-fill: #9d174d; -fx-font-weight: bold;"/>
+                        <Label fx:id="totalDemandesAttenteLabel" text="0" style="-fx-font-size: 36px; -fx-font-weight: bold; -fx-text-fill: #db2777;"/>
+                    </VBox>
+
+                    <VBox style="-fx-background-color: #ccfbf1; -fx-padding: 25; -fx-background-radius: 12;" spacing="10" prefWidth="250" HBox.hgrow="ALWAYS">
+                        <Label text="&#x1f4cb; Ordonnances actives" style="-fx-text-fill: #115e59; -fx-font-weight: bold;"/>
+                        <Label fx:id="totalOrdonnancesActivesLabel" text="0" style="-fx-font-size: 36px; -fx-font-weight: bold; -fx-text-fill: #0d9488;"/>
                     </VBox>
                 </HBox>
             </VBox>
 
-            <!-- Users View -->
             <VBox fx:id="usersView" spacing="20" visible="false">
                 <HBox alignment="CENTER_LEFT" spacing="20">
                     <Label text="Gestion des utilisateurs" style="-fx-font-size: 28px; -fx-font-weight: bold;"/>
                     <Region HBox.hgrow="ALWAYS"/>
-                    <Button text="➕ Nouvel utilisateur" onAction="#onCreateUser"
+                    <Button text="&#x2795; Nouvel utilisateur" onAction="#onCreateUser"
                             style="-fx-background-color: #dc2626; -fx-text-fill: white; -fx-padding: 10 20; -fx-font-weight: bold;"/>
                 </HBox>
 
                 <HBox spacing="15" alignment="CENTER_LEFT">
-                    <TextField fx:id="searchUserField" promptText="🔍 Rechercher..." prefWidth="300"/>
-                    <Button text="🔍 Rechercher" onAction="#onSearchUser" style="-fx-background-color: #6b7280; -fx-text-fill: white;"/>
-                    <Button text="🔄 Actualiser" onAction="#onRefreshUsers" style="-fx-background-color: #10b981; -fx-text-fill: white;"/>
+                    <TextField fx:id="searchUserField" promptText="&#x1f50d; Rechercher..." prefWidth="300"/>
+                    <Button text="&#x1f50d; Rechercher" onAction="#onSearchUser" style="-fx-background-color: #6b7280; -fx-text-fill: white;"/>
+                    <Button text="&#x1f504; Actualiser" onAction="#onRefreshUsers" style="-fx-background-color: #10b981; -fx-text-fill: white;"/>
                 </HBox>
 
                 <TableView fx:id="usersTable" prefHeight="400">
                     <columns>
                         <TableColumn fx:id="userIdCol" text="ID" prefWidth="60"/>
                         <TableColumn fx:id="userNomCol" text="Nom" prefWidth="150"/>
-                        <TableColumn fx:id="userPrenomCol" text="Prénom" prefWidth="150"/>
+                        <TableColumn fx:id="userPrenomCol" text="Pr&#xe9;nom" prefWidth="150"/>
                         <TableColumn fx:id="userEmailCol" text="Email" prefWidth="250"/>
-                        <TableColumn fx:id="userRoleCol" text="Rôle" prefWidth="130"/>
-                        <TableColumn fx:id="userDateCol" text="Date création" prefWidth="150"/>
+                        <TableColumn fx:id="userRoleCol" text="R&#xf4;le" prefWidth="130"/>
+                        <TableColumn fx:id="userDateCol" text="Date cr&#xe9;ation" prefWidth="150"/>
                     </columns>
                 </TableView>
 
                 <HBox spacing="15">
-                    <Button text="✏️ Modifier" onAction="#onEditUser"
+                    <Button text="&#x270f;&#xfe0f; Modifier" onAction="#onEditUser"
                             style="-fx-background-color: #3b82f6; -fx-text-fill: white; -fx-padding: 10 20;"/>
-                    <Button text="🔑 Réinitialiser MDP" onAction="#onResetPassword"
+                    <Button text="&#x1f511; R&#xe9;initialiser MDP" onAction="#onResetPassword"
                             style="-fx-background-color: #f59e0b; -fx-text-fill: white; -fx-padding: 10 20;"/>
-                    <Button text="🗑️ Supprimer" onAction="#onDeleteUser"
+                    <Button text="&#x1f5d1;&#xfe0f; Supprimer" onAction="#onDeleteUser"
                             style="-fx-background-color: #ef4444; -fx-text-fill: white; -fx-padding: 10 20;"/>
                 </HBox>
             </VBox>
 
-            <!-- System View -->
+            <VBox fx:id="patientsView" spacing="20" visible="false">
+                <HBox alignment="CENTER_LEFT" spacing="20">
+                    <Label text="Patients" style="-fx-font-size: 28px; -fx-font-weight: bold;"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Button text="&#x1f504; Actualiser" onAction="#onRefreshPatients" style="-fx-background-color: #10b981; -fx-text-fill: white;"/>
+                </HBox>
+
+                <HBox spacing="15" alignment="CENTER_LEFT">
+                    <TextField fx:id="searchPatientField" promptText="&#x1f50d; Rechercher par nom, pr&#xe9;nom, email, n&#xb0; s&#xe9;cu..." prefWidth="400"/>
+                    <Button text="&#x1f50d; Rechercher" onAction="#onSearchPatient" style="-fx-background-color: #6b7280; -fx-text-fill: white;"/>
+                </HBox>
+
+                <TableView fx:id="patientsTable" prefHeight="400"/>
+
+                <HBox spacing="15">
+                    <Button text="&#x1f5d1;&#xfe0f; Supprimer" onAction="#onDeletePatient"
+                            style="-fx-background-color: #ef4444; -fx-text-fill: white; -fx-padding: 10 20;"/>
+                </HBox>
+            </VBox>
+
+            <VBox fx:id="hospitalisationsView" spacing="20" visible="false">
+                <HBox alignment="CENTER_LEFT" spacing="20">
+                    <Label text="Hospitalisations" style="-fx-font-size: 28px; -fx-font-weight: bold;"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Button text="&#x1f504; Actualiser" onAction="#onRefreshHospitalisations" style="-fx-background-color: #10b981; -fx-text-fill: white;"/>
+                </HBox>
+
+                <TableView fx:id="hospitalisationsTable" prefHeight="400"/>
+
+                <HBox spacing="15">
+                    <Button text="&#x1f5d1;&#xfe0f; Supprimer" onAction="#onDeleteHospitalisation"
+                            style="-fx-background-color: #ef4444; -fx-text-fill: white; -fx-padding: 10 20;"/>
+                </HBox>
+            </VBox>
+
+            <VBox fx:id="ordonnancesView" spacing="20" visible="false">
+                <HBox alignment="CENTER_LEFT" spacing="20">
+                    <Label text="Ordonnances" style="-fx-font-size: 28px; -fx-font-weight: bold;"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Button text="&#x1f504; Actualiser" onAction="#onRefreshOrdonnances" style="-fx-background-color: #10b981; -fx-text-fill: white;"/>
+                </HBox>
+
+                <TableView fx:id="ordonnancesTable" prefHeight="400"/>
+
+                <HBox spacing="15">
+                    <Button text="&#x1f5d1;&#xfe0f; Supprimer" onAction="#onDeleteOrdonnance"
+                            style="-fx-background-color: #ef4444; -fx-text-fill: white; -fx-padding: 10 20;"/>
+                </HBox>
+            </VBox>
+
+            <VBox fx:id="produitsView" spacing="20" visible="false">
+                <HBox alignment="CENTER_LEFT" spacing="20">
+                    <Label text="Produits" style="-fx-font-size: 28px; -fx-font-weight: bold;"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Button text="&#x1f504; Actualiser" onAction="#onRefreshProduits" style="-fx-background-color: #10b981; -fx-text-fill: white;"/>
+                </HBox>
+
+                <HBox spacing="15" alignment="CENTER_LEFT">
+                    <TextField fx:id="searchProduitField" promptText="&#x1f50d; Rechercher par libell&#xe9;..." prefWidth="400"/>
+                    <Button text="&#x1f50d; Rechercher" onAction="#onSearchProduit" style="-fx-background-color: #6b7280; -fx-text-fill: white;"/>
+                </HBox>
+
+                <TableView fx:id="produitsTable" prefHeight="400"/>
+
+                <HBox spacing="15">
+                    <Button text="&#x1f5d1;&#xfe0f; Supprimer" onAction="#onDeleteProduit"
+                            style="-fx-background-color: #ef4444; -fx-text-fill: white; -fx-padding: 10 20;"/>
+                </HBox>
+            </VBox>
+
+            <VBox fx:id="fournisseursView" spacing="20" visible="false">
+                <HBox alignment="CENTER_LEFT" spacing="20">
+                    <Label text="Fournisseurs" style="-fx-font-size: 28px; -fx-font-weight: bold;"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Button text="&#x1f504; Actualiser" onAction="#onRefreshFournisseurs" style="-fx-background-color: #10b981; -fx-text-fill: white;"/>
+                </HBox>
+
+                <HBox spacing="15" alignment="CENTER_LEFT">
+                    <TextField fx:id="searchFournisseurField" promptText="&#x1f50d; Rechercher par nom, contact..." prefWidth="400"/>
+                    <Button text="&#x1f50d; Rechercher" onAction="#onSearchFournisseur" style="-fx-background-color: #6b7280; -fx-text-fill: white;"/>
+                </HBox>
+
+                <TableView fx:id="fournisseursTable" prefHeight="400"/>
+
+                <HBox spacing="15">
+                    <Button text="&#x1f5d1;&#xfe0f; Supprimer" onAction="#onDeleteFournisseur"
+                            style="-fx-background-color: #ef4444; -fx-text-fill: white; -fx-padding: 10 20;"/>
+                </HBox>
+            </VBox>
+
+            <VBox fx:id="demandesView" spacing="20" visible="false">
+                <HBox alignment="CENTER_LEFT" spacing="20">
+                    <Label text="Demandes de produits" style="-fx-font-size: 28px; -fx-font-weight: bold;"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Button text="&#x1f504; Actualiser" onAction="#onRefreshDemandes" style="-fx-background-color: #10b981; -fx-text-fill: white;"/>
+                </HBox>
+
+                <HBox spacing="15" alignment="CENTER_LEFT">
+                    <ComboBox fx:id="demandeStatutFilter" promptText="Filtrer par statut" prefWidth="200"/>
+                    <Button text="&#x1f50d; Filtrer" onAction="#onFilterDemandes" style="-fx-background-color: #6b7280; -fx-text-fill: white;"/>
+                </HBox>
+
+                <TableView fx:id="demandesTable" prefHeight="400"/>
+
+                <HBox spacing="15">
+                    <Button text="&#x1f5d1;&#xfe0f; Supprimer" onAction="#onDeleteDemande"
+                            style="-fx-background-color: #ef4444; -fx-text-fill: white; -fx-padding: 10 20;"/>
+                </HBox>
+            </VBox>
+
             <VBox fx:id="systemView" spacing="20" visible="false">
-                <Label text="Paramètres système" style="-fx-font-size: 28px; -fx-font-weight: bold;"/>
+                <Label text="Param&#xe8;tres syst&#xe8;me" style="-fx-font-size: 28px; -fx-font-weight: bold;"/>
 
                 <VBox spacing="15" style="-fx-padding: 25; -fx-border-color: #e5e7eb; -fx-border-width: 1;">
-                    <Label text="🏥 Informations hôpital" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+                    <Label text="&#x1f3e5; Informations h&#xf4;pital" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
 
                     <GridPane hgap="20" vgap="15">
                         <Label text="Nom :" GridPane.columnIndex="0" GridPane.rowIndex="0" style="-fx-font-weight: bold;"/>
@@ -123,43 +267,42 @@
                         <Label text="Adresse :" GridPane.columnIndex="0" GridPane.rowIndex="1" style="-fx-font-weight: bold;"/>
                         <TextField fx:id="hospitalAddressField" GridPane.columnIndex="1" GridPane.rowIndex="1" prefWidth="400"/>
 
-                        <Label text="Téléphone :" GridPane.columnIndex="0" GridPane.rowIndex="2" style="-fx-font-weight: bold;"/>
+                        <Label text="T&#xe9;l&#xe9;phone :" GridPane.columnIndex="0" GridPane.rowIndex="2" style="-fx-font-weight: bold;"/>
                         <TextField fx:id="hospitalPhoneField" GridPane.columnIndex="1" GridPane.rowIndex="2" prefWidth="400"/>
                     </GridPane>
                 </VBox>
 
                 <VBox spacing="15" style="-fx-padding: 25; -fx-border-color: #e5e7eb; -fx-border-width: 1;">
-                    <Label text="⚙️ Contrôles système" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+                    <Label text="&#x2699;&#xfe0f; Contr&#xf4;les syst&#xe8;me" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
 
                     <CheckBox fx:id="maintenanceModeCheckBox" text="Mode maintenance" onAction="#onToggleMaintenance"
                               style="-fx-font-size: 14px; -fx-font-weight: bold;"/>
 
                     <HBox spacing="15">
-                        <Button text="💾 Sauvegarder BD" onAction="#onBackupDatabase"
+                        <Button text="&#x1f4be; Sauvegarder BD" onAction="#onBackupDatabase"
                                 style="-fx-background-color: #10b981; -fx-text-fill: white; -fx-padding: 12 25;"/>
-                        <Button text="🗑️ Vider cache" onAction="#onClearCache"
+                        <Button text="&#x1f5d1;&#xfe0f; Vider cache" onAction="#onClearCache"
                                 style="-fx-background-color: #f59e0b; -fx-text-fill: white; -fx-padding: 12 25;"/>
                     </HBox>
                 </VBox>
 
-                <Button text="💾 Sauvegarder les paramètres" onAction="#onSaveSettings"
+                <Button text="&#x1f4be; Sauvegarder les param&#xe8;tres" onAction="#onSaveSettings"
                         style="-fx-background-color: #dc2626; -fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold; -fx-padding: 15 40;"/>
             </VBox>
 
-            <!-- Logs View -->
             <VBox fx:id="logsView" spacing="20" visible="false">
                 <HBox alignment="CENTER_LEFT" spacing="20">
-                    <Label text="Journal système" style="-fx-font-size: 28px; -fx-font-weight: bold;"/>
+                    <Label text="Journal syst&#xe8;me" style="-fx-font-size: 28px; -fx-font-weight: bold;"/>
                     <Region HBox.hgrow="ALWAYS"/>
-                    <Button text="🔄 Actualiser" onAction="#onRefreshLogs" style="-fx-background-color: #dc2626; -fx-text-fill: white;"/>
+                    <Button text="&#x1f504; Actualiser" onAction="#onRefreshLogs" style="-fx-background-color: #dc2626; -fx-text-fill: white;"/>
                 </HBox>
 
                 <HBox spacing="15">
                     <ComboBox fx:id="logLevelFilter" promptText="Niveau" prefWidth="150"/>
                     <DatePicker fx:id="logDateFilter" promptText="Date"/>
                     <Region HBox.hgrow="ALWAYS"/>
-                    <Button text="📥 Exporter" onAction="#onExportLogs" style="-fx-background-color: #10b981; -fx-text-fill: white;"/>
-                    <Button text="🗑️ Effacer" onAction="#onClearLogs" style="-fx-background-color: #ef4444; -fx-text-fill: white;"/>
+                    <Button text="&#x1f4e5; Exporter" onAction="#onExportLogs" style="-fx-background-color: #10b981; -fx-text-fill: white;"/>
+                    <Button text="&#x1f5d1;&#xfe0f; Effacer" onAction="#onClearLogs" style="-fx-background-color: #ef4444; -fx-text-fill: white;"/>
                 </HBox>
 
                 <TableView fx:id="logsTable" prefHeight="500">
@@ -168,37 +311,36 @@
                         <TableColumn fx:id="logUtilisateurCol" text="Utilisateur" prefWidth="160"/>
                         <TableColumn fx:id="logActionCol" text="Action" prefWidth="180"/>
                         <TableColumn fx:id="logTableCol" text="Table" prefWidth="140"/>
-                        <TableColumn fx:id="logDetailsCol" text="Détails" prefWidth="320"/>
+                        <TableColumn fx:id="logDetailsCol" text="D&#xe9;tails" prefWidth="320"/>
                     </columns>
                 </TableView>
             </VBox>
 
-            <!-- Stats View -->
             <VBox fx:id="statsView" spacing="20" visible="false">
                 <HBox alignment="CENTER_LEFT" spacing="20">
                     <Label text="Statistiques globales" style="-fx-font-size: 28px; -fx-font-weight: bold;"/>
                     <Region HBox.hgrow="ALWAYS"/>
-                    <Button text="📊 Générer rapport" onAction="#onGenerateReport" style="-fx-background-color: #dc2626; -fx-text-fill: white;"/>
+                    <Button text="&#x1f4ca; G&#xe9;n&#xe9;rer rapport" onAction="#onGenerateReport" style="-fx-background-color: #dc2626; -fx-text-fill: white;"/>
                 </HBox>
 
                 <HBox spacing="20">
                     <VBox style="-fx-background-color: #dbeafe; -fx-padding: 25; -fx-background-radius: 12;" spacing="10" prefWidth="350">
-                        <Label text="📅 Patients ce mois" style="-fx-text-fill: #1e40af; -fx-font-weight: bold;"/>
+                        <Label text="&#x1f4c5; Patients ce mois" style="-fx-text-fill: #1e40af; -fx-font-weight: bold;"/>
                         <Label fx:id="statsPatientsMoisLabel" text="0" style="-fx-font-size: 36px; -fx-font-weight: bold; -fx-text-fill: #2563eb;"/>
                     </VBox>
 
                     <VBox style="-fx-background-color: #f3e8ff; -fx-padding: 25; -fx-background-radius: 12;" spacing="10" prefWidth="350">
-                        <Label text="✅ Dossiers résolus" style="-fx-text-fill: #6b21a8; -fx-font-weight: bold;"/>
+                        <Label text="&#x2705; Dossiers r&#xe9;solus" style="-fx-text-fill: #6b21a8; -fx-font-weight: bold;"/>
                         <Label fx:id="statsConsultationsMoyenneLabel" text="0" style="-fx-font-size: 36px; -fx-font-weight: bold; -fx-text-fill: #7c3aed;"/>
                     </VBox>
 
                     <VBox style="-fx-background-color: #fef3c7; -fx-padding: 25; -fx-background-radius: 12;" spacing="10" prefWidth="350">
-                        <Label text="🛏️ Taux occupation" style="-fx-text-fill: #b45309; -fx-font-weight: bold;"/>
+                        <Label text="&#x1f6cf; Taux occupation" style="-fx-text-fill: #b45309; -fx-font-weight: bold;"/>
                         <Label fx:id="statsTauxOccupationLabel" text="0%" style="-fx-font-size: 36px; -fx-font-weight: bold; -fx-text-fill: #d97706;"/>
                     </VBox>
                 </HBox>
 
-                <Button text="📥 Exporter les statistiques" onAction="#onExportStats"
+                <Button text="&#x1f4e5; Exporter les statistiques" onAction="#onExportStats"
                         style="-fx-background-color: #10b981; -fx-text-fill: white; -fx-padding: 12 30;"/>
             </VBox>
 
