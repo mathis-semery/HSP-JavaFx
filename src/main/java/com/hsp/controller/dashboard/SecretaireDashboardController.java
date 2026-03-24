@@ -37,7 +37,6 @@ public class SecretaireDashboardController implements Initializable {
     @FXML private ComboBox<String>  sexeComboBox;
     @FXML private TextField telephoneField;
     @FXML private TextField adresseField;
-    @FXML private TextArea  motifTextArea;
     @FXML private TextField searchField;
     @FXML private TableView<ObservableList<String>> allPatientsTable;
     @FXML private TableView<ObservableList<String>> waitingTriageTable;
@@ -88,10 +87,6 @@ public class SecretaireDashboardController implements Initializable {
     public void initialize(URL location, ResourceBundle resources) {
         if (sexeComboBox != null)
             sexeComboBox.getItems().addAll("Homme", "Femme", "Autre");
-        if (niveauGraviteComboBox != null) {
-            niveauGraviteComboBox.getItems().addAll(1, 2, 3, 4, 5);
-            niveauGraviteComboBox.setValue(3);
-        }
         setupRecentPatientsTable();
         setupAllPatientsTable();
         setupWaitingTriageTable();
@@ -580,7 +575,7 @@ public class SecretaireDashboardController implements Initializable {
             showAlert(Alert.AlertType.WARNING, "Attention", "Le niveau de gravité est obligatoire"); return;
         }
 
-        int gravite      = (niveauGraviteComboBox != null && niveauGraviteComboBox.getValue() != null) ? niveauGraviteComboBox.getValue() : 3;
+        int gravite = 3;
         int secretaireId = currentSecretaireId > 0 ? currentSecretaireId : 1;
 
         try (Connection conn = getConnection()) {
@@ -609,7 +604,7 @@ public class SecretaireDashboardController implements Initializable {
                             "VALUES (?, ?, NOW(), ?, ?, 'Attente')")) {
                 pstmt.setInt(1, patientId);
                 pstmt.setInt(2, secretaireId);
-                pstmt.setString(3, motifTextArea.getText().trim());
+                pstmt.setString(3, "");
                 pstmt.setInt(4, gravite);
                 pstmt.executeUpdate();
             }
@@ -770,8 +765,6 @@ public class SecretaireDashboardController implements Initializable {
         if (sexeComboBox        != null) sexeComboBox.setValue(null);
         if (telephoneField      != null) telephoneField.clear();
         if (adresseField        != null) adresseField.clear();
-        if (motifTextArea       != null) motifTextArea.clear();
-        if (niveauGraviteComboBox != null) niveauGraviteComboBox.setValue(3);
     }
 
     // ============= DÉCONNEXION =============

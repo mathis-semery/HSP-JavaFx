@@ -1,6 +1,5 @@
 package com.hsp.controller.dashboard;
 
-import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -19,6 +18,7 @@ import javafx.stage.Modality;
 import java.io.IOException;
 import java.net.URL;
 import java.sql.*;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ResourceBundle;
 
@@ -33,6 +33,7 @@ public class MedecinDashboardController implements Initializable {
     @FXML private VBox hospitalizationsView;
     @FXML private VBox productRequestsView;
     @FXML private VBox treatmentView;
+    @FXML private VBox historiqueView;
 
     // Dashboard KPI
     @FXML private Label todayPatientsLabel;
@@ -59,11 +60,20 @@ public class MedecinDashboardController implements Initializable {
     @FXML private ComboBox<String> chambreComboBox;
     @FXML private TextArea maladieTextArea;
 
+    // Vue historique
+    @FXML private TableView<ObservableList<String>> historiqueTable;
+    @FXML private TableColumn<ObservableList<String>, String> histoDateCol;
+    @FXML private TableColumn<ObservableList<String>, String> histoActionCol;
+    @FXML private TableColumn<ObservableList<String>, String> histoTableCol;
+    @FXML private TableColumn<ObservableList<String>, String> histoDetailsCol;
+    @FXML private DatePicker histoDateFilter;
+    @FXML private ComboBox<String> histoActionFilter;
+    @FXML private Label historiqueCountLabel;
+
     // ============= STATE =============
     private ToggleGroup treatmentGroup;
     private int currentMedecinId = -1;
     private String currentMedecinName = "";
-    // Dossier en cours de traitement
     private int currentDossierId = -1;
 
     // ============= DB =============
@@ -102,12 +112,20 @@ public class MedecinDashboardController implements Initializable {
             gravityFilterComboBox.setOnAction(e -> loadUrgentPatients());
         }
 
+        // Filtre historique – actions
+        if (histoActionFilter != null) {
+            histoActionFilter.getItems().addAll(
+                    "Tous", "Hospitalisation", "Ordonnance", "Cloture hospitalisation");
+            histoActionFilter.setValue("Tous");
+        }
+
         // Colonnes tables
         setupUrgentPatientsTable();
         setupWaitingPatientsTable();
         setupActiveHospitalizationsTable();
         setupCompletedHospitalizationsTable();
         setupMyRequestsTable();
+        setupHistoriqueTable();
 
         // Masquer hospitalizationDetails par défaut
         if (hospitalizationDetails != null) {
@@ -128,12 +146,12 @@ public class MedecinDashboardController implements Initializable {
         // data[0] = id_dossier (clé cachée), data[1..6] = données affichées
         String[] cols = {"Patient", "Heure d'arrivée", "Gravité", "Symptômes", "Statut", "Action"};
         for (int i = 0; i < cols.length; i++) {
-            final int dataIdx = i + 1; // décalage de 1 pour ignorer l'id caché en data[0]
+            final int dataIdx = i + 1;
             TableColumn<ObservableList<String>, String> col = new TableColumn<>(cols[i]);
             col.setCellValueFactory(data ->
                     new SimpleStringProperty(data.getValue().get(dataIdx)));
 
-            if (i == 5) { // Colonne Action
+            if (i == 5) {
                 col.setCellFactory(tc -> new TableCell<>() {
                     private final Button btn = new Button("Traiter");
                     {
@@ -197,7 +215,7 @@ public class MedecinDashboardController implements Initializable {
         // data[0] = id_hospitalisation (clé cachée), data[1..6] = données affichées
         String[] cols = {"Patient", "Chambre", "Date début", "Diagnostic", "Durée (j)", "Action"};
         for (int i = 0; i < cols.length; i++) {
-            final int dataIdx = i + 1; // décalage de 1 pour ignorer l'id caché en data[0]
+            final int dataIdx = i + 1;
             TableColumn<ObservableList<String>, String> col = new TableColumn<>(cols[i]);
             col.setCellValueFactory(data ->
                     new SimpleStringProperty(data.getValue().get(dataIdx)));
@@ -254,6 +272,19 @@ public class MedecinDashboardController implements Initializable {
         }
     }
 
+    private void setupHistoriqueTable() {
+        if (historiqueTable == null) return;
+        // Colonnes déclarées dans le FXML via fx:id — on branche uniquement les cellValueFactory
+        if (histoDateCol != null)
+            histoDateCol.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().get(0)));
+        if (histoActionCol != null)
+            histoActionCol.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().get(1)));
+        if (histoTableCol != null)
+            histoTableCol.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().get(2)));
+        if (histoDetailsCol != null)
+            histoDetailsCol.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().get(3)));
+    }
+
     // ============= NAVIGATION =============
 
     @FXML
@@ -288,12 +319,14 @@ public class MedecinDashboardController implements Initializable {
 
     @FXML
     private void showHistory() {
-        showAlert(Alert.AlertType.INFORMATION, "Historique", "Fonctionnalité en cours de développement.");
+        hideAllViews();
+        if (historiqueView != null) { historiqueView.setVisible(true); historiqueView.setManaged(true); }
+        loadHistorique(null, null);
     }
 
     private void hideAllViews() {
         VBox[] views = {dashboardView, waitingPatientsView, hospitalizationsView,
-                productRequestsView, treatmentView};
+                productRequestsView, treatmentView, historiqueView};
         for (VBox v : views) {
             if (v != null) { v.setVisible(false); v.setManaged(false); }
         }
@@ -307,7 +340,6 @@ public class MedecinDashboardController implements Initializable {
      * (les index varient selon la table source, on stocke tout en extra columns)
      */
     private void openTreatmentView(ObservableList<String> row) {
-        // On recharge depuis la BDD avec l'id_dossier (col 0 dans waitingTable, col 0 dans urgentTable)
         try {
             int dossierId = Integer.parseInt(row.get(0).trim());
             loadPatientForTreatment(dossierId);
@@ -350,7 +382,6 @@ public class MedecinDashboardController implements Initializable {
                     hospitalizationDetails.setManaged(false);
                 }
 
-                // Charger les chambres disponibles
                 loadChambresDisponibles();
 
                 hideAllViews();
@@ -442,13 +473,13 @@ public class MedecinDashboardController implements Initializable {
 
             while (rs.next()) {
                 ObservableList<String> row = FXCollections.observableArrayList();
-                row.add(String.valueOf(rs.getInt("id_dossier")));       // 0 – id caché
-                row.add(rs.getString("nom") + " " + rs.getString("prenom")); // 1
-                row.add(formatTimestamp(rs.getTimestamp("date_arrivee"))); // 2
-                row.add("Gravité " + rs.getInt("niveau_gravite"));        // 3
-                row.add(truncate(rs.getString("symptomes"), 60));          // 4
-                row.add(rs.getString("statut"));                           // 5
-                row.add("");                                               // 6 – colonne Action
+                row.add(String.valueOf(rs.getInt("id_dossier")));                  // 0 – id caché
+                row.add(rs.getString("nom") + " " + rs.getString("prenom"));       // 1
+                row.add(formatTimestamp(rs.getTimestamp("date_arrivee")));          // 2
+                row.add("Gravité " + rs.getInt("niveau_gravite"));                  // 3
+                row.add(truncate(rs.getString("symptomes"), 60));                   // 4
+                row.add(rs.getString("statut"));                                    // 5
+                row.add("");                                                        // 6 – colonne Action
                 data.add(row);
             }
         } catch (SQLException e) {
@@ -465,7 +496,6 @@ public class MedecinDashboardController implements Initializable {
         String query = """
                 SELECT d.id_dossier,
                        p.nom, p.prenom,
-                       TIMESTAMPDIFF(YEAR, NULL, NULL) AS age,
                        d.date_arrivee,
                        d.niveau_gravite,
                        d.symptomes
@@ -474,7 +504,6 @@ public class MedecinDashboardController implements Initializable {
                 WHERE d.statut = 'Attente'
                 ORDER BY d.niveau_gravite DESC, d.date_arrivee ASC
                 """;
-        // Note : la table patient n'a pas de date_naissance, on affiche '—' pour l'âge
 
         ObservableList<ObservableList<String>> data = FXCollections.observableArrayList();
         try (Connection conn = getConnection();
@@ -483,14 +512,14 @@ public class MedecinDashboardController implements Initializable {
 
             while (rs.next()) {
                 ObservableList<String> row = FXCollections.observableArrayList();
-                row.add(String.valueOf(rs.getInt("id_dossier")));            // 0
-                row.add(rs.getString("nom"));                                 // 1
-                row.add(rs.getString("prenom"));                              // 2
-                row.add("—");                                                 // 3 âge (absent du schéma)
-                row.add(formatTimestamp(rs.getTimestamp("date_arrivee")));   // 4
-                row.add("Gravité " + rs.getInt("niveau_gravite"));           // 5
-                row.add(truncate(rs.getString("symptomes"), 60));             // 6
-                row.add("");                                                   // 7 Action
+                row.add(String.valueOf(rs.getInt("id_dossier")));                 // 0
+                row.add(rs.getString("nom"));                                      // 1
+                row.add(rs.getString("prenom"));                                   // 2
+                row.add("—");                                                      // 3 âge absent du schéma
+                row.add(formatTimestamp(rs.getTimestamp("date_arrivee")));        // 4
+                row.add("Gravité " + rs.getInt("niveau_gravite"));                // 5
+                row.add(truncate(rs.getString("symptomes"), 60));                  // 6
+                row.add("");                                                        // 7 Action
                 data.add(row);
             }
         } catch (SQLException e) {
@@ -602,7 +631,6 @@ public class MedecinDashboardController implements Initializable {
             try (Connection conn = getConnection()) {
                 conn.setAutoCommit(false);
 
-                // Récupérer id_chambre et id_dossier
                 int chambreId = 0, dossierId = 0;
                 try (PreparedStatement ps = conn.prepareStatement(
                         "SELECT id_chambre, id_dossier FROM hospitalisation WHERE id_hospitalisation = ?")) {
@@ -614,21 +642,18 @@ public class MedecinDashboardController implements Initializable {
                     }
                 }
 
-                // date_fin
                 try (PreparedStatement ps = conn.prepareStatement(
                         "UPDATE hospitalisation SET date_fin = NOW() WHERE id_hospitalisation = ?")) {
                     ps.setInt(1, hospId);
                     ps.executeUpdate();
                 }
 
-                // Libérer la chambre
                 try (PreparedStatement ps = conn.prepareStatement(
                         "UPDATE chambre SET disponible = TRUE WHERE id_chambre = ?")) {
                     ps.setInt(1, chambreId);
                     ps.executeUpdate();
                 }
 
-                // Dossier → Terminé
                 try (PreparedStatement ps = conn.prepareStatement(
                         "UPDATE dossier SET statut = 'Termine' WHERE id_dossier = ?")) {
                     ps.setInt(1, dossierId);
@@ -655,7 +680,6 @@ public class MedecinDashboardController implements Initializable {
     private void loadMyRequests() {
         if (myRequestsTable == null || currentMedecinId < 0) return;
 
-        // Utilise la vue vue_demandes_details filtrée sur ce médecin
         String query = """
                 SELECT dp.id_demande,
                        p.libelle AS produit,
@@ -771,7 +795,6 @@ public class MedecinDashboardController implements Initializable {
                     return;
                 }
 
-                // Récupérer id_chambre
                 int chambreId = 0;
                 try (PreparedStatement ps = conn.prepareStatement(
                         "SELECT id_chambre FROM chambre WHERE numero = ? AND disponible = TRUE")) {
@@ -786,7 +809,6 @@ public class MedecinDashboardController implements Initializable {
                     }
                 }
 
-                // Créer l'hospitalisation
                 try (PreparedStatement ps = conn.prepareStatement(
                         "INSERT INTO hospitalisation (id_dossier, id_chambre, id_medecin, date_debut, description_maladie) " +
                                 "VALUES (?, ?, ?, NOW(), ?)")) {
@@ -797,14 +819,12 @@ public class MedecinDashboardController implements Initializable {
                     ps.executeUpdate();
                 }
 
-                // Marquer la chambre occupée
                 try (PreparedStatement ps = conn.prepareStatement(
                         "UPDATE chambre SET disponible = FALSE WHERE id_chambre = ?")) {
                     ps.setInt(1, chambreId);
                     ps.executeUpdate();
                 }
 
-                // Dossier → EnCours, assigner le médecin
                 try (PreparedStatement ps = conn.prepareStatement(
                         "UPDATE dossier SET statut = 'EnCours', id_medecin = ? WHERE id_dossier = ?")) {
                     ps.setInt(1, currentMedecinId);
@@ -820,7 +840,6 @@ public class MedecinDashboardController implements Initializable {
 
             } else {
                 // ── Ordonnance / Sortie ──
-                // Créer l'ordonnance en base
                 int ordonnanceId = 0;
                 try (PreparedStatement ps = conn.prepareStatement(
                         "INSERT INTO ordonnance (id_dossier, id_medecin, date_ordonnance) VALUES (?, ?, NOW())",
@@ -832,7 +851,6 @@ public class MedecinDashboardController implements Initializable {
                     if (rs.next()) ordonnanceId = rs.getInt(1);
                 }
 
-                // Dossier terminé
                 try (PreparedStatement ps = conn.prepareStatement(
                         "UPDATE dossier SET statut = 'Termine', id_medecin = ? WHERE id_dossier = ?")) {
                     ps.setInt(1, currentMedecinId);
@@ -863,6 +881,71 @@ public class MedecinDashboardController implements Initializable {
     }
 
     // ============= HISTORIQUE =============
+
+    /** Charge l'historique avec filtres optionnels (null = sans filtre). */
+    private void loadHistorique(LocalDate dateFilter, String actionFilter) {
+        if (historiqueTable == null || currentMedecinId < 0) return;
+
+        StringBuilder query = new StringBuilder("""
+                SELECT h.date_action, h.action, h.table_concernee, h.details
+                FROM historique h
+                WHERE h.id_utilisateur = ?
+                """);
+
+        if (dateFilter != null) {
+            query.append(" AND DATE(h.date_action) = '").append(dateFilter).append("'");
+        }
+        if (actionFilter != null && !actionFilter.equals("Tous")) {
+            query.append(" AND h.action = '").append(actionFilter.replace("'", "''")).append("'");
+        }
+        query.append(" ORDER BY h.date_action DESC");
+
+        ObservableList<ObservableList<String>> data = FXCollections.observableArrayList();
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(query.toString())) {
+
+            ps.setInt(1, currentMedecinId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                ObservableList<String> row = FXCollections.observableArrayList();
+                row.add(formatTimestamp(rs.getTimestamp("date_action")));  // 0
+                row.add(rs.getString("action"));                            // 1
+                row.add(rs.getString("table_concernee"));                   // 2
+                row.add(rs.getString("details") != null
+                        ? rs.getString("details") : "—");                  // 3
+                data.add(row);
+            }
+        } catch (SQLException e) {
+            System.err.println("Erreur loadHistorique : " + e.getMessage());
+        }
+
+        historiqueTable.setItems(data);
+
+        if (historiqueCountLabel != null) {
+            int n = data.size();
+            historiqueCountLabel.setText(n + " entrée" + (n > 1 ? "s" : ""));
+        }
+    }
+
+    @FXML
+    private void onFilterHistorique() {
+        LocalDate date  = histoDateFilter  != null ? histoDateFilter.getValue()  : null;
+        String action   = histoActionFilter != null ? histoActionFilter.getValue() : null;
+        loadHistorique(date, action);
+    }
+
+    @FXML
+    private void onResetFilters() {
+        if (histoDateFilter   != null) histoDateFilter.setValue(null);
+        if (histoActionFilter != null) histoActionFilter.setValue("Tous");
+        loadHistorique(null, null);
+    }
+
+    @FXML
+    private void onExportHistorique() {
+        showAlert(Alert.AlertType.INFORMATION, "Export",
+                "Fonctionnalité d'export en cours de développement.");
+    }
 
     private void enregistrerHistorique(Connection conn, String action, String table,
                                        int recordId, String details) {
@@ -918,7 +1001,6 @@ public class MedecinDashboardController implements Initializable {
         this.currentMedecinId   = id;
         this.currentMedecinName = name;
         if (userNameLabel != null) userNameLabel.setText(name);
-        // Recharger les données maintenant qu'on a l'id
         loadDashboardData();
         loadUrgentPatients();
     }
