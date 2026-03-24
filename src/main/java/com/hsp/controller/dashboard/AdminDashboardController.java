@@ -103,8 +103,14 @@ public class AdminDashboardController implements Initializable {
         configurerTableLogs();
 
         if (logLevelFilter != null) {
-            logLevelFilter.getItems().addAll("Tous", "CREATE", "UPDATE", "DELETE", "Connexion");
+            logLevelFilter.getItems().addAll(
+                    "Tous", "Connexion", "Creation", "Modification", "Suppression",
+                    "Validation", "Refus", "Reception", "Hospitalisation", "Ordonnance");
             logLevelFilter.setValue("Tous");
+            logLevelFilter.setOnAction(e -> loadLogs());
+        }
+        if (logDateFilter != null) {
+            logDateFilter.setOnAction(e -> loadLogs());
         }
 
         if (hospitalNameField != null) hospitalNameField.setText("HSP Urgences");
@@ -290,6 +296,12 @@ public class AdminDashboardController implements Initializable {
         String filtre = logLevelFilter != null ? logLevelFilter.getValue() : "Tous";
         if (filtre != null && !filtre.equals("Tous")) {
             historiques.removeIf(h -> !filtre.equalsIgnoreCase(h.getAction()));
+        }
+
+        if (logDateFilter != null && logDateFilter.getValue() != null) {
+            java.time.LocalDate dateFiltre = logDateFilter.getValue();
+            historiques.removeIf(h -> h.getDate_action() == null
+                    || !h.getDate_action().toLocalDate().equals(dateFiltre));
         }
     }
 
