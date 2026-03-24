@@ -289,7 +289,7 @@ public class SecretaireDashboardController implements Initializable {
 
             int patientId;
             try (PreparedStatement pstmt = conn.prepareStatement(
-                    "INSERT INTO patient (nom, prenom, num_secu, email, telephone, adresse) VALUES (?, ?, ?, ?, ?, ?)",
+                    "INSERT INTO patient (nom, prenom, num_secu, email, telephone, adresse, date_naissance, sexe) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
                     Statement.RETURN_GENERATED_KEYS)) {
                 pstmt.setString(1, nomField.getText().trim());
                 pstmt.setString(2, prenomField.getText().trim());
@@ -297,6 +297,9 @@ public class SecretaireDashboardController implements Initializable {
                 pstmt.setString(4, emailPatientField.getText().trim());
                 pstmt.setString(5, telephoneField.getText().trim());
                 pstmt.setString(6, adresseField.getText().trim());
+                pstmt.setString(7, dateNaissancePicker != null && dateNaissancePicker.getValue() != null
+                        ? dateNaissancePicker.getValue().toString() : null);
+                pstmt.setString(8, sexeComboBox != null ? sexeComboBox.getValue() : null);
                 pstmt.executeUpdate();
                 ResultSet rs = pstmt.getGeneratedKeys();
                 patientId = rs.next() ? rs.getInt(1) : 0;

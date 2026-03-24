@@ -32,6 +32,8 @@ CREATE TABLE patient (
     email VARCHAR(100),
     telephone VARCHAR(15),
     adresse TEXT,
+    date_naissance DATE,
+    sexe VARCHAR(10),
     date_creation DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -297,6 +299,27 @@ INSERT INTO ligne_reapprovisionnement (id_reappro, id_fournisseur, id_produit, q
 (1, 1, 4, 200, 8.00),
 (2, 2, 3, 300, 4.00),
 (2, 3, 2, 100, 14.50);
+
+CREATE TABLE rendez_vous (
+    id_rdv INT PRIMARY KEY AUTO_INCREMENT,
+    id_patient INT NOT NULL,
+    id_medecin INT NOT NULL,
+    date_rdv DATETIME NOT NULL,
+    motif TEXT,
+    statut ENUM('Planifie', 'Confirme', 'Annule', 'Effectue') DEFAULT 'Planifie',
+    date_creation DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+ALTER TABLE rendez_vous
+    ADD CONSTRAINT fk_rdv_patient
+        FOREIGN KEY (id_patient) REFERENCES patient(id_patient)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    ADD CONSTRAINT fk_rdv_medecin
+        FOREIGN KEY (id_medecin) REFERENCES utilisateur(id_utilisateur)
+        ON DELETE CASCADE ON UPDATE CASCADE;
+
+CREATE INDEX idx_rdv_medecin ON rendez_vous(id_medecin);
+CREATE INDEX idx_rdv_date ON rendez_vous(date_rdv);
 
 CREATE VIEW vue_patients_attente AS
 SELECT

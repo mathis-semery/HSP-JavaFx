@@ -48,6 +48,15 @@ public class MedecinDashboardController implements Initializable {
     @FXML private TableView<ObservableList<String>> completedHospitalizationsTable;
     @FXML private TableView<ObservableList<String>> myRequestsTable;
 
+    // Vue rendez-vous
+    @FXML private VBox rendezVousView;
+    @FXML private VBox rdvFormView;
+    @FXML private TableView<ObservableList<String>> rendezVousTable;
+    @FXML private ComboBox<String> rdvPatientComboBox;
+    @FXML private DatePicker rdvDatePicker;
+    @FXML private TextField rdvHeureField;
+    @FXML private TextArea rdvMotifArea;
+
     // Vue traitement
     @FXML private Label patientNameLabel;
     @FXML private Label arrivalDateLabel;
@@ -108,6 +117,7 @@ public class MedecinDashboardController implements Initializable {
         setupActiveHospitalizationsTable();
         setupCompletedHospitalizationsTable();
         setupMyRequestsTable();
+        setupRendezVousTable();
 
         // Masquer hospitalizationDetails par défaut
         if (hospitalizationDetails != null) {
@@ -293,7 +303,7 @@ public class MedecinDashboardController implements Initializable {
 
     private void hideAllViews() {
         VBox[] views = {dashboardView, waitingPatientsView, hospitalizationsView,
-                productRequestsView, treatmentView};
+                productRequestsView, treatmentView, rendezVousView};
         for (VBox v : views) {
             if (v != null) { v.setVisible(false); v.setManaged(false); }
         }
@@ -860,6 +870,180 @@ public class MedecinDashboardController implements Initializable {
     private void onCancelTreatment() {
         currentDossierId = -1;
         showWaitingPatients();
+    }
+
+    // ============= RENDEZ-VOUS =============
+
+    @FXML
+    private void showRendezVous() {
+        hideAllViews();
+        if (rendezVousView != null) { rendezVousView.setVisible(true); rendezVousView.setManaged(true); }
+        loadPatientsForRdv();
+        loadRendezVous();
+    }
+
+    @FXML
+    private void onToggleRdvForm() {
+        if (rdvFormView == null) return;
+        boolean show = !rdvFormView.isVisible();
+        rdvFormView.setVisible(show);
+        rdvFormView.setManaged(show);
+        if (show) {
+            loadPatientsForRdv();
+            if (rdvDatePicker != null) rdvDatePicker.setValue(java.time.LocalDate.now());
+            if (rdvHeureField != null) rdvHeureField.clear();
+            if (rdvMotifArea != null) rdvMotifArea.clear();
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void setupRendezVousTable() {
+        if (rendezVousTable == null) return;
+        rendezVousTable.getColumns().clear();
+        // data[0]=id caché, data[1]=patient, data[2]=date, data[3]=motif, data[4]=statut, data[5]=action
+        String[] cols = {"Patient", "Date", "Motif", "Statut", "Action"};
+        for (int i = 0; i < cols.length; i++) {
+            final int dataIdx = i + 1;
+            TableColumn<ObservableList<String>, String> col = new TableColumn<>(cols[i]);
+            col.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().get(dataIdx)));
+            if (i == 4) {
+                col.setCellFactory(tc -> new TableCell<>() {
+                    private final Button btnConfirm = new Button("Confirmer");
+                    private final Button btnAnnuler = new Button("Annuler");
+                    private final HBox box = new HBox(6, btnConfirm, btnAnnuler);
+                    {
+                        btnConfirm.setStyle("-fx-background-color: #1A9E5C; -fx-text-fill: white; -fx-font-size: 10px; -fx-padding: 3 8; -fx-background-radius: 6; -fx-cursor: hand;");
+                        btnAnnuler.setStyle("-fx-background-color: #C0392B; -fx-text-fill: white; -fx-font-size: 10px; -fx-padding: 3 8; -fx-background-radius: 6; -fx-cursor: hand;");
+                        btnConfirm.setOnAction(e -> {
+                            ObservableList<String> row = getTableView().getItems().get(getIndex());
+                            changerStatutRdv(Integer.parseInt(row.get(0)), "Confirme");
+                        });
+                        btnAnnuler.setOnAction(e -> {
+                            ObservableList<String> row = getTableView().getItems().get(getIndex());
+                            changerStatutRdv(Integer.parseInt(row.get(0)), "Annule");
+                        });
+                    }
+                    @Override protected void updateItem(String item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (empty) { setGraphic(null); return; }
+                        String statut = getTableView().getItems().get(getIndex()).get(4);
+                        btnConfirm.setDisable("Confirme".equals(statut) || "Annule".equals(statut) || "Effectue".equals(statut));
+                        btnAnnuler.setDisable("Annule".equals(statut) || "Effectue".equals(statut));
+                        setGraphic(box);
+                    }
+                });
+            }
+            rendezVousTable.getColumns().add(col);
+        }
+    }
+
+    private void loadRendezVous() {
+        if (rendezVousTable == null || currentMedecinId < 0) return;
+        String query = """
+                SELECT rv.id_rdv, p.nom, p.prenom, rv.date_rdv, rv.motif, rv.statut
+                FROM rendez_vous rv
+                JOIN patient p ON rv.id_patient = p.id_patient
+                WHERE rv.id_medecin = ?
+                ORDER BY rv.date_rdv ASC
+                """;
+        ObservableList<ObservableList<String>> data = FXCollections.observableArrayList();
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(query)) {
+            ps.setInt(1, currentMedecinId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                ObservableList<String> row = FXCollections.observableArrayList();
+                row.add(String.valueOf(rs.getInt("id_rdv")));
+                row.add(rs.getString("nom") + " " + rs.getString("prenom"));
+                row.add(formatTimestamp(rs.getTimestamp("date_rdv")));
+                row.add(truncate(rs.getString("motif"), 60));
+                row.add(rs.getString("statut") != null ? rs.getString("statut") : "—");
+                row.add("");
+                data.add(row);
+            }
+        } catch (SQLException e) {
+            System.err.println("Erreur loadRendezVous : " + e.getMessage());
+        }
+        rendezVousTable.setItems(data);
+    }
+
+    private void loadPatientsForRdv() {
+        if (rdvPatientComboBox == null) return;
+        rdvPatientComboBox.getItems().clear();
+        String query = "SELECT id_patient, nom, prenom FROM patient ORDER BY nom, prenom";
+        try (Connection conn = getConnection(); Statement st = conn.createStatement(); ResultSet rs = st.executeQuery(query)) {
+            while (rs.next()) {
+                rdvPatientComboBox.getItems().add(
+                        rs.getString("nom") + " " + rs.getString("prenom") + " (#" + rs.getInt("id_patient") + ")");
+            }
+        } catch (SQLException e) {
+            System.err.println("Erreur loadPatientsForRdv : " + e.getMessage());
+        }
+    }
+
+    @FXML
+    private void onSaveRdv() {
+        if (rdvPatientComboBox == null || rdvPatientComboBox.getValue() == null) {
+            showAlert(Alert.AlertType.WARNING, "Attention", "Sélectionnez un patient.");
+            return;
+        }
+        if (rdvDatePicker == null || rdvDatePicker.getValue() == null) {
+            showAlert(Alert.AlertType.WARNING, "Attention", "Sélectionnez une date.");
+            return;
+        }
+        String heure = rdvHeureField != null && !rdvHeureField.getText().trim().isEmpty()
+                ? rdvHeureField.getText().trim() : "00:00";
+        String selection = rdvPatientComboBox.getValue();
+        int patientId;
+        try {
+            patientId = Integer.parseInt(selection.replaceAll(".*#(\\d+)\\)$", "$1"));
+        } catch (NumberFormatException e) {
+            showAlert(Alert.AlertType.ERROR, "Erreur", "Impossible d'identifier le patient.");
+            return;
+        }
+        String dateRdv = rdvDatePicker.getValue() + " " + heure + ":00";
+        String motif = rdvMotifArea != null ? rdvMotifArea.getText().trim() : "";
+
+        try (Connection conn = getConnection()) {
+            conn.setAutoCommit(false);
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "INSERT INTO rendez_vous (id_patient, id_medecin, date_rdv, motif) VALUES (?, ?, ?, ?)")) {
+                ps.setInt(1, patientId);
+                ps.setInt(2, currentMedecinId);
+                ps.setString(3, dateRdv);
+                ps.setString(4, motif);
+                ps.executeUpdate();
+            }
+            enregistrerHistorique(conn, "Creation", "rendez_vous", patientId,
+                    "RDV planifié le " + rdvDatePicker.getValue());
+            conn.commit();
+            showAlert(Alert.AlertType.INFORMATION, "Succès", "Rendez-vous enregistré !");
+            onToggleRdvForm();
+            loadRendezVous();
+        } catch (SQLException e) {
+            showAlert(Alert.AlertType.ERROR, "Erreur BDD", e.getMessage());
+        }
+    }
+
+    @FXML
+    private void onRefreshRdv() {
+        loadRendezVous();
+    }
+
+    private void changerStatutRdv(int rdvId, String statut) {
+        try (Connection conn = getConnection()) {
+            conn.setAutoCommit(false);
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "UPDATE rendez_vous SET statut = ? WHERE id_rdv = ?")) {
+                ps.setString(1, statut);
+                ps.setInt(2, rdvId);
+                ps.executeUpdate();
+            }
+            enregistrerHistorique(conn, statut, "rendez_vous", rdvId, "Statut RDV → " + statut);
+            conn.commit();
+            loadRendezVous();
+        } catch (SQLException e) {
+            showAlert(Alert.AlertType.ERROR, "Erreur BDD", e.getMessage());
+        }
     }
 
     // ============= HISTORIQUE =============
