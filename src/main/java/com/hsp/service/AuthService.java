@@ -1,15 +1,12 @@
 package com.hsp.service;
 
-import com.hsp.dao.ConnexionDAO;
 import com.hsp.dao.HistoriqueDAO;
 import com.hsp.dao.UtilisateurDAO;
-import com.hsp.model.Connexion;
 import com.hsp.model.Historique;
 import com.hsp.model.Utilisateur;
 import org.mindrot.jbcrypt.BCrypt;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 /**
  * Service d'authentification.
@@ -22,13 +19,11 @@ import java.time.format.DateTimeFormatter;
 public class AuthService {
 
     private UtilisateurDAO utilisateurDAO;
-    private ConnexionDAO connexionDAO;
     private HistoriqueDAO historiqueDAO;
     private Utilisateur utilisateurConnecte;
 
     public AuthService() {
         this.utilisateurDAO = new UtilisateurDAO();
-        this.connexionDAO = new ConnexionDAO();
         this.historiqueDAO = new HistoriqueDAO();
         this.utilisateurConnecte = null;
     }
@@ -63,8 +58,9 @@ public class AuthService {
             // Connexion reussie
             this.utilisateurConnecte = utilisateur;
 
-            // Enregistrer la connexion dans l'historique
-            enregistrerConnexion(utilisateur.getId());
+            // Enregistrer dans l'historique
+            enregistrerHistorique(utilisateur.getId(), "CONNEXION", "utilisateur",
+                    utilisateur.getId(), "Connexion de l'utilisateur");
 
             return utilisateur;
         }
@@ -191,31 +187,6 @@ public class AuthService {
             return motDePasse.equals(hash);
         }
     }
-// Inserer dans la base de donnees
-
-    /**
-     * Enregistre une connexion dans la table connexion
-     */
-    private void enregistrerConnexion(int idUtilisateur) {
-        // Formater la date actuelle
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        String dateConnexion = LocalDateTime.now().format(formatter);
-
-        // Creer l'enregistrement de connexion
-        Connexion connexion = new Connexion(
-                0,                  // ID auto-genere
-                idUtilisateur,      // ID de l'utilisateur
-                dateConnexion,      // Date et heure de connexion
-                "127.0.0.1"         // Adresse IP (localhost par defaut)
-        );
-
-        connexionDAO.insert(connexion);
-
-        // Enregistrer aussi dans l'historique
-        enregistrerHistorique(idUtilisateur, "CONNEXION", "utilisateur",
-                idUtilisateur, "Connexion de l'utilisateur");
-    }
-
     /**
      * Enregistre une action dans l'historique pour la tracabilite (RGPD)
      */
