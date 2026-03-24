@@ -4,74 +4,132 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<VBox xmlns="http://javafx.com/javafx"
-      xmlns:fx="http://javafx.com/fxml"
-      fx:controller="com.hsp.controller.fournisseur.FournisseurFormController"
-      spacing="16"
-      prefWidth="440"
-      style="-fx-background-color: #f0f4f8;">
+<ScrollPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.hsp.controller.fournisseur.FournisseurFormController"
+            fitToWidth="true"
+            prefWidth="620"
+            prefHeight="700"
+            style="-fx-background-color: #f0f4f8;">
 
-    <padding><Insets top="24" right="28" bottom="24" left="28"/></padding>
+    <VBox spacing="16" style="-fx-background-color: #f0f4f8;">
+        <padding><Insets top="24" right="28" bottom="24" left="28"/></padding>
 
-    <!-- Titre dynamique -->
-    <Label fx:id="titre"
-           text="Fournisseur"
-           style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #1a73e8;"/>
+        <!-- Titre dynamique -->
+        <Label fx:id="titre"
+               text="Fournisseur"
+               style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #1a73e8;"/>
 
-    <Separator/>
+        <Separator/>
 
-    <!-- Nom -->
-    <VBox spacing="4">
-        <Label text="Nom *"
-               style="-fx-font-weight: bold; -fx-text-fill: #555;"/>
-        <TextField fx:id="nomField" promptText="Nom du fournisseur (max 100 caractères)"/>
+        <!-- Nom -->
+        <VBox spacing="4">
+            <Label text="Nom *"
+                   style="-fx-font-weight: bold; -fx-text-fill: #555;"/>
+            <TextField fx:id="nomField" promptText="Nom du fournisseur (max 100 caractères)"/>
+        </VBox>
+
+        <!-- Contact -->
+        <VBox spacing="4">
+            <Label text="Personne de contact"
+                   style="-fx-font-weight: bold; -fx-text-fill: #555;"/>
+            <TextField fx:id="contactField" promptText="Nom du contact principal"/>
+        </VBox>
+
+        <!-- Email -->
+        <VBox spacing="4">
+            <Label text="Adresse email"
+                   style="-fx-font-weight: bold; -fx-text-fill: #555;"/>
+            <TextField fx:id="emailField" promptText="exemple@domaine.com"/>
+        </VBox>
+
+        <!-- Téléphone -->
+        <VBox spacing="4">
+            <Label text="Téléphone"
+                   style="-fx-font-weight: bold; -fx-text-fill: #555;"/>
+            <TextField fx:id="telephoneField" promptText="Ex : +33 1 23 45 67 89"/>
+        </VBox>
+
+        <!-- Adresse -->
+        <VBox spacing="4">
+            <Label text="Adresse"
+                   style="-fx-font-weight: bold; -fx-text-fill: #555;"/>
+            <TextArea fx:id="adresseField"
+                      promptText="Adresse complète du fournisseur…"
+                      prefRowCount="3"
+                      wrapText="true"/>
+        </VBox>
+
+        <Separator/>
+
+        <!-- ===== CATALOGUE DES PRODUITS ===== -->
+        <VBox spacing="10" style="-fx-padding: 16; -fx-border-color: #c7d2fe; -fx-border-width: 1; -fx-border-radius: 8; -fx-background-color: #eef2ff; -fx-background-radius: 8;">
+            <Label text="Catalogue des produits"
+                   style="-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #3730a3;"/>
+            <Label text="Définissez les produits proposés par ce fournisseur et leur prix unitaire."
+                   style="-fx-text-fill: #6366f1; -fx-font-size: 12px;"/>
+
+            <!-- Formulaire ajout ligne -->
+            <GridPane hgap="10" vgap="8">
+                <columnConstraints>
+                    <ColumnConstraints minWidth="120" prefWidth="140"/>
+                    <ColumnConstraints hgrow="ALWAYS"/>
+                    <ColumnConstraints minWidth="90" prefWidth="90"/>
+                    <ColumnConstraints minWidth="90" prefWidth="90"/>
+                    <ColumnConstraints minWidth="80" prefWidth="80"/>
+                </columnConstraints>
+
+                <Label text="Nom produit *" GridPane.columnIndex="0" GridPane.rowIndex="0"
+                       style="-fx-font-weight: bold; -fx-text-fill: #555; -fx-font-size: 12px;"/>
+                <Label text="Description" GridPane.columnIndex="1" GridPane.rowIndex="0"
+                       style="-fx-font-weight: bold; -fx-text-fill: #555; -fx-font-size: 12px;"/>
+                <Label text="Dangerosité *" GridPane.columnIndex="2" GridPane.rowIndex="0"
+                       style="-fx-font-weight: bold; -fx-text-fill: #555; -fx-font-size: 12px;"/>
+                <Label text="Prix (€) *" GridPane.columnIndex="3" GridPane.rowIndex="0"
+                       style="-fx-font-weight: bold; -fx-text-fill: #555; -fx-font-size: 12px;"/>
+
+                <TextField fx:id="nomProduitCatalogueField"
+                           GridPane.columnIndex="0" GridPane.rowIndex="1"
+                           promptText="Nom du produit"/>
+                <TextField fx:id="descriptionCatalogueField"
+                           GridPane.columnIndex="1" GridPane.rowIndex="1"
+                           promptText="Description (optionnel)"/>
+                <ComboBox fx:id="dangerositeCatalogueBox"
+                          GridPane.columnIndex="2" GridPane.rowIndex="1"
+                          maxWidth="Infinity"/>
+                <TextField fx:id="prixCatalogueField"
+                           GridPane.columnIndex="3" GridPane.rowIndex="1"
+                           promptText="Ex: 12.50"/>
+                <Button text="Ajouter"
+                        GridPane.columnIndex="4" GridPane.rowIndex="1"
+                        onAction="#onAjouterProduit"
+                        style="-fx-background-color: #6366f1; -fx-text-fill: white;
+                               -fx-font-weight: bold; -fx-cursor: hand; -fx-padding: 6 12 6 12;"/>
+            </GridPane>
+
+            <!-- Tableau catalogue -->
+            <TableView fx:id="catalogueTable" prefHeight="180"/>
+
+            <Button text="Retirer la sélection" onAction="#onRetirerProduit"
+                    style="-fx-background-color: #ef4444; -fx-text-fill: white;
+                           -fx-font-weight: bold; -fx-cursor: hand; -fx-padding: 6 14 6 14;"/>
+        </VBox>
+
+        <Separator/>
+
+        <!-- Boutons -->
+        <HBox spacing="10" alignment="CENTER_RIGHT">
+            <Button fx:id="annuler"
+                    text="Annuler"
+                    onAction="#annuler"
+                    style="-fx-background-color: #e0e0e0; -fx-font-weight: bold;
+                           -fx-cursor: hand; -fx-padding: 8 18 8 18;"/>
+            <Button fx:id="valider"
+                    text="Valider"
+                    onAction="#valider"
+                    style="-fx-background-color: #1a73e8; -fx-text-fill: white;
+                           -fx-font-weight: bold; -fx-cursor: hand; -fx-padding: 8 18 8 18;"/>
+        </HBox>
+
     </VBox>
-
-    <!-- Contact -->
-    <VBox spacing="4">
-        <Label text="Personne de contact"
-               style="-fx-font-weight: bold; -fx-text-fill: #555;"/>
-        <TextField fx:id="contactField" promptText="Nom du contact principal"/>
-    </VBox>
-
-    <!-- Email -->
-    <VBox spacing="4">
-        <Label text="Adresse email"
-               style="-fx-font-weight: bold; -fx-text-fill: #555;"/>
-        <TextField fx:id="emailField" promptText="exemple@domaine.com"/>
-    </VBox>
-
-    <!-- Téléphone -->
-    <VBox spacing="4">
-        <Label text="Téléphone"
-               style="-fx-font-weight: bold; -fx-text-fill: #555;"/>
-        <TextField fx:id="telephoneField" promptText="Ex : +33 1 23 45 67 89"/>
-    </VBox>
-
-    <!-- Adresse -->
-    <VBox spacing="4">
-        <Label text="Adresse"
-               style="-fx-font-weight: bold; -fx-text-fill: #555;"/>
-        <TextArea fx:id="adresseField"
-                  promptText="Adresse complète du fournisseur…"
-                  prefRowCount="3"
-                  wrapText="true"/>
-    </VBox>
-
-    <Separator/>
-
-    <!-- Boutons -->
-    <HBox spacing="10" alignment="CENTER_RIGHT">
-        <Button fx:id="annuler"
-                text="Annuler"
-                onAction="#annuler"
-                style="-fx-background-color: #e0e0e0; -fx-font-weight: bold;
-                       -fx-cursor: hand; -fx-padding: 8 18 8 18;"/>
-        <Button fx:id="valider"
-                text="✔ Valider"
-                onAction="#valider"
-                style="-fx-background-color: #1a73e8; -fx-text-fill: white;
-                       -fx-font-weight: bold; -fx-cursor: hand; -fx-padding: 8 18 8 18;"/>
-    </HBox>
-
-</VBox>
+</ScrollPane>

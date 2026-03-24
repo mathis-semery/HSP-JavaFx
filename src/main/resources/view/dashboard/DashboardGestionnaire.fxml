@@ -67,35 +67,14 @@
 
             <!-- ===== STOCK PRODUITS ===== -->
             <VBox fx:id="stockView" spacing="20" visible="false" managed="false">
-                <Label text="Gestion du stock" style="-fx-font-size: 28px; -fx-font-weight: bold;"/>
+                <Label text="Stock produits" style="-fx-font-size: 28px; -fx-font-weight: bold;"/>
+                <Label text="Les produits sont définis dans le catalogue de chaque fournisseur."
+                       style="-fx-text-fill: #6b7280; -fx-font-size: 13px;"/>
 
-                <!-- Formulaire ajout -->
-                <VBox spacing="15" style="-fx-padding: 20; -fx-border-color: #e5e7eb; -fx-border-width: 1; -fx-border-radius: 8;">
-                    <Label text="Ajouter un produit" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
-                    <GridPane hgap="20" vgap="12">
-                        <Label text="Nom produit *" GridPane.columnIndex="0" GridPane.rowIndex="0" style="-fx-font-weight: bold;"/>
-                        <TextField fx:id="productNameField" GridPane.columnIndex="1" GridPane.rowIndex="0" prefWidth="280" promptText="Libellé du produit"/>
-                        <Label text="Quantité *" GridPane.columnIndex="0" GridPane.rowIndex="1" style="-fx-font-weight: bold;"/>
-                        <TextField fx:id="quantityField" GridPane.columnIndex="1" GridPane.rowIndex="1" prefWidth="280" promptText="Quantité initiale en stock"/>
-                        <Label text="Dangerosité (1-5) *" GridPane.columnIndex="0" GridPane.rowIndex="2" style="-fx-font-weight: bold;"/>
-                        <ComboBox fx:id="dangerositeProduitComboBox" GridPane.columnIndex="1" GridPane.rowIndex="2" prefWidth="280"/>
-                        <Label text="Description" GridPane.columnIndex="0" GridPane.rowIndex="3" style="-fx-font-weight: bold;"/>
-                        <TextField fx:id="descriptionProduitField" GridPane.columnIndex="1" GridPane.rowIndex="3" prefWidth="280" promptText="Description (optionnel)"/>
-                    </GridPane>
-                    <Button text="✅ Ajouter au stock" onAction="#onAddProduct"
-                            style="-fx-background-color: #10b981; -fx-text-fill: white; -fx-padding: 10 24; -fx-font-weight: bold;"/>
-                </VBox>
-
-                <!-- Liste + actions -->
+                <!-- Liste lecture seule -->
                 <VBox spacing="10" style="-fx-padding: 20; -fx-border-color: #e5e7eb; -fx-border-width: 1; -fx-border-radius: 8;" VBox.vgrow="ALWAYS">
-                    <Label text="Liste des produits" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
-                    <TableView fx:id="stockProductsTable" VBox.vgrow="ALWAYS" prefHeight="300"/>
-                    <HBox spacing="12">
-                        <Button text="✏️ Modifier" onAction="#onEditProduct"
-                                style="-fx-background-color: #3b82f6; -fx-text-fill: white; -fx-padding: 10 20; -fx-font-weight: bold;"/>
-                        <Button text="🗑 Supprimer" onAction="#onDeleteProduct"
-                                style="-fx-background-color: #ef4444; -fx-text-fill: white; -fx-padding: 10 20; -fx-font-weight: bold;"/>
-                    </HBox>
+                    <Label text="Produits en stock" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+                    <TableView fx:id="stockProductsTable" VBox.vgrow="ALWAYS" prefHeight="450"/>
                 </VBox>
             </VBox>
 

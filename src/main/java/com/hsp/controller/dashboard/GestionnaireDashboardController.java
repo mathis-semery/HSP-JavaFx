@@ -1,12 +1,9 @@
 package com.hsp.controller.dashboard;
 
 import com.hsp.controller.fournisseur.FournisseurFormController;
-import com.hsp.controller.produit.ProduitFormController;
 import com.hsp.controller.reappro.ReapproFormController;
 import com.hsp.dao.FournisseurDAO;
-import com.hsp.dao.ProduitDAO;
 import com.hsp.model.Fournisseur;
-import com.hsp.model.Produit;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -43,11 +40,6 @@ public class GestionnaireDashboardController implements Initializable {
     @FXML private TableView<ObservableList<String>> stockProductsTable;
     @FXML private TableView<ObservableList<String>> demandesTable;
     @FXML private TableView<ObservableList<String>> fournisseursTable;
-    @FXML private TextField productNameField;
-    @FXML private TextField quantityField;
-    @FXML private TextField seuilField;
-    @FXML private TextField descriptionProduitField;
-    @FXML private ComboBox<Integer> dangerositeProduitComboBox;
 
     private static final String DB_URL      = "jdbc:mysql://localhost:3306/hsp_urgences";
     private static final String DB_USER     = "root";
@@ -60,8 +52,6 @@ public class GestionnaireDashboardController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        if (dangerositeProduitComboBox != null)
-            dangerositeProduitComboBox.getItems().addAll(1, 2, 3, 4, 5);
         setupProductsTable();
         setupStockProductsTable();
         setupDemandesTable();
@@ -76,11 +66,14 @@ public class GestionnaireDashboardController implements Initializable {
     private void setupProductsTable() {
         if (productsTable == null) return;
         productsTable.getColumns().clear();
-        String[] cols = {"Produit", "Quantité", "Dangerosité"};
+        productsTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        String[] cols   = {"Produit", "Quantité", "Dangerosité"};
+        double[] widths = {0.60,       0.20,        0.20};
         for (int i = 0; i < cols.length; i++) {
             final int idx = i;
             TableColumn<ObservableList<String>, String> col = new TableColumn<>(cols[i]);
             col.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().get(idx)));
+            col.setMaxWidth(1f * Integer.MAX_VALUE * widths[i] * 100);
             productsTable.getColumns().add(col);
         }
     }
@@ -89,12 +82,15 @@ public class GestionnaireDashboardController implements Initializable {
     private void setupStockProductsTable() {
         if (stockProductsTable == null) return;
         stockProductsTable.getColumns().clear();
+        stockProductsTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         // data[0] = id_produit (caché), data[1..4] = données affichées
-        String[] cols = {"Produit", "Description", "Quantité", "Dangerosité"};
+        String[] cols   = {"Produit",  "Description", "Quantité", "Dangerosité"};
+        double[] widths = {0.25,        0.45,           0.15,       0.15};
         for (int i = 0; i < cols.length; i++) {
             final int dataIdx = i + 1;
             TableColumn<ObservableList<String>, String> col = new TableColumn<>(cols[i]);
             col.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().get(dataIdx)));
+            col.setMaxWidth(1f * Integer.MAX_VALUE * widths[i] * 100);
             stockProductsTable.getColumns().add(col);
         }
     }
@@ -103,12 +99,15 @@ public class GestionnaireDashboardController implements Initializable {
     private void setupDemandesTable() {
         if (demandesTable == null) return;
         demandesTable.getColumns().clear();
+        demandesTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         // data[0]=id, [1]=médecin, [2]=produit(s), [3]=qté, [4]=date, [5]=statut
-        String[] cols = {"N°", "Médecin", "Produit(s)", "Qté", "Date", "Statut"};
+        String[] cols   = {"N°",   "Médecin", "Produit(s)", "Qté",  "Date",  "Statut"};
+        double[] widths = {0.05,    0.20,       0.35,         0.07,   0.18,    0.15};
         for (int i = 0; i < cols.length; i++) {
             final int idx = i;
             TableColumn<ObservableList<String>, String> col = new TableColumn<>(cols[i]);
             col.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().get(idx)));
+            col.setMaxWidth(1f * Integer.MAX_VALUE * widths[i] * 100);
             demandesTable.getColumns().add(col);
         }
     }
@@ -117,12 +116,15 @@ public class GestionnaireDashboardController implements Initializable {
     private void setupFournisseursTable() {
         if (fournisseursTable == null) return;
         fournisseursTable.getColumns().clear();
-        // data[0] = id_fournisseur (caché), data[1..4] = données affichées
-        String[] cols = {"Nom", "Contact", "Email", "Téléphone"};
+        fournisseursTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        // data[0] = id_fournisseur (caché), data[1..5] = données affichées
+        String[] cols   = {"Nom",  "Contact", "Email", "Téléphone", "Adresse"};
+        double[] widths = {0.20,    0.15,       0.25,    0.15,        0.25};
         for (int i = 0; i < cols.length; i++) {
             final int dataIdx = i + 1;
             TableColumn<ObservableList<String>, String> col = new TableColumn<>(cols[i]);
             col.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().get(dataIdx)));
+            col.setMaxWidth(1f * Integer.MAX_VALUE * widths[i] * 100);
             fournisseursTable.getColumns().add(col);
         }
     }
@@ -279,7 +281,7 @@ public class GestionnaireDashboardController implements Initializable {
 
     private void loadFournisseurs() {
         if (fournisseursTable == null) return;
-        String query = "SELECT id_fournisseur, nom, contact, email, telephone FROM fournisseur ORDER BY nom";
+        String query = "SELECT id_fournisseur, nom, contact, email, telephone, adresse FROM fournisseur ORDER BY nom";
         ObservableList<ObservableList<String>> data = FXCollections.observableArrayList();
         try (Connection conn = getConnection();
              Statement st = conn.createStatement();
@@ -291,148 +293,13 @@ public class GestionnaireDashboardController implements Initializable {
                 row.add(rs.getString("contact") != null ? rs.getString("contact") : "—");     // 2
                 row.add(rs.getString("email") != null ? rs.getString("email") : "—");         // 3
                 row.add(rs.getString("telephone") != null ? rs.getString("telephone") : "—"); // 4
+                row.add(rs.getString("adresse")   != null ? rs.getString("adresse")   : "—"); // 5
                 data.add(row);
             }
         } catch (SQLException e) {
             System.err.println("Erreur loadFournisseurs : " + e.getMessage());
         }
         fournisseursTable.setItems(data);
-    }
-
-    // ============= GESTION PRODUITS =============
-
-    @FXML
-    private void onAddProduct() {
-        if (productNameField == null || productNameField.getText().trim().isEmpty()) {
-            showAlert(Alert.AlertType.WARNING, "Attention", "Le nom est obligatoire");
-            return;
-        }
-        if (quantityField == null || quantityField.getText().trim().isEmpty()) {
-            showAlert(Alert.AlertType.WARNING, "Attention", "La quantité est obligatoire");
-            return;
-        }
-        if (dangerositeProduitComboBox == null || dangerositeProduitComboBox.getValue() == null) {
-            showAlert(Alert.AlertType.WARNING, "Attention", "Le niveau de dangerosité est obligatoire");
-            return;
-        }
-
-        int gestionnaireId = currentGestionnaireId > 0 ? currentGestionnaireId : 1;
-
-        try (Connection conn = getConnection()) {
-            conn.setAutoCommit(false);
-
-            int productId;
-            try (PreparedStatement pstmt = conn.prepareStatement(
-                    "INSERT INTO produit (libelle, description, niveau_dangerosite, quantite_stock) VALUES (?, ?, ?, ?)",
-                    Statement.RETURN_GENERATED_KEYS)) {
-                pstmt.setString(1, productNameField.getText().trim());
-                pstmt.setString(2, descriptionProduitField != null ? descriptionProduitField.getText().trim() : "");
-                pstmt.setInt(3, dangerositeProduitComboBox.getValue());
-                pstmt.setInt(4, Integer.parseInt(quantityField.getText().trim()));
-                pstmt.executeUpdate();
-                ResultSet rs = pstmt.getGeneratedKeys();
-                productId = rs.next() ? rs.getInt(1) : 0;
-            }
-
-            try (PreparedStatement pstmt = conn.prepareStatement(
-                    "INSERT INTO historique (id_utilisateur, action, table_concernee, id_enregistrement, details) VALUES (?, 'Creation', 'produit', ?, ?)")) {
-                pstmt.setInt(1, gestionnaireId);
-                pstmt.setInt(2, productId);
-                pstmt.setString(3, "Produit ajouté: " + productNameField.getText());
-                pstmt.executeUpdate();
-            }
-
-            conn.commit();
-            showAlert(Alert.AlertType.INFORMATION, "Succès", "Produit ajouté au stock !");
-            productNameField.clear();
-            quantityField.clear();
-            if (seuilField != null) seuilField.clear();
-            if (descriptionProduitField != null) descriptionProduitField.clear();
-            dangerositeProduitComboBox.setValue(null);
-            loadStockProducts();
-            loadDashboardData();
-            loadProductsDashboard();
-
-        } catch (NumberFormatException e) {
-            showAlert(Alert.AlertType.ERROR, "Erreur", "La quantité doit être un nombre entier.");
-        } catch (SQLException e) {
-            showAlert(Alert.AlertType.ERROR, "Erreur BD", e.getMessage());
-        }
-    }
-
-    @FXML
-    private void onEditProduct() {
-        if (stockProductsTable == null) return;
-        ObservableList<String> selected = stockProductsTable.getSelectionModel().getSelectedItem();
-        if (selected == null) {
-            showAlert(Alert.AlertType.WARNING, "Attention", "Veuillez sélectionner un produit dans la liste.");
-            return;
-        }
-        int produitId = Integer.parseInt(selected.get(0));
-        Produit produit = new ProduitDAO().findById(produitId);
-        if (produit == null) {
-            showAlert(Alert.AlertType.ERROR, "Erreur", "Produit introuvable.");
-            return;
-        }
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/stock/ProduitForm.fxml"));
-            Parent root = loader.load();
-            ProduitFormController controller = loader.getController();
-            controller.setMode(ProduitFormController.Mode.MODIFICATION);
-            controller.setProduit(produit);
-            controller.setIdUtilisateurConnecte(currentGestionnaireId > 0 ? currentGestionnaireId : 1);
-            Stage stage = new Stage();
-            stage.setTitle("Modifier le produit");
-            stage.setScene(new Scene(root));
-            stage.initModality(Modality.APPLICATION_MODAL);
-            stage.showAndWait();
-            loadStockProducts();
-            loadDashboardData();
-            loadProductsDashboard();
-        } catch (IOException e) {
-            showAlert(Alert.AlertType.ERROR, "Erreur", "Impossible d'ouvrir le formulaire : " + e.getMessage());
-        }
-    }
-
-    @FXML
-    private void onDeleteProduct() {
-        if (stockProductsTable == null) return;
-        ObservableList<String> selected = stockProductsTable.getSelectionModel().getSelectedItem();
-        if (selected == null) {
-            showAlert(Alert.AlertType.WARNING, "Attention", "Veuillez sélectionner un produit dans la liste.");
-            return;
-        }
-        int produitId = Integer.parseInt(selected.get(0));
-        String libelle = selected.get(1);
-
-        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
-        confirm.setTitle("Suppression");
-        confirm.setHeaderText("Supprimer le produit \"" + libelle + "\" ?");
-        confirm.setContentText("Cette action est irréversible.");
-        confirm.showAndWait().ifPresent(resp -> {
-            if (resp != ButtonType.OK) return;
-            boolean succes = new ProduitDAO().delete(produitId);
-            if (succes) {
-                int gestionnaireId = currentGestionnaireId > 0 ? currentGestionnaireId : 1;
-                try (Connection conn = getConnection();
-                     PreparedStatement ps = conn.prepareStatement(
-                             "INSERT INTO historique (id_utilisateur, action, table_concernee, id_enregistrement, details) VALUES (?, 'Suppression', 'produit', ?, ?)")) {
-                    ps.setInt(1, gestionnaireId);
-                    ps.setInt(2, produitId);
-                    ps.setString(3, "Suppression produit: " + libelle);
-                    ps.executeUpdate();
-                } catch (SQLException e) {
-                    System.err.println("Erreur historique : " + e.getMessage());
-                }
-                showAlert(Alert.AlertType.INFORMATION, "Supprimé", "Produit \"" + libelle + "\" supprimé.");
-                loadStockProducts();
-                loadDashboardData();
-                loadProductsDashboard();
-            } else {
-                showAlert(Alert.AlertType.ERROR, "Erreur",
-                        "Impossible de supprimer ce produit (référencé dans des demandes ou réapprovisionnements).");
-            }
-        });
     }
 
     // ============= GESTION DEMANDES =============
@@ -661,12 +528,15 @@ public class GestionnaireDashboardController implements Initializable {
     private void setupReapproTable() {
         if (reapproTable == null) return;
         reapproTable.getColumns().clear();
+        reapproTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         // data[0] = id_reappro (caché), data[1..5] = colonnes affichées
-        String[] cols = {"Produit", "Fournisseur", "Quantité", "Date commande", "Date réception"};
+        String[] cols   = {"Produit", "Fournisseur", "Quantité", "Date commande", "Date réception"};
+        double[] widths = {0.28,       0.28,           0.10,       0.17,            0.17};
         for (int i = 0; i < cols.length; i++) {
             final int dataIdx = i + 1;
             TableColumn<ObservableList<String>, String> col = new TableColumn<>(cols[i]);
             col.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().get(dataIdx)));
+            col.setMaxWidth(1f * Integer.MAX_VALUE * widths[i] * 100);
             reapproTable.getColumns().add(col);
         }
     }
