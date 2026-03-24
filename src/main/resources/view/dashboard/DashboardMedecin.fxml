@@ -122,18 +122,6 @@
                     </graphic>
                 </Button>
 
-                <Button onAction="#showRendezVous" maxWidth="Infinity" focusTraversable="false"
-                        style="-fx-background-color: transparent; -fx-padding: 12 16 12 16;
-                               -fx-background-radius: 10; -fx-cursor: hand; -fx-border-width: 0;
-                               -fx-alignment: CENTER_LEFT;">
-                    <graphic>
-                        <HBox spacing="10" alignment="CENTER_LEFT">
-                            <Label text="📅" style="-fx-font-size: 14px;"/>
-                            <Label text="Rendez-vous" style="-fx-text-fill: #B0C8DE; -fx-font-size: 13px;"/>
-                        </HBox>
-                    </graphic>
-                </Button>
-
                 <Button onAction="#showHistory" maxWidth="Infinity" focusTraversable="false"
                         style="-fx-background-color: transparent; -fx-padding: 12 16 12 16;
                                -fx-background-radius: 10; -fx-cursor: hand; -fx-border-width: 0;
@@ -514,102 +502,7 @@
             </VBox>
 
             <!-- ════════════════════════════════════
-                 VUE 5 — RENDEZ-VOUS
-            ════════════════════════════════════ -->
-            <VBox fx:id="rendezVousView" spacing="22"
-                  style="-fx-padding: 32 30 30 30;"
-                  visible="false" managed="false">
-
-                <HBox alignment="CENTER_LEFT">
-                    <VBox spacing="3">
-                        <Label text="Rendez-vous"
-                               style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #0D1B2A;"/>
-                        <Label text="Gestion de vos rendez-vous patients"
-                               style="-fx-font-size: 12px; -fx-text-fill: #7F93A8;"/>
-                    </VBox>
-                    <Region HBox.hgrow="ALWAYS"/>
-                    <Button text="➕  Nouveau RDV" onAction="#onToggleRdvForm"
-                            style="-fx-background-color: #F0A500; -fx-text-fill: white;
-                                   -fx-font-size: 12px; -fx-font-weight: bold;
-                                   -fx-padding: 10 20 10 20; -fx-background-radius: 9;
-                                   -fx-cursor: hand; -fx-border-width: 0;"/>
-                </HBox>
-
-                <!-- Formulaire nouveau RDV -->
-                <VBox fx:id="rdvFormView" spacing="14" visible="false" managed="false"
-                      style="-fx-background-color: white; -fx-padding: 22; -fx-background-radius: 14;
-                             -fx-effect: dropshadow(gaussian, rgba(13,27,42,0.07), 12, 0, 0, 3);">
-                    <Label text="Nouveau rendez-vous"
-                           style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #0D1B2A;"/>
-                    <Separator/>
-                    <GridPane hgap="16" vgap="12">
-                        <Label text="Patient :" GridPane.columnIndex="0" GridPane.rowIndex="0"
-                               style="-fx-text-fill: #5A7090; -fx-font-size: 12px;"/>
-                        <ComboBox fx:id="rdvPatientComboBox" prefWidth="280"
-                                  GridPane.columnIndex="1" GridPane.rowIndex="0"/>
-                        <Label text="Date :" GridPane.columnIndex="0" GridPane.rowIndex="1"
-                               style="-fx-text-fill: #5A7090; -fx-font-size: 12px;"/>
-                        <DatePicker fx:id="rdvDatePicker" prefWidth="180"
-                                    GridPane.columnIndex="1" GridPane.rowIndex="1"/>
-                        <Label text="Heure (HH:mm) :" GridPane.columnIndex="0" GridPane.rowIndex="2"
-                               style="-fx-text-fill: #5A7090; -fx-font-size: 12px;"/>
-                        <TextField fx:id="rdvHeureField" promptText="ex : 09:30" prefWidth="120"
-                                   GridPane.columnIndex="1" GridPane.rowIndex="2"/>
-                        <Label text="Motif :" GridPane.columnIndex="0" GridPane.rowIndex="3"
-                               style="-fx-text-fill: #5A7090; -fx-font-size: 12px;"/>
-                        <TextArea fx:id="rdvMotifArea" prefRowCount="2" prefWidth="280"
-                                  GridPane.columnIndex="1" GridPane.rowIndex="3"/>
-                    </GridPane>
-                    <HBox spacing="10" alignment="CENTER_RIGHT">
-                        <Button text="✅ Enregistrer" onAction="#onSaveRdv"
-                                style="-fx-background-color: #F0A500; -fx-text-fill: white;
-                                       -fx-font-size: 12px; -fx-font-weight: bold;
-                                       -fx-padding: 10 22 10 22; -fx-background-radius: 9; -fx-cursor: hand;"/>
-                        <Button text="✖ Annuler" onAction="#onToggleRdvForm"
-                                style="-fx-background-color: #F0F3F8; -fx-text-fill: #5A7090;
-                                       -fx-font-size: 12px; -fx-font-weight: bold;
-                                       -fx-padding: 10 22 10 22; -fx-background-radius: 9; -fx-cursor: hand;"/>
-                    </HBox>
-                </VBox>
-
-                <!-- Table des RDV -->
-                <VBox VBox.vgrow="ALWAYS" spacing="0"
-                      style="-fx-background-color: white; -fx-background-radius: 14;
-                             -fx-effect: dropshadow(gaussian, rgba(13,27,42,0.07), 12, 0, 0, 3);">
-                    <HBox alignment="CENTER_LEFT" spacing="10"
-                          style="-fx-padding: 16 22 14 22;
-                                 -fx-border-color: transparent transparent #EEF1F7 transparent;
-                                 -fx-border-width: 0 0 1 0;">
-                        <Label text="📅" style="-fx-font-size: 16px;"/>
-                        <Label text="Mes rendez-vous"
-                               style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #0D1B2A;"/>
-                        <Region HBox.hgrow="ALWAYS"/>
-                        <Button text="🔄" onAction="#onRefreshRdv"
-                                style="-fx-background-color: transparent; -fx-cursor: hand; -fx-font-size: 14px;"/>
-                    </HBox>
-                    <TableView fx:id="rendezVousTable" VBox.vgrow="ALWAYS"
-                               style="-fx-background-color: transparent; -fx-border-width: 0;
-                                      -fx-table-cell-border-color: #F0F3F8;">
-                        <columns>
-                            <TableColumn text="Patient"  prefWidth="180"/>
-                            <TableColumn text="Date"     prefWidth="150"/>
-                            <TableColumn text="Motif"    prefWidth="260"/>
-                            <TableColumn text="Statut"   prefWidth="110"/>
-                            <TableColumn text="Action"   prefWidth="180"/>
-                        </columns>
-                        <placeholder>
-                            <VBox alignment="CENTER" spacing="8" style="-fx-padding: 40 0 40 0;">
-                                <Label text="📅" style="-fx-font-size: 28px;"/>
-                                <Label text="Aucun rendez-vous planifié"
-                                       style="-fx-text-fill: #7F93A8; -fx-font-size: 13px;"/>
-                            </VBox>
-                        </placeholder>
-                    </TableView>
-                </VBox>
-            </VBox>
-
-            <!-- ════════════════════════════════════
-                 VUE 6 — DÉCISION DE TRAITEMENT
+                 VUE 5 — DÉCISION DE TRAITEMENT
             ════════════════════════════════════ -->
             <VBox fx:id="treatmentView" spacing="20"
                   style="-fx-padding: 32 30 30 30;"
