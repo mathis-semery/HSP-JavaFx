@@ -16,7 +16,7 @@ CREATE TABLE utilisateur (
 
 CREATE TABLE historique (
     id_historique INT PRIMARY KEY AUTO_INCREMENT,
-    id_utilisateur INT NOT NULL,
+    id_utilisateur INT,
     action VARCHAR(50) NOT NULL,
     table_concernee VARCHAR(50) NOT NULL,
     id_enregistrement INT,
@@ -35,16 +35,28 @@ CREATE TABLE patient (
     date_creation DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-
 CREATE TABLE dossier (
     id_dossier INT PRIMARY KEY AUTO_INCREMENT,
     id_patient INT NOT NULL,
-    id_secretaire INT NOT NULL,
+    id_secretaire INT,
     id_medecin INT,
     date_arrivee DATETIME NOT NULL,
     symptomes TEXT,
-    niveau_gravite INT NOT NULL CHECK(niveau_gravite BETWEEN 1 AND 5),
+    niveau_gravite INT NOT NULL,
     statut ENUM('Attente', 'EnCours', 'Termine') DEFAULT 'Attente',
+    date_creation DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE ordonnance (
+    id_ordonnance INT PRIMARY KEY AUTO_INCREMENT,
+    id_dossier INT NOT NULL,
+    id_medecin INT NOT NULL,
+    date_ordonnance DATETIME NOT NULL,
+    medicaments TEXT,
+    posologie TEXT,
+    duree_traitement VARCHAR(100),
+    notes TEXT,
+    statut ENUM('active', 'terminee') DEFAULT 'active',
     date_creation DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -60,7 +72,7 @@ CREATE TABLE hospitalisation (
     id_hospitalisation INT PRIMARY KEY AUTO_INCREMENT,
     id_dossier INT NOT NULL,
     id_chambre INT NOT NULL,
-    id_medecin INT NOT NULL,
+    id_medecin INT,
     date_debut DATETIME NOT NULL,
     date_fin DATETIME,
     description_maladie TEXT,
@@ -71,7 +83,7 @@ CREATE TABLE produit (
     id_produit INT PRIMARY KEY AUTO_INCREMENT,
     libelle VARCHAR(100) NOT NULL,
     description TEXT,
-    niveau_dangerosite INT NOT NULL CHECK(niveau_dangerosite BETWEEN 1 AND 5),
+    niveau_dangerosite INT NOT NULL,
     quantite_stock INT DEFAULT 0,
     date_creation DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -95,7 +107,7 @@ CREATE TABLE produit_fournisseur (
 
 CREATE TABLE demande_produit (
     id_demande INT PRIMARY KEY AUTO_INCREMENT,
-    id_medecin INT NOT NULL,
+    id_medecin INT,
     id_gestionnaire INT,
     date_demande DATETIME DEFAULT CURRENT_TIMESTAMP,
     statut ENUM('Attente', 'Validee', 'Refusee') DEFAULT 'Attente',
@@ -112,7 +124,7 @@ CREATE TABLE ligne_demande (
 
 CREATE TABLE reapprovisionnement (
     id_reappro INT PRIMARY KEY AUTO_INCREMENT,
-    id_gestionnaire INT NOT NULL,
+    id_gestionnaire INT,
     date_commande DATETIME DEFAULT CURRENT_TIMESTAMP,
     date_reception DATETIME
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -130,7 +142,7 @@ CREATE TABLE ligne_reapprovisionnement (
 ALTER TABLE historique
     ADD CONSTRAINT fk_historique_utilisateur
         FOREIGN KEY (id_utilisateur) REFERENCES utilisateur(id_utilisateur)
-        ON DELETE CASCADE ON UPDATE CASCADE;
+        ON DELETE SET NULL ON UPDATE CASCADE;
 
 ALTER TABLE dossier
     ADD CONSTRAINT fk_dossier_patient
@@ -138,10 +150,18 @@ ALTER TABLE dossier
         ON DELETE CASCADE ON UPDATE CASCADE,
     ADD CONSTRAINT fk_dossier_secretaire
         FOREIGN KEY (id_secretaire) REFERENCES utilisateur(id_utilisateur)
-        ON DELETE RESTRICT ON UPDATE CASCADE,
+        ON DELETE SET NULL ON UPDATE CASCADE,
     ADD CONSTRAINT fk_dossier_medecin
         FOREIGN KEY (id_medecin) REFERENCES utilisateur(id_utilisateur)
         ON DELETE SET NULL ON UPDATE CASCADE;
+
+ALTER TABLE ordonnance
+    ADD CONSTRAINT fk_ordonnance_dossier
+        FOREIGN KEY (id_dossier) REFERENCES dossier(id_dossier)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    ADD CONSTRAINT fk_ordonnance_medecin
+        FOREIGN KEY (id_medecin) REFERENCES utilisateur(id_utilisateur)
+        ON DELETE RESTRICT ON UPDATE CASCADE;
 
 ALTER TABLE hospitalisation
     ADD CONSTRAINT fk_hospitalisation_dossier
@@ -152,7 +172,7 @@ ALTER TABLE hospitalisation
         ON DELETE RESTRICT ON UPDATE CASCADE,
     ADD CONSTRAINT fk_hospitalisation_medecin
         FOREIGN KEY (id_medecin) REFERENCES utilisateur(id_utilisateur)
-        ON DELETE RESTRICT ON UPDATE CASCADE;
+        ON DELETE SET NULL ON UPDATE CASCADE;
 
 ALTER TABLE produit_fournisseur
     ADD CONSTRAINT fk_prodfour_produit
@@ -165,7 +185,7 @@ ALTER TABLE produit_fournisseur
 ALTER TABLE demande_produit
     ADD CONSTRAINT fk_demande_medecin
         FOREIGN KEY (id_medecin) REFERENCES utilisateur(id_utilisateur)
-        ON DELETE RESTRICT ON UPDATE CASCADE,
+        ON DELETE SET NULL ON UPDATE CASCADE,
     ADD CONSTRAINT fk_demande_gestionnaire
         FOREIGN KEY (id_gestionnaire) REFERENCES utilisateur(id_utilisateur)
         ON DELETE SET NULL ON UPDATE CASCADE;
@@ -181,7 +201,7 @@ ALTER TABLE ligne_demande
 ALTER TABLE reapprovisionnement
     ADD CONSTRAINT fk_reappro_gestionnaire
         FOREIGN KEY (id_gestionnaire) REFERENCES utilisateur(id_utilisateur)
-        ON DELETE RESTRICT ON UPDATE CASCADE;
+        ON DELETE SET NULL ON UPDATE CASCADE;
 
 ALTER TABLE ligne_reapprovisionnement
     ADD CONSTRAINT fk_ligne_reappro_reappro
@@ -204,6 +224,9 @@ CREATE INDEX idx_chambre_dispo ON chambre(disponible);
 CREATE INDEX idx_produit_stock ON produit(quantite_stock);
 CREATE INDEX idx_demande_statut ON demande_produit(statut);
 CREATE INDEX idx_historique_date ON historique(date_action);
+CREATE INDEX idx_ordonnance_dossier ON ordonnance(id_dossier);
+CREATE INDEX idx_ordonnance_medecin ON ordonnance(id_medecin);
+CREATE INDEX idx_ordonnance_statut ON ordonnance(statut);
 
 INSERT INTO utilisateur (nom, prenom, email, mot_de_passe, role) VALUES
 ('Dupont', 'Marie', 'marie.dupont@hopital.fr', '$2a$10$xJwL5v5Jz5U5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z', 'Secretaire'),
@@ -247,9 +270,13 @@ INSERT INTO produit_fournisseur (id_produit, id_fournisseur, prix) VALUES
 (5, 3, 25.00);
 
 INSERT INTO dossier (id_patient, id_secretaire, id_medecin, date_arrivee, symptomes, niveau_gravite, statut) VALUES
-(1, 1, 2, NOW(), 'Douleurs thoraciques, essoufflement', 4, 'EnCours'),
-(2, 1, 3, NOW() - INTERVAL 2 HOUR, 'Fièvre, maux de tête', 2, 'Attente'),
-(3, 1, 2, NOW() - INTERVAL 1 DAY, 'Fracture du bras', 3, 'Termine');
+(1, NULL, 2, NOW(), 'Douleurs thoraciques, essoufflement', 4, 'EnCours'),
+(2, NULL, 3, NOW() - INTERVAL 2 HOUR, 'Fièvre, maux de tête', 2, 'Attente'),
+(3, NULL, 2, NOW() - INTERVAL 1 DAY, 'Fracture du bras', 3, 'Termine');
+
+INSERT INTO ordonnance (id_dossier, id_medecin, date_ordonnance, medicaments, posologie, duree_traitement, notes, statut) VALUES
+(1, 2, NOW(), 'Morphine 10mg', '1 comprimé toutes les 6h', '3 jours', 'Surveillance tensionnelle', 'active'),
+(3, 2, NOW() - INTERVAL 1 DAY, 'Ibuprofène 400mg, Amoxicilline 1g', '3 fois par jour après les repas', '7 jours', 'Renouvellement si douleur persistante', 'terminee');
 
 INSERT INTO demande_produit (id_medecin, id_gestionnaire, statut) VALUES
 (2, 4, 'Validee'),
@@ -344,3 +371,22 @@ JOIN ligne_reapprovisionnement lr ON r.id_reappro = lr.id_reappro
 JOIN fournisseur f ON lr.id_fournisseur = f.id_fournisseur
 JOIN produit p ON lr.id_produit = p.id_produit
 ORDER BY r.date_commande DESC;
+
+CREATE VIEW vue_ordonnances_details AS
+SELECT
+    o.id_ordonnance,
+    p.nom AS patient_nom,
+    p.prenom AS patient_prenom,
+    u.nom AS medecin_nom,
+    u.prenom AS medecin_prenom,
+    o.date_ordonnance,
+    o.medicaments,
+    o.posologie,
+    o.duree_traitement,
+    o.notes,
+    o.statut
+FROM ordonnance o
+JOIN dossier d ON o.id_dossier = d.id_dossier
+JOIN patient p ON d.id_patient = p.id_patient
+JOIN utilisateur u ON o.id_medecin = u.id_utilisateur
+ORDER BY o.date_ordonnance DESC;
