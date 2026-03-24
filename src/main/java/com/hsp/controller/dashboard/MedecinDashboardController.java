@@ -820,6 +820,19 @@ public class MedecinDashboardController implements Initializable {
 
             } else {
                 // ── Ordonnance / Sortie ──
+                // Créer l'ordonnance en base
+                int ordonnanceId = 0;
+                try (PreparedStatement ps = conn.prepareStatement(
+                        "INSERT INTO ordonnance (id_dossier, id_medecin, date_ordonnance) VALUES (?, ?, NOW())",
+                        Statement.RETURN_GENERATED_KEYS)) {
+                    ps.setInt(1, currentDossierId);
+                    ps.setInt(2, currentMedecinId);
+                    ps.executeUpdate();
+                    ResultSet rs = ps.getGeneratedKeys();
+                    if (rs.next()) ordonnanceId = rs.getInt(1);
+                }
+
+                // Dossier terminé
                 try (PreparedStatement ps = conn.prepareStatement(
                         "UPDATE dossier SET statut = 'Termine', id_medecin = ? WHERE id_dossier = ?")) {
                     ps.setInt(1, currentMedecinId);
@@ -827,8 +840,8 @@ public class MedecinDashboardController implements Initializable {
                     ps.executeUpdate();
                 }
 
-                enregistrerHistorique(conn, "Ordonnance", "dossier",
-                        currentDossierId, "Patient sorti avec ordonnance");
+                enregistrerHistorique(conn, "Ordonnance", "ordonnance",
+                        ordonnanceId, "Ordonnance créée pour dossier #" + currentDossierId);
 
                 conn.commit();
                 showAlert(Alert.AlertType.INFORMATION, "Succès", "Ordonnance délivrée — le patient peut sortir.");

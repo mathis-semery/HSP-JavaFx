@@ -638,11 +638,17 @@ public class GestionnaireDashboardController implements Initializable {
     private void loadReappros() {
         if (reapproTable == null) return;
         String query = """
-                SELECT r.id_reappro, p.libelle, f.nom, r.quantite,
-                       r.date_commande, r.date_reception
+                SELECT r.id_reappro,
+                       COALESCE(GROUP_CONCAT(DISTINCT p.libelle ORDER BY p.libelle SEPARATOR ', '), '—') AS produits,
+                       COALESCE(GROUP_CONCAT(DISTINCT f.nom ORDER BY f.nom SEPARATOR ', '), '—') AS fournisseurs,
+                       COALESCE(SUM(lr.quantite_commandee), 0) AS total_quantite,
+                       r.date_commande,
+                       r.date_reception
                 FROM reapprovisionnement r
-                JOIN produit p ON r.id_produit = p.id_produit
-                JOIN fournisseur f ON r.id_fournisseur = f.id_fournisseur
+                LEFT JOIN ligne_reapprovisionnement lr ON r.id_reappro = lr.id_reappro
+                LEFT JOIN produit p ON lr.id_produit = p.id_produit
+                LEFT JOIN fournisseur f ON lr.id_fournisseur = f.id_fournisseur
+                GROUP BY r.id_reappro, r.date_commande, r.date_reception
                 ORDER BY r.date_commande DESC
                 """;
         ObservableList<ObservableList<String>> data = FXCollections.observableArrayList();
@@ -652,9 +658,9 @@ public class GestionnaireDashboardController implements Initializable {
             while (rs.next()) {
                 ObservableList<String> row = FXCollections.observableArrayList();
                 row.add(String.valueOf(rs.getInt("id_reappro")));
-                row.add(rs.getString("libelle") != null ? rs.getString("libelle") : "—");
-                row.add(rs.getString("nom") != null ? rs.getString("nom") : "—");
-                row.add(String.valueOf(rs.getInt("quantite")));
+                row.add(rs.getString("produits") != null ? rs.getString("produits") : "—");
+                row.add(rs.getString("fournisseurs") != null ? rs.getString("fournisseurs") : "—");
+                row.add(String.valueOf(rs.getLong("total_quantite")));
                 row.add(rs.getDate("date_commande") != null ? rs.getDate("date_commande").toString() : "—");
                 row.add(rs.getDate("date_reception") != null ? rs.getDate("date_reception").toString() : "En attente");
                 data.add(row);
@@ -702,14 +708,22 @@ public class GestionnaireDashboardController implements Initializable {
         try (Connection conn = getConnection()) {
             conn.setAutoCommit(false);
 
-            int idProduit = 0, quantite = 0;
+            // Mettre à jour le stock pour chaque ligne de réappro
+            int totalQuantite = 0;
             try (PreparedStatement ps = conn.prepareStatement(
-                    "SELECT id_produit, quantite FROM reapprovisionnement WHERE id_reappro = ?")) {
+                    "SELECT id_produit, quantite_commandee FROM ligne_reapprovisionnement WHERE id_reappro = ?")) {
                 ps.setInt(1, reapproId);
                 ResultSet rs = ps.executeQuery();
-                if (rs.next()) {
-                    idProduit = rs.getInt("id_produit");
-                    quantite  = rs.getInt("quantite");
+                while (rs.next()) {
+                    int idProduit = rs.getInt("id_produit");
+                    int quantite  = rs.getInt("quantite_commandee");
+                    totalQuantite += quantite;
+                    try (PreparedStatement psUpdate = conn.prepareStatement(
+                            "UPDATE produit SET quantite_stock = quantite_stock + ? WHERE id_produit = ?")) {
+                        psUpdate.setInt(1, quantite);
+                        psUpdate.setInt(2, idProduit);
+                        psUpdate.executeUpdate();
+                    }
                 }
             }
             try (PreparedStatement ps = conn.prepareStatement(
@@ -718,20 +732,14 @@ public class GestionnaireDashboardController implements Initializable {
                 ps.executeUpdate();
             }
             try (PreparedStatement ps = conn.prepareStatement(
-                    "UPDATE produit SET quantite_stock = quantite_stock + ? WHERE id_produit = ?")) {
-                ps.setInt(1, quantite);
-                ps.setInt(2, idProduit);
-                ps.executeUpdate();
-            }
-            try (PreparedStatement ps = conn.prepareStatement(
                     "INSERT INTO historique (id_utilisateur, action, table_concernee, id_enregistrement, details) VALUES (?, 'Reception', 'reapprovisionnement', ?, ?)")) {
                 ps.setInt(1, gestionnaireId);
                 ps.setInt(2, reapproId);
-                ps.setString(3, "Réception réappro #" + reapproId + " — stock +" + quantite);
+                ps.setString(3, "Réception réappro #" + reapproId + " — stock +" + totalQuantite);
                 ps.executeUpdate();
             }
             conn.commit();
-            showAlert(Alert.AlertType.INFORMATION, "Succès", "Réception confirmée. Stock mis à jour (+" + quantite + " unités).");
+            showAlert(Alert.AlertType.INFORMATION, "Succès", "Réception confirmée. Stock mis à jour (+" + totalQuantite + " unités).");
             loadReappros();
             loadDashboardData();
         } catch (SQLException e) {
