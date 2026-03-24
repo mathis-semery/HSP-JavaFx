@@ -26,18 +26,6 @@
                     style="-fx-background-color: #dc2626; -fx-text-fill: white; -fx-padding: 12;"/>
             <Button text="&#x1f465; Utilisateurs" onAction="#showUsers" prefWidth="220"
                     style="-fx-background-color: #374151; -fx-text-fill: white; -fx-padding: 12;"/>
-            <Button text="&#x1f3e5; Patients" onAction="#showPatients" prefWidth="220"
-                    style="-fx-background-color: #374151; -fx-text-fill: white; -fx-padding: 12;"/>
-            <Button text="&#x1f6cf; Hospitalisations" onAction="#showHospitalisations" prefWidth="220"
-                    style="-fx-background-color: #374151; -fx-text-fill: white; -fx-padding: 12;"/>
-            <Button text="&#x1f4cb; Ordonnances" onAction="#showOrdonnances" prefWidth="220"
-                    style="-fx-background-color: #374151; -fx-text-fill: white; -fx-padding: 12;"/>
-            <Button text="&#x1f4e6; Produits" onAction="#showProduits" prefWidth="220"
-                    style="-fx-background-color: #374151; -fx-text-fill: white; -fx-padding: 12;"/>
-            <Button text="&#x1f69a; Fournisseurs" onAction="#showFournisseurs" prefWidth="220"
-                    style="-fx-background-color: #374151; -fx-text-fill: white; -fx-padding: 12;"/>
-            <Button text="&#x1f4e9; Demandes" onAction="#showDemandes" prefWidth="220"
-                    style="-fx-background-color: #374151; -fx-text-fill: white; -fx-padding: 12;"/>
 
             <Separator/>
 
@@ -140,116 +128,6 @@
                     <Button text="&#x1f511; R&#xe9;initialiser MDP" onAction="#onResetPassword"
                             style="-fx-background-color: #f59e0b; -fx-text-fill: white; -fx-padding: 10 20;"/>
                     <Button text="&#x1f5d1;&#xfe0f; Supprimer" onAction="#onDeleteUser"
-                            style="-fx-background-color: #ef4444; -fx-text-fill: white; -fx-padding: 10 20;"/>
-                </HBox>
-            </VBox>
-
-            <VBox fx:id="patientsView" spacing="20" visible="false">
-                <HBox alignment="CENTER_LEFT" spacing="20">
-                    <Label text="Patients" style="-fx-font-size: 28px; -fx-font-weight: bold;"/>
-                    <Region HBox.hgrow="ALWAYS"/>
-                    <Button text="&#x1f504; Actualiser" onAction="#onRefreshPatients" style="-fx-background-color: #10b981; -fx-text-fill: white;"/>
-                </HBox>
-
-                <HBox spacing="15" alignment="CENTER_LEFT">
-                    <TextField fx:id="searchPatientField" promptText="&#x1f50d; Rechercher par nom, pr&#xe9;nom, email, n&#xb0; s&#xe9;cu..." prefWidth="400"/>
-                    <Button text="&#x1f50d; Rechercher" onAction="#onSearchPatient" style="-fx-background-color: #6b7280; -fx-text-fill: white;"/>
-                </HBox>
-
-                <TableView fx:id="patientsTable" prefHeight="400"/>
-
-                <HBox spacing="15">
-                    <Button text="&#x1f5d1;&#xfe0f; Supprimer" onAction="#onDeletePatient"
-                            style="-fx-background-color: #ef4444; -fx-text-fill: white; -fx-padding: 10 20;"/>
-                </HBox>
-            </VBox>
-
-            <VBox fx:id="hospitalisationsView" spacing="20" visible="false">
-                <HBox alignment="CENTER_LEFT" spacing="20">
-                    <Label text="Hospitalisations" style="-fx-font-size: 28px; -fx-font-weight: bold;"/>
-                    <Region HBox.hgrow="ALWAYS"/>
-                    <Button text="&#x1f504; Actualiser" onAction="#onRefreshHospitalisations" style="-fx-background-color: #10b981; -fx-text-fill: white;"/>
-                </HBox>
-
-                <TableView fx:id="hospitalisationsTable" prefHeight="400"/>
-
-                <HBox spacing="15">
-                    <Button text="&#x1f5d1;&#xfe0f; Supprimer" onAction="#onDeleteHospitalisation"
-                            style="-fx-background-color: #ef4444; -fx-text-fill: white; -fx-padding: 10 20;"/>
-                </HBox>
-            </VBox>
-
-            <VBox fx:id="ordonnancesView" spacing="20" visible="false">
-                <HBox alignment="CENTER_LEFT" spacing="20">
-                    <Label text="Ordonnances" style="-fx-font-size: 28px; -fx-font-weight: bold;"/>
-                    <Region HBox.hgrow="ALWAYS"/>
-                    <Button text="&#x1f504; Actualiser" onAction="#onRefreshOrdonnances" style="-fx-background-color: #10b981; -fx-text-fill: white;"/>
-                </HBox>
-
-                <TableView fx:id="ordonnancesTable" prefHeight="400"/>
-
-                <HBox spacing="15">
-                    <Button text="&#x1f5d1;&#xfe0f; Supprimer" onAction="#onDeleteOrdonnance"
-                            style="-fx-background-color: #ef4444; -fx-text-fill: white; -fx-padding: 10 20;"/>
-                </HBox>
-            </VBox>
-
-            <VBox fx:id="produitsView" spacing="20" visible="false">
-                <HBox alignment="CENTER_LEFT" spacing="20">
-                    <Label text="Produits" style="-fx-font-size: 28px; -fx-font-weight: bold;"/>
-                    <Region HBox.hgrow="ALWAYS"/>
-                    <Button text="&#x1f504; Actualiser" onAction="#onRefreshProduits" style="-fx-background-color: #10b981; -fx-text-fill: white;"/>
-                </HBox>
-
-                <HBox spacing="15" alignment="CENTER_LEFT">
-                    <TextField fx:id="searchProduitField" promptText="&#x1f50d; Rechercher par libell&#xe9;..." prefWidth="400"/>
-                    <Button text="&#x1f50d; Rechercher" onAction="#onSearchProduit" style="-fx-background-color: #6b7280; -fx-text-fill: white;"/>
-                </HBox>
-
-                <TableView fx:id="produitsTable" prefHeight="400"/>
-
-                <HBox spacing="15">
-                    <Button text="&#x1f5d1;&#xfe0f; Supprimer" onAction="#onDeleteProduit"
-                            style="-fx-background-color: #ef4444; -fx-text-fill: white; -fx-padding: 10 20;"/>
-                </HBox>
-            </VBox>
-
-            <VBox fx:id="fournisseursView" spacing="20" visible="false">
-                <HBox alignment="CENTER_LEFT" spacing="20">
-                    <Label text="Fournisseurs" style="-fx-font-size: 28px; -fx-font-weight: bold;"/>
-                    <Region HBox.hgrow="ALWAYS"/>
-                    <Button text="&#x1f504; Actualiser" onAction="#onRefreshFournisseurs" style="-fx-background-color: #10b981; -fx-text-fill: white;"/>
-                </HBox>
-
-                <HBox spacing="15" alignment="CENTER_LEFT">
-                    <TextField fx:id="searchFournisseurField" promptText="&#x1f50d; Rechercher par nom, contact..." prefWidth="400"/>
-                    <Button text="&#x1f50d; Rechercher" onAction="#onSearchFournisseur" style="-fx-background-color: #6b7280; -fx-text-fill: white;"/>
-                </HBox>
-
-                <TableView fx:id="fournisseursTable" prefHeight="400"/>
-
-                <HBox spacing="15">
-                    <Button text="&#x1f5d1;&#xfe0f; Supprimer" onAction="#onDeleteFournisseur"
-                            style="-fx-background-color: #ef4444; -fx-text-fill: white; -fx-padding: 10 20;"/>
-                </HBox>
-            </VBox>
-
-            <VBox fx:id="demandesView" spacing="20" visible="false">
-                <HBox alignment="CENTER_LEFT" spacing="20">
-                    <Label text="Demandes de produits" style="-fx-font-size: 28px; -fx-font-weight: bold;"/>
-                    <Region HBox.hgrow="ALWAYS"/>
-                    <Button text="&#x1f504; Actualiser" onAction="#onRefreshDemandes" style="-fx-background-color: #10b981; -fx-text-fill: white;"/>
-                </HBox>
-
-                <HBox spacing="15" alignment="CENTER_LEFT">
-                    <ComboBox fx:id="demandeStatutFilter" promptText="Filtrer par statut" prefWidth="200"/>
-                    <Button text="&#x1f50d; Filtrer" onAction="#onFilterDemandes" style="-fx-background-color: #6b7280; -fx-text-fill: white;"/>
-                </HBox>
-
-                <TableView fx:id="demandesTable" prefHeight="400"/>
-
-                <HBox spacing="15">
-                    <Button text="&#x1f5d1;&#xfe0f; Supprimer" onAction="#onDeleteDemande"
                             style="-fx-background-color: #ef4444; -fx-text-fill: white; -fx-padding: 10 20;"/>
                 </HBox>
             </VBox>
